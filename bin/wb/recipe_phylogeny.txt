@@ -1,0 +1,62 @@
+DNA phylogeny pipeline
+
+OBJECTIVE
+
+To derive DNA-based maximum-likelyhood phylogeny of large replicons (chromosomes and plasmids) using core-genome alignment.
+
+EXAMPLE
+
+cd genomes
+mob_recon_gather.sh myplasmid plasmid_AA002
+cd myplasmid
+make_core_tree.sh
+
+PREREQUISITES/INITIAL STATE
+
+Reconstructed replicon sequences as provided by mob_recon.
+
+Working directory contains a 'sequences' subdir, with isolate-named subdirs each containing the replicon sequence. If an isolate contains several close replicons to be compared, create new isolate subdirs.
+
+wd/sequences/
+    isolate1/<replicon>.fasta
+    isolate2/<replicon>.fasta
+    ...
+    samples.txt
+
+Sequences can be extracted from a general genomes repo using the 'plasmid_gather.sh' command,
+
+plasmid_gather.sh <working directory> <replicon>
+
+will create directory <working directory>, then search in the repo for ./*/mob_recon/<replicon>.fasta and populate the working directory.
+
+PACKAGES
+
+prokka, panaroo, iqtree
+
+OVERVIEW
+
+Replicon sequences are annotated using prokka. A core-genome alignment is obtained using panaroo. A fast ML tree is obtained using iqtree with model KHY.
+
+FINAL STATE
+
+wd/
+    sequences/
+        isolate1/
+            prokka/
+                isolate1.gff
+                ...
+            <replicon>.fasta
+    panaroo/
+        gff/
+            isolate1.gff
+            ...
+        core_gene_alignment.aln
+    iqtree/
+        core_gene_alignment.aln.mldist
+        core_gene_alignment.aln.treefile
+        core_gene_alignment.aln.iqtree
+        ...
+    
+GOING FURTHER
+
+Refine SNP calling by aligning raw reads to the core-genome consensus instead of using assemblies.
