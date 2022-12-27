@@ -6,6 +6,32 @@ NEWDIR=$1/sequences
 
 REPLICON=$2
 
+SAMPLES=$3
+
+mkdir -p $NEWDIR
+
+for SAMPLE in $(<$SAMPLES)
+    do
+        # echo $SAMPLE
+        FNAME=./"$SAMPLE"/mob_recon/"$REPLICON".fasta
+        # echo $FNAME
+    
+        mkdir -p "$NEWDIR"/"$SAMPLE"
+
+        # Prepend sample name to file name
+        TARGET="$SAMPLE"_"$REPLICON".fasta
+
+        cp $FNAME "$NEWDIR"/"$SAMPLE"/"$TARGET"
+    done
+
+# Save default fofn, replacing spaces with newlines as required by launch2 format
+# echo $SAMPLES | tr ' ' '\n' > $NEWDIR/samples.txt
+cp $SAMPLES $NEWDIR/samples.txt
+
+exit
+
+
+
 # Find all matching files
 FNAMES=$(ls ./*/mob_recon/$REPLICON.fasta) 
 
