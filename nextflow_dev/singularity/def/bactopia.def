@@ -1,0 +1,14 @@
+Bootstrap: docker
+From: continuumio/miniconda3:latest
+Stage: condabuild
+
+%files
+bactopia.yml /bactopia.yml
+
+
+
+%post
+/opt/conda/bin/conda config --set ssl_verify false &&\
+/opt/conda/bin/conda update -n base -c defaults conda &&\
+/opt/conda/bin/conda install mamba -n base -c conda-forge &&\
+/opt/conda/bin/mamba env create -f /bactopia.yml

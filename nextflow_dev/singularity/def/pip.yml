@@ -1,0 +1,62 @@
+- pip:
+    - ete3==3.1.2
+    - mob-suite==3.1.0
+    - numexpr==2.8.4
+    - pandas==1.0.5
+    - pycurl==7.45.1
+    - pytz==2022.6
+    - scipy==1.9.3
+    - tables==3.7.0
+
+
+Note:
+Dernière erreur ici
+FATAL:   While performing build: while running engine: exit status 127
+Donc il faut rajouter un "sudo apt-get install python 3.9"
+ça peut être vachement utile !
+Tous les jours des nouvelles erreurs wouhou !
+deb http://deb.debian.org/debian/ buster/updates main contrib non-free
+
+
+%environment
+
+export REQUESTS_CA_BUNDLE=/opt/conda/ssl/cacert.pem
+export CURL_CA_BUNDLE=/opt/conda/ssl/cacert.pem
+export SSL_CERT_FILE=/opt/conda/ssl/cert.pem
+
+
+
+
+mkdir -p /usr/share/man/man1
+dpkg --configure -a
+apt-get install -f
+apt-get install -y wget git procps libxml2-dev libssl-dev curl libcurl4-openssl-dev zip build-essential zlib1g-dev
+apt-get clean -y
+apt-get install -y dos2unix
+apt-get upgrade -y
+apt-get install -y python3-pip
+git clone https://github.com/fenderglass/Flye
+cd Flye
+make
+python setup.py install
+amrfinder -u
+pip install mob_suite
+mob_init
+
+%help
+    SUMMARY
+    Container with tools necessary for bactopia nextflow pipeline.
+    KNOWN BUGS
+    None
+    USAGE
+    Called by the bactopia nextflow pipeline.
+
+%labels
+    Version 0.0.1
+    Singularity Version 3.10.5
+    Author chuafischer
+    Date 2023-01-20
+
+
+  - openjdk=11.0.13
+  - prokka
