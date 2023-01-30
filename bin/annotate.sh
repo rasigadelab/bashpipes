@@ -2,7 +2,7 @@
 # PROKKA Annotation
 
 SAMPLE=$1
-SAMPLE_POLISHED="$SAMPLE""_polished"
+SAMPLE_POLISHED="$SAMPLE""_polished_realigned"
 
 cd $SAMPLE
 

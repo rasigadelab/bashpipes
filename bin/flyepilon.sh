@@ -10,10 +10,12 @@ SAMPLE_ASM_RAW="$SAMPLE""_assembly_raw"
 SAMPLE_BAM="$SAMPLE"".bam"
 SAMPLE_BAM_SORTED="$SAMPLE"".sorted.bam"
 SAMPLE_POLISHED="$SAMPLE""_polished"
+SAMPLE_POLISHED_REALIGNED="$SAMPLE""_polished_realigned"
 
 cd $SAMPLE
 mkdir flye
 mkdir polish
+mkdir circlator
 
 cd flye && \
 flye --nano-raw ../"$SAMPLE_ONT" -o . --threads 48 \
@@ -28,7 +30,10 @@ samtools sort $SAMPLE_BAM > $SAMPLE_BAM_SORTED && \
 samtools index $SAMPLE_BAM_SORTED &> samtools.index.log && \
 pilon -Xmx256G --genome ../"$SAMPLE_ASM_RAW".fasta --bam $SAMPLE_BAM_SORTED --threads 48 --changes --output $SAMPLE_POLISHED \
     &> pilon.log && \
-cp $SAMPLE_POLISHED.fasta ../"$SAMPLE_POLISHED".fasta
+cp $SAMPLE_POLISHED.fasta ../"$SAMPLE_POLISHED".fasta && \
+cd ../circlator && \
+circlator fixstart ../"$SAMPLE_POLISHED".fasta "$SAMPLE_POLISHED_REALIGNED"
+cp $SAMPLE_POLISHED_REALIGNED.fasta ../"$SAMPLE_POLISHED_REALIGNED".fasta
 
 # https://gist.github.com/stevekm/e054544fe3849bd7173d4c9124577115
 # Problem found with samtools sort redirection, steals output from samtools sort => don't log
