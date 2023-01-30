@@ -6,10 +6,17 @@ SAMPLE_POLISHED="$SAMPLE""_polished_realigned"
 
 cd $SAMPLE
 
+mkdir -p mlst
 mkdir -p sourmash
 mkdir -p amrfinder
 mkdir -p prokka
 mkdir -p mob_recon
+
+# MLST
+# Determine sequence type (ST) of the isolate
+cd mlst &&
+mlst ../"$SAMPLE_POLISHED".fasta > mlst.tsv 2>> mlst.log
+cd ..
 
 # TAXON VERIFICATION
 # Use Rscript to extract taxon from sourmash output. This writes files genus.txt and species.txt
