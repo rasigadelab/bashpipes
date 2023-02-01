@@ -1,0 +1,23 @@
+ADD-IN installation
+
+Remember to activate pipeline conda environment:
+conda activate bactopia
+
+# CIRCLATOR installation
+conda install -c bioconda -c conda-forge circlator
+
+# MLST installation
+conda install -c conda-forge -c bioconda -c defaults mlst
+
+# SPADES installation
+wget http://cab.spbu.ru/files/release3.15.5/SPAdes-3.15.5.tar.gz
+tar -xzf SPAdes-3.15.5.tar.gz
+cd SPAdes-3.15.5
+./spades_compile.sh
+
+Usage: spades.py -h
+(note: conda install doesn't work, because it installs a version<3.15.5 (01/02/2023))
+
+# QUAST installation
+conda install -c bioconda -c conda-forge quast
+(note: could take a quite long time to run)
