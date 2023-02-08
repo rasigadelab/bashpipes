@@ -42,10 +42,10 @@ def search_reads(dir_path, method, output_file):
             elif method == "Illumina":
                 write_Illumina_reads(subrepo, abs_path_dir, output_file)
 
-def main(project_dir, output_name):
+def main(project_dir, output_dir):
     #Step1 - output file creation
-    output_path = os.path.join(project_dir, output_name)
-    output_file=open(output_path, "w")
+    output_name = os.path.join(output_dir,"Files_location.tsv")
+    output_file=open(output_name, "w")
     output_file.write("full_path\tSample\ttype\n")
     #Step2- which input information do we want
     full_path = "" #path of file containing reads
@@ -62,12 +62,15 @@ def main(project_dir, output_name):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Creation of Files_location.tsv')
     parser.add_argument("-d", dest="path_to_data", required=True, help="Path to the folder containing Illumina and Nanopore data")
-    parser.add_argument("-o", dest="output_name", required=False, default="Files_location.tsv", help="Name of output file (only tsv file extension)")
+    parser.add_argument("-o", dest="output_dir", required=False, help="Path to output directory")
     args = parser.parse_args()
 
-    path_to_data = args.path_to_data
-    output_name = args.output_name
+    if args.output_dir is None:
+        args.output_dir = args.path_to_data
 
-    main(path_to_data, output_name)
+    path_to_data = args.path_to_data
+    output_dir = args.output_dir
+
+    main(path_to_data, output_dir)
 
 # THE END
