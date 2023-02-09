@@ -1,0 +1,104 @@
+{
+    "version" : "",
+    
+    "result" : "/home/afischer/Test",
+    "workflow" : "bacteria_denovo",
+    "hybrid_assembly" : true,
+    "assembler" : "flye",
+    "map" : "bowtie2",
+    "index" : "samtools",
+    "polisher" : "pilon",
+    "circularization" : "circlator",
+    "mlst" : "mlst", 
+    "taxon_match" : "sourmash",
+    "amr_typer" : "amrfinder",
+    "annotator" : "prokka",
+    "plasmid_typer" : "mob_recon",
+    "quast" : false,
+    
+    "sourmash_ref" : [
+        "/home/jpr/common_db/sourmash-genbank-k21.json.gz"
+    ],
+        
+    "assembler_flye" : {
+        "todo" : 1,
+        "ont_type" : "--nano-raw"
+    },
+    
+    "assembler_spades" : {
+        "todo" : 0,
+        "sample_type" : "--isolate"
+    },
+    
+    "premap_bowtie2" : {
+        "todo" : 1
+    },
+        
+    "map_bowtie2" : {
+        "todo" : 1
+    },
+            
+    "index_sort_samtools" : {
+        "todo" : 1
+    },
+       
+    "polish_pilon" : {
+        "todo" : 1,
+        "memory" : "-XMX256G",
+        "list_change" : "true"
+    },
+    
+    "fixstart_circlator" : {
+        "todo" : 1
+    },
+    
+    "mlsequence_typing" : {
+        "todo" : 1
+    },
+    
+    "sketch_sourmash" : {
+        "todo" : 1,
+        "scaled" : "1000",
+        "k" : "21"
+    },
+        
+    "classify_sourmash" : {
+        "todo" : 1,
+        "db" : "/home/jpr/common_db/sourmash-genbank-k21.json.gz"
+    },
+        
+    "AMRgenes_amrfinder" : {
+        "todo" : 1,
+        "mode" : "--nucleotide"
+    },
+    
+    "qc_quast" : {
+        "todo" : 0
+    },
+        
+    "annotation_prokka" : {
+        "todo" : 1,
+        "genes" : "--addgenes",
+        "mode" : "--compliant",
+        "genus" : "--usegenus"
+    },
+        
+    "filter_bbmap" : {
+        "todo" : 1,
+        "mode" : "withdraw",
+        "minid" : 0.95,
+        "maxindel" : 3,
+        "bwr" : 0.16,
+        "bw" : 12,
+        "minhits" : 2,
+        "qtrim" : "rl",
+        "trimq" : 10,
+        "qin" : 33,
+        "path" : ""
+    },
+        
+    "mge_mob_recon" : {
+        "todo" : 1
+    }
+    
+}
