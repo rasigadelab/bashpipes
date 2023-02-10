@@ -21,7 +21,7 @@
     ],
         
     "assembler_flye" : {
-        "todo" : 1,
+        "todo" : 0,
         "ont_type" : "--nano-raw"
     },
     

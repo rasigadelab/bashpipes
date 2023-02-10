@@ -23,22 +23,23 @@ if (params.help) {
 
 // main workflow
 workflow {
+    //Step1- create a Channel based on content of Files_location.tsv
     fastq_locations = Channel.fromPath(params.result+"/Files_location.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
-    make_sample_dir(fastq_locations, params.result)
-    
-    if ( params.hybrid_assembly == true) {
-        ont_path = "$params.result/genomes/*/*_ONT.fastq.gz"
-        ont_ch = Channel.fromPath(ont_path, checkIfExists: true)
-    } 
-    else {
-        ont_ch = Channel.of("0")
-    }
-    illumina_path = "$params.result/genomes/*/*_{R1,R2}.fastq.gz"
-    illumina_ch = Channel.fromFilePairs(illumina_path, checkIfExists: true)
-    
+    //Step2- launch process to create a directory for each sample in /genomes folder
+    make_sample_dir(fastq_locations)
+    //Step3- create a Channel [sample, ONT/R1/R2_output_file_path]
+    make_sample_dir.out.set{ new_ch }
+    //Step3- create a Channel for each type of reads (ONT, R1 or R2)
+    illumina_R1 = new_ch.unique().filter{ it[1] =~/.*\_R1.fastq.gz$/ }
+    illumina_R2 = new_ch.unique().filter{ it[1] =~/.*\_R2.fastq.gz$/ }
+    ont_ch = new_ch.unique().filter{ it[1] =~/.*\_ONT.fastq.gz$/ }
+    //Step4- create a final Channel joining R1 and R2 Illumina reads together by sample.
+    illumina_ch = illumina_R1.join(illumina_R2)
+
     main:
+    //Step5- launch the appropriate workflow
     if ( params.workflow == 'bacteria_denovo') {
         bacteria_denovo(illumina_ch, ont_ch)
     } 
-    
+   
 }
