@@ -182,6 +182,8 @@ process polish_pilon {
 
   pilon -Xmx${memory}G --genome $draft_assembly --bam $sorted_bam ${params.polish_pilon["list_changes"]} --output \${SAMPLE_POLISHED} &> \${OUT_DIR}/pilon.log
   cp \${SAMPLE_POLISHED}.fasta genomes/$sample/${sample}_polished.fasta
+
+  echo "Completed Pilon process for sample $sample"
   
   rm -rf work
   """
@@ -194,22 +196,92 @@ process polish_pilon {
   touch \${SAMPLE_POLISHED}.fasta
   touch \${OUT_DIR}/pilon.log
 
+  echo "Completed Pilon process for sample $sample"
+
   rm -rf work
   """
 
 }
 
+process qc_quast {
+  // Tool: quast. 
+  // Assembly QC step consists in checking quality of de novo Illumina assembly.
 
+  label 'denovo'
+  storeDir params.result
+  debug true
+  tag "Quast QC on $sample"
 
+  when:
+    params.qc_quast.todo == 1
 
+  input:
+    tuple val(sample), path(draft_assembly)
 
+  output:
+    path("genomes/$sample/quast/*.log")
 
+  script:
+  """
+  OUT_DIR=genomes/$sample/quast
+  mkdir -p -m 777 \${OUT_DIR}
 
+  quast.py -o $draft_assembly 1> \${OUT_DIR}/quast.log 2> \${OUT_DIR}/quast.err
 
+  rm -rf work
+  """
 
+  stub:
+  """
+  OUT_DIR=genomes/$sample/quast
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/quast.log
+  touch \${OUT_DIR}/quast.err
 
+  rm -rf work
+  """  
 
+}
 
+process fixstart_circlator {
+  // Tool: circlator. 
+  // Circularization step consists in re-aligning contig sequences to origin of replication.
+
+  label 'denovo'
+  storeDir params.result
+  debug true
+  tag "Circlator on $sample"
+
+  when:
+    params.fixstart_circlator.todo == 1
+
+  input:
+    tuple val(sample), path(denovo_assembly)
+
+  output:
+    tuple val(sample), path("genomes/$sample/circlator/${sample}_realigned.fasta"), emit : realigned_assembly
+    path("genomes/$sample/circlator/*.log")
+ 
+  script:
+  """
+  OUT_DIR=genomes/$sample/circlator
+  mkdir -p -m 777 \${OUT_DIR}
+
+  circlator fixstart $denovo_assembly \${OUT_DIR}/${sample}_realigned.fasta
+  cp \${OUT_DIR}/${sample}_realigned.fasta genomes/$sample/${sample}_realigned.fasta
+
+  rm -rf work
+  """
+
+  stub:
+  """
+  OUT_DIR=genomes/$sample/circlator
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/${sample}_realigned.fasta
+  touch \${OUT_DIR}/circlator.log
+  rm -rf work
+  """  
+}
 
 
 

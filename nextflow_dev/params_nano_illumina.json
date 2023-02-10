@@ -7,7 +7,7 @@
     "assembler" : "flye",
     "map" : true,
     "polish" : true,
-    "circularization" : "circlator",
+    "circularization" : true,
     "mlst" : "mlst", 
     "taxon_match" : "sourmash",
     "amr_typer" : "amrfinder",
@@ -37,6 +37,10 @@
         "todo" : 1,
         "list_changes" : "--changes"
     },
+        
+    "qc_quast" : {
+        "todo" : 0
+    },
     
     "fixstart_circlator" : {
         "todo" : 1
@@ -61,10 +65,6 @@
         "todo" : 1,
         "mode" : "--nucleotide"
     },
-    
-    "qc_quast" : {
-        "todo" : 0
-    },
         
     "annotation_prokka" : {
         "todo" : 1,
@@ -72,21 +72,7 @@
         "mode" : "--compliant",
         "genus" : "--usegenus"
     },
-        
-    "filter_bbmap" : {
-        "todo" : 1,
-        "mode" : "withdraw",
-        "minid" : 0.95,
-        "maxindel" : 3,
-        "bwr" : 0.16,
-        "bw" : 12,
-        "minhits" : 2,
-        "qtrim" : "rl",
-        "trimq" : 10,
-        "qin" : 33,
-        "path" : ""
-    },
-        
+     
     "mge_mob_recon" : {
         "todo" : 1
     }

@@ -7,7 +7,7 @@
     "assembler" : "spades",
     "map" : false,
     "polish" : false,
-    "circularization" : "circlator",
+    "circularization" : true,
     "mlst" : "mlst", 
     "taxon_match" : "sourmash",
     "amr_typer" : "amrfinder",
@@ -38,6 +38,10 @@
         "list_changes" : "--changes"
     },
     
+    "qc_quast" : {
+        "todo" : 1
+    },
+    
     "fixstart_circlator" : {
         "todo" : 1
     },
@@ -60,10 +64,6 @@
     "AMRgenes_amrfinder" : {
         "todo" : 1,
         "mode" : "--nucleotide"
-    },
-    
-    "qc_quast" : {
-        "todo" : 1
     },
         
     "annotation_prokka" : {
