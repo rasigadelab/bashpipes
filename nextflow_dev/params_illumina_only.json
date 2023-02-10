@@ -5,9 +5,8 @@
     "workflow" : "bacteria_denovo",
     "hybrid_assembly" : false,
     "assembler" : "spades",
-    "map" : "bowtie2",
-    "index" : "samtools",
-    "polisher" : "pilon",
+    "map" : false,
+    "polish" : false,
     "circularization" : "circlator",
     "mlst" : "mlst", 
     "taxon_match" : "sourmash",
@@ -29,23 +28,14 @@
         "todo" : 1,
         "sample_type" : "--isolate"
     },
-    
-    "premap_bowtie2" : {
-        "todo" : 1
-    },
         
     "map_bowtie2" : {
-        "todo" : 1
-    },
-            
-    "index_sort_samtools" : {
-        "todo" : 1
+        "todo" : 0
     },
        
     "polish_pilon" : {
-        "todo" : 1,
-        "memory" : "-XMX256G",
-        "list_change" : "true"
+        "todo" : 0,
+        "list_changes" : "--changes"
     },
     
     "fixstart_circlator" : {
