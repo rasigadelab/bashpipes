@@ -20,12 +20,12 @@
         "/home/jpr/common_db/sourmash-genbank-k21.json.gz"
     ],
         
-    "assembler_flye" : {
+    "assembly_flye" : {
         "todo" : 1,
         "ont_type" : "--nano-raw"
     },
     
-    "assembler_spades" : {
+    "assembly_spades" : {
         "todo" : 0,
         "sample_type" : "--isolate"
     },
