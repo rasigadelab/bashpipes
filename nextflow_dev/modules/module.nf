@@ -16,10 +16,10 @@ process assembly_flye {
   
   output:
     tuple val(sample), path("genomes/$sample/flye/assembly.fasta"), emit : draft_assembly
-    path("genomes/$sample/flye/assembly.fasta")
     path("genomes/$sample/flye/flye.log")
     path("genomes/$sample/flye/flye.err")
     path("genomes/$sample/flye/assembly_info.txt")
+    path("genomes/$sample/${sample}_assembly_raw.fasta")
 
   script:
   """
@@ -129,8 +129,8 @@ process map_bowtie2 {
 
   bowtie2-build $draft_assembly \${OUT_DIR}/index &> \${OUT_DIR}/bowtie2.index.log
   bowtie2 -x \${OUT_DIR}/index -1 $R1 -2 $R2 -p $task.cpus 2>> \${OUT_DIR}/bowtie2.map.log | samtools view -bS - > \${SAMPLE_BAM}
-  samtools sort \${SAMPLE_BAM} > \${SAMPLE_BAM_SORTED} &> \${OUT_DIR}/samtools.sort.log
-  samtools index \${SAMPLE_BAM_SORTED} &> \${OUT_DIR}/samtools.index.log
+  samtools sort \${SAMPLE_BAM} -o \${SAMPLE_BAM_SORTED} 2>> \${OUT_DIR}/samtools.sort.log
+  samtools index \${SAMPLE_BAM_SORTED} 2>> \${OUT_DIR}/samtools.index.log
 
   rm -rf work
   """
@@ -173,6 +173,7 @@ process polish_pilon {
   output:
     tuple val(sample), path("genomes/$sample/polish/${sample}_polished.fasta"), emit : polished_assembly
     path("genomes/$sample/polish/pilon.log")
+    path("genomes/$sample/${sample}_polished.fasta")
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -210,7 +211,7 @@ process qc_quast {
 
   label 'denovo'
   storeDir params.result
-  debug true
+  debug false
   tag "Quast QC on $sample"
 
   when:
