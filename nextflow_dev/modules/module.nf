@@ -68,6 +68,7 @@ process assembly_spades {
     tuple val(sample), path("genomes/$sample/spades/contigs.fasta"), emit : draft_assembly
     path("genomes/$sample/spades/spades_1.log")
     path("genomes/$sample/spades/spades.err")
+    path("genomes/$sample/${sample}_assembly_raw.fasta")
 
   script:
   """
@@ -160,7 +161,7 @@ process polish_pilon {
 
   label 'denovo'
   storeDir params.result
-  debug true
+  debug false
   tag "Polishing of $sample"
 
   when:
@@ -219,14 +220,14 @@ process qc_quast {
     tuple val(sample), path(draft_assembly)
 
   output:
-    path("genomes/$sample/quast/*.log")
+    path("genomes/$sample/quast/*")
 
   script:
   """
   OUT_DIR=genomes/$sample/quast
   mkdir -p -m 777 \${OUT_DIR}
 
-  quast.py -o $draft_assembly 1> \${OUT_DIR}/quast.log 2> \${OUT_DIR}/quast.err
+  quast -o \${OUT_DIR} $draft_assembly 1> \${OUT_DIR}/quast.log 2> \${OUT_DIR}/quast.err
 
   rm -rf work
   """
@@ -249,7 +250,7 @@ process fixstart_circlator {
 
   label 'denovo'
   storeDir params.result
-  debug true
+  debug false
   tag "Circlator on $sample"
 
   when:
@@ -261,13 +262,14 @@ process fixstart_circlator {
   output:
     tuple val(sample), path("genomes/$sample/circlator/${sample}_realigned.fasta"), emit : realigned_assembly
     path("genomes/$sample/circlator/*.log")
+    path("genomes/$sample/${sample}_realigned.fasta")
  
   script:
   """
   OUT_DIR=genomes/$sample/circlator
   mkdir -p -m 777 \${OUT_DIR}
 
-  circlator fixstart $denovo_assembly \${OUT_DIR}/${sample}_realigned.fasta
+  circlator fixstart $denovo_assembly \${OUT_DIR}/${sample}_realigned
   cp \${OUT_DIR}/${sample}_realigned.fasta genomes/$sample/${sample}_realigned.fasta
 
   rm -rf work
