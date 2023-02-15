@@ -7,13 +7,13 @@
     "assembler" : "flye",
     "map" : true,
     "polish" : true,
+    "quast" : false,
     "circularization" : true,
     "mlst" : true, 
     "sourmash" : true,
     "amr_typer" : true,
-    "annotator" : "prokka",
-    "plasmid_typer" : "mob_recon",
-    "quast" : false,
+    "annotate" : true,
+    "mge" : true,
         
     "assembly_flye" : {
         "todo" : 1,
@@ -57,11 +57,10 @@
         "todo" : 1
     },
         
-    "annotation_prokka" : {
+    "annotate_prokka" : {
         "todo" : 1,
         "genes" : "--addgenes",
-        "mode" : "--compliant",
-        "genus" : "--usegenus"
+        "mode" : "--compliant"
     },
      
     "mge_mob_recon" : {

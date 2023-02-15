@@ -349,7 +349,7 @@ process classify_sourmash {
 process amr_typer_amrfinder {
   // Tool: AMRFinder. 
   // AMR genes typing consists in listing AMR genes present in the genome + some other genes of interest like biocide, stress response or virulence genes. 
-  // Behave differently depending on genus and species given by amrfinder.
+  // Behave differently depending on genus and species given by Sourmash.
 
   label 'denovo'
   storeDir params.result
@@ -363,7 +363,7 @@ process amr_typer_amrfinder {
     tuple val(sample), path(final_assembly), path(taxonomy_file)
 
   output:
-    tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
+    tuple val(sample), path("genomes/$sample/$final_assembly"), path("genomes/$sample/sourmash/$taxonomy_file"), emit : final_assembly
     path("genomes/$sample/amrfinder/*")
   
   script:
@@ -395,7 +395,85 @@ process amr_typer_amrfinder {
 
 }
 
+process annotate_prokka {
+  // Tool: prokka. 
+  // Genome annotation consists in locating genes on the genome and giving their function 
 
+  label 'denovo'
+  storeDir params.result
+  debug false
+  tag "Prokka on $sample"  
+
+  when:
+    params.annotate_prokka.todo == 1
+
+  input:
+    tuple val(sample), path(final_assembly), path(taxonomy_file)
+
+  output:
+    tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
+    path("genomes/$sample/prokka/*")
+
+  script:
+  """
+  OUT_DIR=genomes/$sample/prokka
+  mkdir -p -m 777 \${OUT_DIR}
+
+  # Extract genus and species names if available (NEED TO CHANGE COLUMN NUMBER AND ADAPT IT TO SOURMASH OUTPUT)
+  GENUS=\$(cut -d',' -f1 $taxonomy_file | tail -n 1)
+  SPECIES=\$(cut -d',' -f2 $taxonomy_file | tail -n 1)
+  
+  source ~/miniconda3/etc/profile.d/conda.sh
+  conda activate prokka
+  prokka $final_assembly --force ${params.classify_sourmash["genes"]} –-cpus $task.cpus --outdir \${OUT_DIR} ${params.classify_sourmash["mode"]} \
+      --prefix $sample –-usegenus –-genus \$GENUS –-species \$SPECIES &> \${OUT_DIR}/prokka.log
+  conda deactivate
+  """
+
+  stub:
+  """
+  OUT_DIR=genomes/$sample/prokka
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/prokka.gff
+  touch \${OUT_DIR}/prokka.log
+  """  
+}
+
+process mge_mob_recon {
+  // Tool: Mob_recon. 
+  // MGE Analysis consists in finding and annotating plasmids, transposons and other mobile genetic elements encountered in the genome. 
+
+  label 'denovo'
+  storeDir params.result
+  debug false
+  tag "Mob_Recon on $sample" 
+
+  when:
+    params.mge_mob_recon.todo == 1
+
+  input:
+    tuple val(sample), path(final_assembly)
+
+  output:
+    path("genomes/$sample/mob_recon/*")
+
+  script:
+  """
+  OUT_DIR=genomes/$sample/mob_recon
+  mkdir -p -m 777 \${OUT_DIR}
+
+  mob_recon -n task.cpus --force --infile $final_assembly --outdir \${OUT_DIR} 1> \${OUT_DIR}/mob_recon.log 2> \${OUT_DIR}/mob_recon.err
+  """
+
+  stub:
+  """
+  OUT_DIR=genomes/$sample/mob_recon
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/mob_recon.err
+  touch \${OUT_DIR}/mob_recon.log
+  """  
+
+}
 
 
 

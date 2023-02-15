@@ -14,6 +14,9 @@ include {fixstart_circlator} from "${params.nfpath}/modules/module.nf"
 include {mlst_sequence_typing} from "${params.nfpath}/modules/module.nf"
 include {classify_sourmash} from "${params.nfpath}/modules/module.nf"
 include {amr_typer_amrfinder} from "${params.nfpath}/modules/module.nf"
+include {annotate_prokka} from "${params.nfpath}/modules/module.nf"
+include {mge_mob_recon} from "${params.nfpath}/modules/module.nf"
+
 
 
 // workflow script
@@ -78,5 +81,15 @@ workflow bacteria_denovo {
             amr_typer_amrfinder.out.final_assembly.set{ ch_final_assembly }
         }
         
+        //StepH- Genome annotation
+        if ( params.annotate ) {
+            annotate_prokka(ch_final_assembly)
+            annotate_prokka.out.final_assembly.set{ ch_final_assembly }
+        }
+
+        //StepI- MGE Analysis (mobile genetic elements)
+        if ( params.mge ) {
+            mge_mob_recon(ch_final_assembly)
+        }
     
 }

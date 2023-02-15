@@ -7,13 +7,13 @@
     "assembler" : "spades",
     "map" : false,
     "polish" : false,
+    "quast" : true,
     "circularization" : true,
     "mlst" : true, 
     "sourmash" : true,
     "amr_typer" : true,
-    "annotator" : "prokka",
-    "plasmid_typer" : "mob_recon",
-    "quast" : true,
+    "annotate" : true,
+    "mge" : true,
         
     "assembly_flye" : {
         "todo" : 0,
@@ -57,7 +57,7 @@
         "todo" : 1
     },
         
-    "annotation_prokka" : {
+    "annotate_prokka" : {
         "todo" : 1,
         "genes" : "--addgenes",
         "mode" : "--compliant",
