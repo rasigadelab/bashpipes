@@ -11,6 +11,10 @@ include {polish_pilon} from "${params.nfpath}/modules/module.nf"
 include {qc_quast} from "${params.nfpath}/modules/module.nf"
 include {fixstart_circlator} from "${params.nfpath}/modules/module.nf"
 
+include {mlst_sequence_typing} from "${params.nfpath}/modules/module.nf"
+include {classify_sourmash} from "${params.nfpath}/modules/module.nf"
+include {amr_typer_amrfinder} from "${params.nfpath}/modules/module.nf"
+
 
 // workflow script
 workflow bacteria_denovo {
@@ -55,9 +59,24 @@ workflow bacteria_denovo {
             fixstart_circlator(ch_denovo_assembly)
             fixstart_circlator.out.realigned_assembly.set{ ch_final_assembly }
         }
+        
+        //StepE- MLST Sequence Typing
+        if ( params.mlst ) {
+            mlst_sequence_typing(ch_final_assembly)
+            mlst_sequence_typing.out.final_assembly.set{ ch_final_assembly }
+        }
+        
+        //StepF- Taxon classification
+        if ( params.sourmash ) {
+            classify_sourmash(ch_final_assembly)
+            classify_sourmash.out.sample_taxonomy.set{ ch_sample_taxonomy }
+        }
 
-    
-
+        //StepG- AMR genes annotation (+other genes of interest)
+        if ( params.amr_typer ) {
+            amr_typer_amrfinder(ch_final_assembly.join(ch_sample_taxonomy))
+            amr_typer_amrfinder.out.final_assembly.set{ ch_final_assembly }
+        }
         
     
 }

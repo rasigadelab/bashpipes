@@ -8,16 +8,12 @@
     "map" : true,
     "polish" : true,
     "circularization" : true,
-    "mlst" : "mlst", 
-    "taxon_match" : "sourmash",
-    "amr_typer" : "amrfinder",
+    "mlst" : true, 
+    "sourmash" : true,
+    "amr_typer" : true,
     "annotator" : "prokka",
     "plasmid_typer" : "mob_recon",
     "quast" : false,
-    
-    "sourmash_ref" : [
-        "/home/jpr/common_db/sourmash-genbank-k21.json.gz"
-    ],
         
     "assembly_flye" : {
         "todo" : 1,
@@ -46,24 +42,19 @@
         "todo" : 1
     },
     
-    "mlsequence_typing" : {
+    "mlst_sequence_typing" : {
         "todo" : 1
-    },
-    
-    "sketch_sourmash" : {
-        "todo" : 1,
-        "scaled" : "1000",
-        "k" : "21"
     },
         
     "classify_sourmash" : {
         "todo" : 1,
+        "scale" : "1000",
+        "k" : "21",
         "db" : "/home/jpr/common_db/sourmash-genbank-k21.json.gz"
     },
         
-    "AMRgenes_amrfinder" : {
-        "todo" : 1,
-        "mode" : "--nucleotide"
+    "amr_typer_amrfinder" : {
+        "todo" : 1
     },
         
     "annotation_prokka" : {
