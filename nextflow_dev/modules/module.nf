@@ -329,8 +329,8 @@ process classify_sourmash {
   OUT_DIR=genomes/$sample/sourmash
   OUT_SIG_FILE=\${OUT_DIR}/${sample}_realigned.fasta.sig
   mkdir -p -m 777 \${OUT_DIR}
-
-  sourmash sketch dna -p scale=${params.classify_sourmash["scale"]},k=${params.classify_sourmash["k"]} $final_assembly &> \${OUT_DIR}/sourmash.log
+  touch \${OUT_DIR}/sourmash.csv
+  sourmash sketch dna -o \${OUT_SIG_FILE} -p scaled=${params.classify_sourmash["scale"]},k=${params.classify_sourmash["k"]} $final_assembly &> \${OUT_DIR}/sourmash.log
   sourmash lca classify --query \${OUT_SIG_FILE} --db ${params.classify_sourmash["db"]} > \${OUT_DIR}/sourmash.csv 2>> \${OUT_DIR}/sourmash.log
   """
 
@@ -353,7 +353,7 @@ process amr_typer_amrfinder {
 
   label 'denovo'
   storeDir params.result
-  debug false
+  debug true
   tag "AMRFinder on $sample"
 
   when:
@@ -371,13 +371,12 @@ process amr_typer_amrfinder {
   OUT_DIR=genomes/$sample/amrfinder
   mkdir -p -m 777 \${OUT_DIR}
 
-  # Extract genus and species names if available (NEED TO CHANGE COLUMN NUMBER AND ADAPT IT TO SOURMASH OUTPUT)
-  GENUS=\$(cut -d',' -f1 $taxonomy_file | tail -n 1)
-  SPECIES=\$(cut -d',' -f2 $taxonomy_file | tail -n 1)
+  # Extract genus and species names if available
+  GENUS=\$(cut -d',' -f8 $taxonomy_file | tail -n 1)
+  SPECIES=\$(cut -d',' -f9 $taxonomy_file | tail -n 1)
   # Set Organism flag if genus/species are specified
   ORGANISM_FLAG=""
   case "\$GENUS" in
-      "Klebsiella" ) ORGANISM_FLAG="--organism Klebsiella";;
       "Escherichia" ) ORGANISM_FLAG="--organism Escherichia";;
       *) ORGANISM_FLAG=""
   esac
@@ -419,9 +418,9 @@ process annotate_prokka {
   OUT_DIR=genomes/$sample/prokka
   mkdir -p -m 777 \${OUT_DIR}
 
-  # Extract genus and species names if available (NEED TO CHANGE COLUMN NUMBER AND ADAPT IT TO SOURMASH OUTPUT)
-  GENUS=\$(cut -d',' -f1 $taxonomy_file | tail -n 1)
-  SPECIES=\$(cut -d',' -f2 $taxonomy_file | tail -n 1)
+  # Extract genus and species names if available
+  GENUS=\$(cut -d',' -f8 $taxonomy_file | tail -n 1)
+  SPECIES=\$(cut -d',' -f9 $taxonomy_file | tail -n 1)
   
   source ~/miniconda3/etc/profile.d/conda.sh
   conda activate prokka
@@ -462,7 +461,7 @@ process mge_mob_recon {
   OUT_DIR=genomes/$sample/mob_recon
   mkdir -p -m 777 \${OUT_DIR}
 
-  mob_recon -n task.cpus --force --infile $final_assembly --outdir \${OUT_DIR} 1> \${OUT_DIR}/mob_recon.log 2> \${OUT_DIR}/mob_recon.err
+  mob_recon -n $task.cpus --force --infile $final_assembly --outdir \${OUT_DIR} 1> \${OUT_DIR}/mob_recon.log 2> \${OUT_DIR}/mob_recon.err
   """
 
   stub:
