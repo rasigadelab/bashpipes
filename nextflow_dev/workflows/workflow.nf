@@ -16,7 +16,8 @@ include {classify_sourmash} from "${params.nfpath}/modules/module.nf"
 include {amr_typer_amrfinder} from "${params.nfpath}/modules/module.nf"
 include {annotate_prokka} from "${params.nfpath}/modules/module.nf"
 include {mge_mob_recon} from "${params.nfpath}/modules/module.nf"
-
+include {quality_fastqc} from "${params.nfpath}/modules/module.nf"
+include {trim_trimmomatic} from "${params.nfpath}/modules/module.nf"
 
 
 // workflow script
@@ -27,6 +28,17 @@ workflow bacteria_denovo {
 
     main:
        
+       //Step0- Reads quality and fastq trimming
+       if ( params.fastqc ) {
+            quality_fastqc(ch_illumina)
+            quality_fastqc.out.illumina_reads.set{ ch_illumina }
+       }
+
+       if ( params.trimming ) {
+            trim_trimmomatic(ch_illumina)
+            trim_trimmomatic.out.illumina_trimmed.set{ ch_illumina }
+       }
+
         //StepA- De novo assembly
         if ( params.assembler == 'flye' ) {
             assembly_flye(ch_ont)

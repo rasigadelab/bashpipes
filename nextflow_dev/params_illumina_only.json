@@ -1,9 +1,11 @@
 {
     "version" : "",
     
-    "result" : "/home/afischer/Test2",
+    "result" : "/mnt/c/Users/admin/Documents/Pipeline_launch",
     "workflow" : "bacteria_denovo",
     "hybrid_assembly" : false,
+    "fastqc" : true,
+    "trimming" : true,
     "assembler" : "spades",
     "map" : false,
     "polish" : false,
@@ -14,7 +16,31 @@
     "amr_typer" : true,
     "annotate" : true,
     "mge" : true,
-        
+
+    "quality_fastqc" : {
+        "todo" : 1
+    },
+
+    "trim_trimmomatic" : {
+        "todo" : 1,
+        "adapter" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/11.Illumina_pipeline/Trimmomatic-0.39/adapters/NexteraPE-PE.fa",
+        "Trimmomatic" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/11.Illumina_pipeline/Trimmomatic-0.39/dist/jar/trimmomatic-0.39.jar"
+    },
+
+    "trim_cutadapt" : {
+        "todo" : 0,
+        "minimum_length" : 30,
+        "error_rate" : 0,
+        "quality" : 20,
+        "overlap" : 1,
+        "adapter_f" : ["AGATGTGTATAAGAGACAG", "CTGTCTCTTATACACATCT"],
+        "adapter_r" : ["AGATGTGTATAAGAGACAG", "CTGTCTCTTATACACATCT"],
+        "front_f" : ["TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG","GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG","CTGTCTCTTATACACATCTCCGAGCCCACGAGAC","CTGTCTCTTATACACATCTGACGCTGCCGACGA"],
+        "front_r" : ["TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG","GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG","CTGTCTCTTATACACATCTCCGAGCCCACGAGAC","CTGTCTCTTATACACATCTGACGCTGCCGACGA"],
+        "anywhere_f" : [],
+        "anywhere_r" : []
+    },
+
     "assembly_flye" : {
         "todo" : 0,
         "ont_type" : "--nano-raw"

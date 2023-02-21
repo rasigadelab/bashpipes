@@ -1,9 +1,11 @@
 {
     "version" : "",
     
-    "result" : "/home/afischer/Test",
+    "result" : "/home/jpr/Test",
     "workflow" : "bacteria_denovo",
     "hybrid_assembly" : true,
+    "fastqc" : false,
+    "trimming" : false,
     "assembler" : "flye",
     "map" : true,
     "polish" : true,
@@ -14,7 +16,31 @@
     "amr_typer" : true,
     "annotate" : true,
     "mge" : true,
-        
+    
+    "quality_fastqc" : {
+        "todo" : 0
+    },
+
+    "trim_trimmomatic" : {
+        "todo" : 0,
+        "adapter" : "TruSeq3",
+        "Trimmomatic" : ""
+    },
+
+    "trim_cutadapt" : {
+        "todo" : 0,
+        "minimum_length" : 30,
+        "error_rate" : 0,
+        "quality" : 20,
+        "overlap" : 1,
+        "adapter_f" : ["AGATGTGTATAAGAGACAG", "CTGTCTCTTATACACATCT"],
+        "adapter_r" : ["AGATGTGTATAAGAGACAG", "CTGTCTCTTATACACATCT"],
+        "front_f" : ["TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG","GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG","CTGTCTCTTATACACATCTCCGAGCCCACGAGAC","CTGTCTCTTATACACATCTGACGCTGCCGACGA"],
+        "front_r" : ["TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG","GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG","CTGTCTCTTATACACATCTCCGAGCCCACGAGAC","CTGTCTCTTATACACATCTGACGCTGCCGACGA"],
+        "anywhere_f" : [],
+        "anywhere_r" : []
+    },
+
     "assembly_flye" : {
         "todo" : 1,
         "ont_type" : "--nano-raw"

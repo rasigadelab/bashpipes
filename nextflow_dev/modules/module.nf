@@ -1,3 +1,89 @@
+process quality_fastqc {
+  // Tool: fastqc
+  // Quality control on FASTQ reads. 
+
+  label 'fastqc'
+  storeDir (params.result)
+  debug false
+  tag "Fastqc on $sample"
+
+  when:
+    params.quality_fastqc.todo == 1
+
+  input:
+    tuple val(sample), path(R1), path(R2)
+  
+  output:
+    tuple val(sample), path("genomes/$sample/$R1"), path("genomes/$sample/$R2"), emit : illumina_reads
+    path("genomes/$sample/fastqc/*")
+
+  script:
+  """
+  OUT_DIR=genomes/$sample/fastqc
+  mkdir -p -m 777 \${OUT_DIR}
+
+  fastqc $R1 $R2 -o \${OUT_DIR} -t $task.cpus 1> \${OUT_DIR}/fastqc.log 2> \${OUT_DIR}/fastqc.err 
+  
+  """
+
+  stub:
+  """
+  OUT_DIR=genomes/$sample/fastqc
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/fastqc.err
+  touch \${OUT_DIR}/fastqc.log
+  """ 
+
+}
+
+process trim_trimmomatic {
+  // Tool: trimmomatic
+  // Trimming adapters and filtering reads of bad quality
+
+  label 'trimmomatic'
+  storeDir (params.result)
+  debug false
+  tag "Trimmomatic on $sample"  
+
+  when:
+    params.trim_trimmomatic.todo == 1
+
+  input:
+    tuple val(sample), path(R1), path(R2)
+  
+  output:
+    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit : illumina_trimmed
+    path("genomes/$sample/trimmomatic/*")
+
+  script:
+  """
+  OUT_DIR=genomes/$sample/trimmomatic
+  TRIM_R1=\${OUT_DIR}/$sample"_R1_paired.trimmed.fastq.gz"
+  TRIM_R1_unpaired=\${OUT_DIR}/$sample"_R1_unpaired.trimmed.fastq.gz"
+  TRIM_R2=\${OUT_DIR}/$sample"_R2_paired.trimmed.fastq.gz"
+  TRIM_R2_unpaired=\${OUT_DIR}/$sample"_R2_unpaired.trimmed.fastq.gz"
+  PARAMS="ILLUMINACLIP:${params.trim_trimmomatic["adapter"]}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
+  mkdir -p -m 777 \${OUT_DIR}
+
+  java -jar ${params.trim_trimmomatic["Trimmomatic"]} PE -validatePairs -threads $task.cpus $R1 $R2 \$TRIM_R1 \$TRIM_R1_unpaired \$TRIM_R2 \$TRIM_R2_unpaired \$PARAMS \
+    1> \${OUT_DIR}/trimmomatic.log 2> \${OUT_DIR}/trimmomatic.err
+  
+  """
+
+  stub:
+  """
+  OUT_DIR=genomes/$sample/trimmomatic
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/$sample"_R1_paired.trimmed.fastq.gz"
+  touch \${OUT_DIR}/$sample"_R1_unpaired.trimmed.fastq.gz"
+  touch \${OUT_DIR}/$sample"_R2_paired.trimmed.fastq.gz"
+  touch \${OUT_DIR}/$sample"_R2_unpaired.trimmed.fastq.gz"
+  touch \${OUT_DIR}/trimmomatic.err
+  touch \${OUT_DIR}/trimmomatic.log
+  """     
+
+}
+
 process assembly_flye {
 
   // Tool: Flye
@@ -50,7 +136,7 @@ process assembly_spades {
   // Tool: SPAdes. 
   // De novo assembler for Illumina short reads.
 
-  label 'denovo'
+  label 'spades'
   storeDir params.result
   debug false
   tag "SPAdes on $sample"
@@ -59,7 +145,7 @@ process assembly_spades {
     params.assembly_spades.todo == 1
 
   input:
-    tuple val(sample), path(R1), path(R2)
+    tuple val(sample), path(R1), path(R2), path(R1_UNPAIRED), path(R2_UNPAIRED)
   
   output:
     tuple val(sample), path("genomes/$sample/spades/contigs.fasta"), emit : draft_assembly
@@ -68,11 +154,20 @@ process assembly_spades {
     path("genomes/$sample/${sample}_assembly_raw.fasta")
 
   script:
+  memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
   """
   OUT_DIR=genomes/$sample/spades
   mkdir -p -m 777 \${OUT_DIR}
 
-  spades.py -1 $R1 -2 $R2 ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
+  #If unpaired files are empty
+  UNPAIRED_R1_SIZE=\$(wc -c $R1_UNPAIRED | awk '{print \$1}')
+  UNPAIRED_R2_SIZE=\$(wc -c $R2_UNPAIRED | awk '{print \$1}')
+  if [ \${UNPAIRED_R1_SIZE} -le 1000 ] || [ \${UNPAIRED_R2_SIZE} -le 1000 ]; then
+      spades.py -1 $R1 -2 $R2 ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus -m ${memory} 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
+  else
+      spades.py -1 $R1 -2 $R2 --s1 $R1_UNPAIRED --s2 $R2_UNPAIRED ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus -m ${memory} 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
+  fi
+  
   cp \${OUT_DIR}/contigs.fasta genomes/$sample/${sample}_assembly_raw.fasta
 
   echo "Completed SPAdes process for sample $sample"
@@ -232,7 +327,7 @@ process fixstart_circlator {
   // Tool: circlator. 
   // Circularization step consists in re-aligning contig sequences to origin of replication.
 
-  label 'denovo'
+  label 'circlator'
   storeDir params.result
   debug false
   tag "Circlator on $sample"
@@ -353,7 +448,7 @@ process amr_typer_amrfinder {
 
   label 'denovo'
   storeDir params.result
-  debug true
+  debug false
   tag "AMRFinder on $sample"
 
   when:
