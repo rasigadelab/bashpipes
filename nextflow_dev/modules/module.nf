@@ -2,7 +2,7 @@ process quality_fastqc {
   // Tool: fastqc
   // Quality control on FASTQ reads. 
 
-  label 'fastqc'
+  label 'lowCPU'
   storeDir (params.result)
   debug false
   tag "Fastqc on $sample"
@@ -89,7 +89,7 @@ process assembly_flye {
   // Tool: Flye
   // De novo assembler for Oxford Nanopore long reads. 
 
-  label 'denovo'
+  label 'flye'
   storeDir (params.result)
   debug false
   tag "FLYE on $ont_reads.simpleName"
@@ -192,7 +192,7 @@ process map_bowtie2 {
   // Then alignments are sorted and indexed.
   // Outputs a BAM and a BAI file per sample.
 
-  label 'denovo'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "Mapping on $sample"
@@ -210,16 +210,17 @@ process map_bowtie2 {
 
 
   script:
+  memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
   """
   OUT_DIR=genomes/$sample/polish
   SAMPLE_BAM=\${OUT_DIR}/${sample}.bam
   SAMPLE_BAM_SORTED=\${OUT_DIR}/${sample}.sorted.bam
   mkdir -p -m 777 \${OUT_DIR}
 
-  bowtie2-build $draft_assembly \${OUT_DIR}/index &> \${OUT_DIR}/bowtie2.index.log
+  bowtie2-build $draft_assembly \${OUT_DIR}/index --threads $task.cpus &> \${OUT_DIR}/bowtie2.index.log
   bowtie2 -x \${OUT_DIR}/index -1 $R1 -2 $R2 -p $task.cpus 2>> \${OUT_DIR}/bowtie2.map.log | samtools view -bS - > \${SAMPLE_BAM}
-  samtools sort \${SAMPLE_BAM} -o \${SAMPLE_BAM_SORTED} 2>> \${OUT_DIR}/samtools.sort.log
-  samtools index \${SAMPLE_BAM_SORTED} 2>> \${OUT_DIR}/samtools.index.log
+  samtools sort \${SAMPLE_BAM} -o \${SAMPLE_BAM_SORTED} -@ $task.cpus -m ${memory}G 2>> \${OUT_DIR}/samtools.sort.log
+  samtools index \${SAMPLE_BAM_SORTED} -@ $task.cpus 2>> \${OUT_DIR}/samtools.index.log
   """
 
   stub:
@@ -244,7 +245,7 @@ process polish_pilon {
   // Tool: pilon. 
   // Polishing step consists in correcting errors in draft assembly with Illumina reads alignment.
 
-  label 'denovo'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "Polishing of $sample"
@@ -291,7 +292,7 @@ process qc_quast {
   // Tool: quast. 
   // Assembly QC step consists in checking quality of de novo Illumina assembly.
 
-  label 'denovo'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "Quast QC on $sample"
@@ -327,7 +328,7 @@ process fixstart_circlator {
   // Tool: circlator. 
   // Circularization step consists in re-aligning contig sequences to origin of replication.
 
-  label 'circlator'
+  label 'lowCPU'
   storeDir params.result
   debug false
   tag "Circlator on $sample"
@@ -366,7 +367,7 @@ process mlst_sequence_typing {
   // Tool: mlst. 
   // Sequence typing consists in writing ST annotation for each isolate by checking the allele version of 7 house-keeping genes.
 
-  label 'denovo'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "MLST on $sample"
@@ -386,7 +387,7 @@ process mlst_sequence_typing {
   OUT_DIR=genomes/$sample/mlst
   mkdir -p -m 777 \${OUT_DIR}
 
-  mlst $final_assembly > \${OUT_DIR}/mlst.tsv 2>> \${OUT_DIR}/mlst.log
+  mlst $final_assembly --threads $task.cpus > \${OUT_DIR}/mlst.tsv 2>> \${OUT_DIR}/mlst.log
   """
 
   stub:
@@ -404,7 +405,7 @@ process classify_sourmash {
   // Taxon classification consists in describing right taxonomy for each isolate. 
   // Outputs specifically genus and species in this pipeline.
 
-  label 'denovo'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "Sourmash on $sample"
@@ -446,7 +447,7 @@ process amr_typer_amrfinder {
   // AMR genes typing consists in listing AMR genes present in the genome + some other genes of interest like biocide, stress response or virulence genes. 
   // Behave differently depending on genus and species given by Sourmash.
 
-  label 'denovo'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "AMRFinder on $sample"
@@ -493,7 +494,7 @@ process annotate_prokka {
   // Tool: prokka. 
   // Genome annotation consists in locating genes on the genome and giving their function 
 
-  label 'denovo'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "Prokka on $sample"  
@@ -537,7 +538,7 @@ process mge_mob_recon {
   // Tool: Mob_recon. 
   // MGE Analysis consists in finding and annotating plasmids, transposons and other mobile genetic elements encountered in the genome. 
 
-  label 'denovo'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "Mob_Recon on $sample" 
