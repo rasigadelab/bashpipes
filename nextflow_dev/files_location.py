@@ -9,6 +9,13 @@ import argparse
 # python3 files_location.py -d path/to/data/folder
 
 ## FUNCTIONS ##
+def remove_spaces(filename):
+    # Example case: "Sample_S18_R2.fastq (2).gz"
+    # Change filename to differentiate it from the other file with same name
+    file_prefix = filename.split('.')[0]+"_2"
+    filename = '.'.join([file_prefix,"fastq.gz"])
+    return filename
+
 def write_ONT_reads(subrepo, abs_path_dir, output_file):
     sample_type = "ONT"
     sample = subrepo
@@ -19,6 +26,12 @@ def write_ONT_reads(subrepo, abs_path_dir, output_file):
 
 def write_Illumina_reads(subrepo, abs_path_dir, output_file):
     full_path = os.path.join(abs_path_dir,subrepo)
+    # Remove whitespaces in filename
+    if " " in subrepo:
+        subrepo = remove_spaces(subrepo)
+        new_path = os.path.join(abs_path_dir,subrepo)
+        os.rename(full_path, new_path)
+        full_path = new_path
     # Get characters before first underscore to get sample name
     sample = subrepo.split('_')[0]
     # Remove 'bis' after sample name
