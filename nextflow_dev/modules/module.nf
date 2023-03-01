@@ -2,7 +2,7 @@ process quality_fastqc {
   // Tool: fastqc
   // Quality control on FASTQ reads. 
 
-  label 'lowCPU'
+  label 'highCPU'
   storeDir (params.result)
   debug false
   tag "Fastqc on $sample"
@@ -40,7 +40,7 @@ process trim_trimmomatic {
   // Tool: trimmomatic
   // Trimming adapters and filtering reads of bad quality
 
-  label 'trimmomatic'
+  label 'highCPU'
   storeDir (params.result)
   debug false
   tag "Trimmomatic on $sample"  
@@ -89,7 +89,7 @@ process assembly_flye {
   // Tool: Flye
   // De novo assembler for Oxford Nanopore long reads. 
 
-  label 'flye'
+  label 'highCPU'
   storeDir (params.result)
   debug false
   tag "FLYE on $ont_reads.simpleName"
@@ -136,7 +136,7 @@ process assembly_spades {
   // Tool: SPAdes. 
   // De novo assembler for Illumina short reads.
 
-  label 'spades'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "SPAdes on $sample"
@@ -201,7 +201,7 @@ process map_bowtie2 {
     params.map_bowtie2.todo == 1
 
   input:
-    tuple val(sample), path(draft_assembly), path(R1), path(R2)
+    tuple val(sample), path(draft_assembly), path(R1), path(R2), path(R1_UNPAIRED), path(R2_UNPAIRED)
 
   output:
     tuple val(sample), path("genomes/$sample/polish/${sample}.sorted.bam"), emit : sorted_bam_files
@@ -218,7 +218,16 @@ process map_bowtie2 {
   mkdir -p -m 777 \${OUT_DIR}
 
   bowtie2-build $draft_assembly \${OUT_DIR}/index --threads $task.cpus &> \${OUT_DIR}/bowtie2.index.log
-  bowtie2 -x \${OUT_DIR}/index -1 $R1 -2 $R2 -p $task.cpus 2>> \${OUT_DIR}/bowtie2.map.log | samtools view -bS - > \${SAMPLE_BAM}
+
+  #If unpaired files are empty
+  UNPAIRED_R1_SIZE=\$(wc -c $R1_UNPAIRED | awk '{print \$1}')
+  UNPAIRED_R2_SIZE=\$(wc -c $R2_UNPAIRED | awk '{print \$1}')
+  if [ \${UNPAIRED_R1_SIZE} -le 1000 ] || [ \${UNPAIRED_R2_SIZE} -le 1000 ]; then
+      bowtie2 -x \${OUT_DIR}/index -1 $R1 -2 $R2 -p $task.cpus 2>> \${OUT_DIR}/bowtie2.map.log | samtools view -bS - > \${SAMPLE_BAM}
+  else
+      bowtie2 -x \${OUT_DIR}/index -1 $R1 -2 $R2 -U $R1_unpaired,$R2_unpaired -p $task.cpus 2>> \${OUT_DIR}/bowtie2.map.log | samtools view -bS - > \${SAMPLE_BAM}
+  fi
+  
   samtools sort \${SAMPLE_BAM} -o \${SAMPLE_BAM_SORTED} -@ $task.cpus -m ${memory}G 2>> \${OUT_DIR}/samtools.sort.log
   samtools index \${SAMPLE_BAM_SORTED} -@ $task.cpus 2>> \${OUT_DIR}/samtools.index.log
   """
@@ -328,7 +337,7 @@ process fixstart_circlator {
   // Tool: circlator. 
   // Circularization step consists in re-aligning contig sequences to origin of replication.
 
-  label 'lowCPU'
+  label 'highCPU'
   storeDir params.result
   debug false
   tag "Circlator on $sample"
