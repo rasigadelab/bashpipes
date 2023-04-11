@@ -2,7 +2,7 @@ process quality_fastqc {
   // Tool: fastqc
   // Quality control on FASTQ reads. 
 
-  label 'highCPU'
+  label 'lowCPU'
   storeDir (params.result)
   debug false
   tag "Fastqc on $sample"
@@ -40,7 +40,7 @@ process trim_trimmomatic {
   // Tool: trimmomatic
   // Trimming adapters and filtering reads of bad quality
 
-  label 'highCPU'
+  label 'trimmomatic'
   storeDir (params.result)
   debug false
   tag "Trimmomatic on $sample"  
@@ -89,7 +89,7 @@ process assembly_flye {
   // Tool: Flye
   // De novo assembler for Oxford Nanopore long reads. 
 
-  label 'highCPU'
+  label 'flye'
   storeDir (params.result)
   debug false
   tag "FLYE on $ont_reads.simpleName"
@@ -136,7 +136,7 @@ process assembly_spades {
   // Tool: SPAdes. 
   // De novo assembler for Illumina short reads.
 
-  label 'highCPU'
+  label 'spades'
   storeDir params.result
   debug false
   tag "SPAdes on $sample"
@@ -146,6 +146,7 @@ process assembly_spades {
 
   input:
     tuple val(sample), path(R1), path(R2), path(R1_UNPAIRED), path(R2_UNPAIRED)
+  //  tuple val(sample), path(R1), path(R2)
   
   output:
     tuple val(sample), path("genomes/$sample/spades/contigs.fasta"), emit : draft_assembly
@@ -167,11 +168,21 @@ process assembly_spades {
   else
       spades.py -1 $R1 -2 $R2 --s1 $R1_UNPAIRED --s2 $R2_UNPAIRED ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus -m ${memory} 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
   fi
-  
+
   cp \${OUT_DIR}/contigs.fasta genomes/$sample/${sample}_assembly_raw.fasta
 
   echo "Completed SPAdes process for sample $sample"
   """
+  /*
+  If unpaired files are empty
+  UNPAIRED_R1_SIZE=\$(wc -c $R1_UNPAIRED | awk '{print \$1}')
+  UNPAIRED_R2_SIZE=\$(wc -c $R2_UNPAIRED | awk '{print \$1}')
+  if [ \${UNPAIRED_R1_SIZE} -le 1000 ] || [ \${UNPAIRED_R2_SIZE} -le 1000 ]; then
+      spades.py -1 $R1 -2 $R2 ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus -m ${memory} 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
+  else
+      spades.py -1 $R1 -2 $R2 --s1 $R1_UNPAIRED --s2 $R2_UNPAIRED ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus -m ${memory} 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
+  fi
+  */
 
   stub:
   """
@@ -192,7 +203,7 @@ process map_bowtie2 {
   // Then alignments are sorted and indexed.
   // Outputs a BAM and a BAI file per sample.
 
-  label 'highCPU'
+  label 'map_and_sort'
   storeDir params.result
   debug false
   tag "Mapping on $sample"
@@ -217,16 +228,8 @@ process map_bowtie2 {
   SAMPLE_BAM_SORTED=\${OUT_DIR}/${sample}.sorted.bam
   mkdir -p -m 777 \${OUT_DIR}
 
-  bowtie2-build $draft_assembly \${OUT_DIR}/index --threads $task.cpus &> \${OUT_DIR}/bowtie2.index.log
-
-  #If unpaired files are empty
-  UNPAIRED_R1_SIZE=\$(wc -c $R1_UNPAIRED | awk '{print \$1}')
-  UNPAIRED_R2_SIZE=\$(wc -c $R2_UNPAIRED | awk '{print \$1}')
-  if [ \${UNPAIRED_R1_SIZE} -le 1000 ] || [ \${UNPAIRED_R2_SIZE} -le 1000 ]; then
-      bowtie2 -x \${OUT_DIR}/index -1 $R1 -2 $R2 -p $task.cpus 2>> \${OUT_DIR}/bowtie2.map.log | samtools view -bS - > \${SAMPLE_BAM}
-  else
-      bowtie2 -x \${OUT_DIR}/index -1 $R1 -2 $R2 -U $R1_unpaired,$R2_unpaired -p $task.cpus 2>> \${OUT_DIR}/bowtie2.map.log | samtools view -bS - > \${SAMPLE_BAM}
-  fi
+  bowtie2-build $draft_assembly \${OUT_DIR}/index &> \${OUT_DIR}/bowtie2.index.log
+  bowtie2 -x \${OUT_DIR}/index -1 $R1 -2 $R2 -p $task.cpus 2>> \${OUT_DIR}/bowtie2.map.log | samtools view -bS > \${SAMPLE_BAM}
   
   samtools sort \${SAMPLE_BAM} -o \${SAMPLE_BAM_SORTED} -@ $task.cpus -m ${memory}G 2>> \${OUT_DIR}/samtools.sort.log
   samtools index \${SAMPLE_BAM_SORTED} -@ $task.cpus 2>> \${OUT_DIR}/samtools.index.log
@@ -269,6 +272,7 @@ process polish_pilon {
     tuple val(sample), path("genomes/$sample/polish/${sample}_polished.fasta"), emit : polished_assembly
     path("genomes/$sample/polish/pilon.log")
     path("genomes/$sample/${sample}_polished.fasta")
+    path("genomes/$sample/${sample}_polished.changes")
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -337,7 +341,7 @@ process fixstart_circlator {
   // Tool: circlator. 
   // Circularization step consists in re-aligning contig sequences to origin of replication.
 
-  label 'highCPU'
+  label 'lowCPU'
   storeDir params.result
   debug false
   tag "Circlator on $sample"
@@ -503,7 +507,7 @@ process annotate_prokka {
   // Tool: prokka. 
   // Genome annotation consists in locating genes on the genome and giving their function 
 
-  label 'highCPU'
+  label 'prokka'
   storeDir params.result
   debug false
   tag "Prokka on $sample"  
@@ -549,7 +553,7 @@ process mge_mob_recon {
 
   label 'highCPU'
   storeDir params.result
-  debug false
+  debug true
   tag "Mob_Recon on $sample" 
 
   when:
@@ -565,8 +569,11 @@ process mge_mob_recon {
   """
   OUT_DIR=genomes/$sample/mob_recon
   mkdir -p -m 777 \${OUT_DIR}
-
+  
+  source ~/miniconda3/etc/profile.d/conda.sh
+  conda activate mob_suite2
   mob_recon -n $task.cpus --force --infile $final_assembly --outdir \${OUT_DIR} 1> \${OUT_DIR}/mob_recon.log 2> \${OUT_DIR}/mob_recon.err
+  conda deactivate
   """
 
   stub:

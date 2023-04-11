@@ -43,6 +43,7 @@ def write_Illumina_reads(subrepo, abs_path_dir, output_file):
     sample_type = subrepo.split('_')[-1].split('.')[0]
     if sample_type != "R1" and sample_type != "R2":
         sample_type = subrepo.split('_')[-2]
+    sample = sample.replace("Epitrack", "Epi")
     output_file.write(full_path+"\t"+sample+"\t"+sample_type+"\n")
     return sample
 
@@ -57,7 +58,6 @@ def search_reads(dir_path, method, output_file):
                 sample = write_ONT_reads(subrepo, abs_path_dir, output_file)
             elif method == "Illumina":
                 sample = write_Illumina_reads(subrepo, abs_path_dir, output_file)
-            
             if sample not in samples_list:
                 samples_list.append(sample)
     return samples_list

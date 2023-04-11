@@ -1,11 +1,11 @@
 {
     "version" : "",
     
-    "result" : "/home/jpr/Test",
+    "result" : "/mnt/c/Users/admin/Documents/Pipeline_launch",
     "workflow" : "bacteria_denovo",
     "hybrid_assembly" : true,
-    "fastqc" : false,
-    "trimming" : false,
+    "fastqc" : true,
+    "trimming" : true,
     "assembler" : "flye",
     "map" : true,
     "polish" : true,
@@ -18,13 +18,13 @@
     "mge" : true,
     
     "quality_fastqc" : {
-        "todo" : 0
+        "todo" : 1
     },
 
     "trim_trimmomatic" : {
-        "todo" : 0,
-        "adapter" : "TruSeq3",
-        "Trimmomatic" : ""
+        "todo" : 1,
+        "adapter" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/11.Illumina_pipeline/Trimmomatic-0.39/adapters/NexteraPE-PE.fa",
+        "Trimmomatic" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/11.Illumina_pipeline/Trimmomatic-0.39/dist/jar/trimmomatic-0.39.jar"
     },
 
     "trim_cutadapt" : {
