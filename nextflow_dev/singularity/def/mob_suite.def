@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: continuumio/miniconda3:latest
+Stage: condabuild
+
+%files
+mob_suite.yml /mob_suite.yml
+
+%post
+/opt/conda/bin/conda install mamba -c conda-forge
+/opt/conda/bin/mamba env create -f /mob_suite.yml
+conda list -n mob_suite | grep -v "^#" | awk '{print "  - "$1"="$2}'
+. activate mob_suite
+conda deactivate
+
+Bootstrap: docker
+From: debian:buster-slim
+Stage: final
+
+%files from condabuild
+/opt/conda/envs/mob_suite /opt/conda/envs/mob_suite
+
+%environment
+export PATH=/opt/conda/envs/mob_suite/bin:$PATH
+export JAVA_HOME=/opt/conda/envs/mob_suite
+
+%post
+mob_init
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2022-03-15
