@@ -1,0 +1,21 @@
+Bootstrap: docker
+From: continuumio/miniconda3:latest
+
+%files
+bacto_denovo.yml /bacto_denovo.yml
+
+%post
+/opt/conda/bin/conda install mamba -c conda-forge
+/opt/conda/bin/mamba env create -f /bacto_denovo.yml
+conda list -n bacto_denovo | grep -v "^#" | awk '{print "  - "$1"="$2}'
+. activate bacto_denovo
+conda deactivate
+
+%environment
+export PATH=/opt/conda/envs/bacto_denovo/bin:$PATH
+export JAVA_HOME=/opt/conda/envs/bacto_denovo
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2022-03-15
