@@ -272,7 +272,7 @@ process polish_pilon {
     tuple val(sample), path("genomes/$sample/polish/${sample}_polished.fasta"), emit : polished_assembly
     path("genomes/$sample/polish/pilon.log")
     path("genomes/$sample/${sample}_polished.fasta")
-    path("genomes/$sample/${sample}_polished.changes")
+    path("genomes/$sample/polish/${sample}_polished.changes")
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
