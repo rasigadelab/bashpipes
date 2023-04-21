@@ -5,8 +5,7 @@ From: continuumio/miniconda3:latest
 bacto_denovo.yml /bacto_denovo.yml
 
 %post
-/opt/conda/bin/conda install mamba -c conda-forge
-/opt/conda/bin/mamba env create -f /bacto_denovo.yml
+/opt/conda/bin/conda env create -f /bacto_denovo.yml
 conda list -n bacto_denovo | grep -v "^#" | awk '{print "  - "$1"="$2}'
 . activate bacto_denovo
 conda deactivate

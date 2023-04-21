@@ -1,13 +1,12 @@
 Bootstrap: docker
-From: continuumio/miniconda3:latest
+From: continuumio/miniconda3
 Stage: condabuild
 
 %files
 mob_suite.yml /mob_suite.yml
 
 %post
-/opt/conda/bin/conda install mamba -c conda-forge
-/opt/conda/bin/mamba env create -f /mob_suite.yml
+/opt/conda/bin/conda env create -f /mob_suite.yml
 conda list -n mob_suite | grep -v "^#" | awk '{print "  - "$1"="$2}'
 . activate mob_suite
 conda deactivate

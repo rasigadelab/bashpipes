@@ -1,12 +1,11 @@
 Bootstrap: docker
-From: continuumio/miniconda3:latest
+From: continuumio/miniconda3
 
 %files
-panaroo.yml /panaroo.yml
+panaroo.yml
 
 %post
-/opt/conda/bin/conda install mamba -c conda-forge
-/opt/conda/bin/mamba env create -f /panaroo.yml
+/opt/conda/bin/conda env create -f panaroo.yml
 conda list -n panaroo | grep -v "^#" | awk '{print "  - "$1"="$2}'
 . activate panaroo
 conda deactivate
