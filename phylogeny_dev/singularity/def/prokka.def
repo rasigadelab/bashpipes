@@ -1,0 +1,20 @@
+Bootstrap: docker
+From: continuumio/miniconda3
+
+%files
+prokka.yml /prokka.yml
+
+%post
+/opt/conda/bin/conda env create -f /prokka.yml
+conda list -n prokka | grep -v "^#" | awk '{print "  - "$1"="$2}'
+. activate prokka
+conda deactivate
+
+%environment
+export PATH=/opt/conda/envs/prokka/bin:$PATH
+export JAVA_HOME=/opt/conda/envs/prokka
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2022-03-15

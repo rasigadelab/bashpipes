@@ -1,0 +1,26 @@
+{
+    "version" : "",
+    
+    "result" : "/home/afischer/11.Phylogeny_test",
+    "workflow" : "bacteria_phylogeny",
+    "hybrid_assembly" : false,
+    "fastqc" : true,
+    "trimming" : true,
+    "assembler" : "spades",
+    "map" : false,
+    "polish" : false,
+    "quast" : true,
+    "circularization" : true,
+    "mlst" : true, 
+    "sourmash" : true,
+    "amr_typer" : true,
+    "annotate" : true,
+    "mge" : true,
+        
+    "annotate_prokka" : {
+        "todo" : 1,
+        "genes" : "--addgenes",
+        "mode" : "--compliant"
+    }
+    
+}
