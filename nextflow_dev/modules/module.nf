@@ -533,7 +533,7 @@ process annotate_prokka {
   
   source ~/miniconda3/etc/profile.d/conda.sh
   conda activate prokka
-  prokka $final_assembly --force ${params.classify_sourmash["genes"]} –-cpus $task.cpus --outdir \${OUT_DIR} ${params.classify_sourmash["mode"]} \
+  prokka $final_assembly --force ${params.annotate_prokka["genes"]} –-cpus $task.cpus --outdir \${OUT_DIR} ${params.annotate_prokka["mode"]} \
       --prefix $sample –-usegenus –-genus \$GENUS –-species \$SPECIES &> \${OUT_DIR}/prokka.log
   conda deactivate
   """
