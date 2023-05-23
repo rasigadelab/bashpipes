@@ -3,24 +3,36 @@
     
     "result" : "/home/afischer/11.Phylogeny_test",
     "workflow" : "bacteria_phylogeny",
-    "hybrid_assembly" : false,
-    "fastqc" : true,
-    "trimming" : true,
-    "assembler" : "spades",
-    "map" : false,
-    "polish" : false,
-    "quast" : true,
-    "circularization" : true,
-    "mlst" : true, 
-    "sourmash" : true,
-    "amr_typer" : true,
     "annotate" : true,
-    "mge" : true,
+    "panaroo" : true,
+    "iqtree_fast" : true,
+    "snippy": true,
         
     "annotate_prokka" : {
         "todo" : 1,
         "genes" : "--addgenes",
         "mode" : "--compliant"
+    },
+
+    "pan_genome_panaroo" : {
+        "todo" : 1,
+        "clean_mode" : "strict",
+        "gene_alignment" : "core",
+        "core_threshold" : 1
+    },
+    
+    "core_tree_iqtree" : {
+        "todo" : 1,
+        "model" : "HKY"
+    },
+
+    "make_core_genome_ref" : {
+        "todo" : 1
+    },
+    
+    "core_snps_snippy" : {
+        "todo" : 1
     }
+
     
 }
