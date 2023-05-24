@@ -7,6 +7,7 @@
     "panaroo" : true,
     "iqtree_fast" : true,
     "snippy": true,
+    "iqtree_snps": true,
         
     "annotate_prokka" : {
         "todo" : 1,
@@ -31,6 +32,10 @@
     },
     
     "core_snps_snippy" : {
+        "todo" : 1
+    },
+
+    "snps_tree_iqtree" : {
         "todo" : 1
     }
 
