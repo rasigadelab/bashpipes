@@ -20,7 +20,7 @@ def main(project_dir, output_dir):
     sample = "" #name of sample
     replicon = "" #name of replicons
     #Step3- Searching assemblies in genomes folder
-    replicons_list = []
+    replicons_list = {}
     dir_genomes = os.path.join(project_dir, "genomes")
     for sample_repo in os.listdir(dir_genomes):
         sample = sample_repo
@@ -29,7 +29,14 @@ def main(project_dir, output_dir):
             if ".fasta" in out_file:
                 fasta_file = os.path.join(mob_recon_dir, out_file)
                 replicon = out_file.strip('.fasta')
-                output_file.write(fasta_file+"\t"+sample+"\t"+replicon+"\n")
+                if replicon not in replicons_list.keys():
+                    replicons_list[replicon] = []
+                replicons_list[replicon].append((sample, fasta_file))
+    #Step4- Only writing replicons with at least 2 samples
+    for rep in replicons_list:
+        if len(replicons_list[rep]) >= 2:
+            for sample_item in replicons_list[rep]:
+                output_file.write(sample_item[1]+"\t"+sample_item[0]+"\t"+rep+"\n")
     output_file.close()
 
 if __name__ == '__main__':
