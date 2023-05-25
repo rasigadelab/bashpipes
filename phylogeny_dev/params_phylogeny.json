@@ -8,6 +8,7 @@
     "iqtree_fast" : true,
     "snippy": true,
     "iqtree_snps": true,
+    "clonalframeml": true,
         
     "annotate_prokka" : {
         "todo" : 1,
@@ -36,8 +37,17 @@
     },
 
     "snps_tree_iqtree" : {
+        "todo" : 1,
+        "model" : "GTR+ASC"
+    },
+
+    "full_tree_iqtree" : {
+        "todo" : 1,
+        "model" : "HKY"
+    },
+
+    "rec_removal_clonalframeml" : {
         "todo" : 1
     }
-
     
 }

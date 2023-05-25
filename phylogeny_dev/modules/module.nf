@@ -201,7 +201,7 @@ process core_snps_snippy {
   mkdir -p -m 777 \${OUT_DIR}
 
   snippy-multi $input_tab --ref $core_genome_fasta --cpus $task.cpus > \${OUT_DIR}/snippy_commands.sh
-  sh \${OUT_DIR}/snippy_commands.sh 
+  sh \${OUT_DIR}/snippy_commands.sh 1> \${OUT_DIR}/snippy.log 2> \${OUT_DIR}/snippy.err
   """
 
   stub:
@@ -222,10 +222,122 @@ process core_snps_snippy {
 
 }
 
+process snps_tree_iqtree {
+  // Tool: iqtree. 
+  // Tree construction of a specific replicon based on its core snps.
 
+  label 'highCPU'
+  storeDir params.result
+  debug false
+  tag "Iqtree on $replicon"  
 
+  when:
+    params.snps_tree_iqtree.todo == 1
+  
+  input:
+    tuple val(replicon), path(core_snps_aln)
+    val(out_prefix)
 
+  output:
+    tuple val(replicon), path("phylogeny/$replicon/$out_prefix/${replicon}.treefile"), emit : treefiles
+    path("phylogeny/$replicon/$out_prefix/iqtree.err")
+    path("phylogeny/$replicon/$out_prefix/iqtree.log")
 
+  script:
+  """
+  OUT_DIR=phylogeny/$replicon/$out_prefix
+  mkdir -p -m 777 \${OUT_DIR}
+  
+  iqtree -s $core_snps_aln -m ${params.snps_tree_iqtree["model"]} --prefix $replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
+  """
+
+  stub:
+  """
+  OUT_DIR=phylogeny/$replicon/$out_prefix
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/${replicon}.treefile
+  touch \${OUT_DIR}/iqtree.err
+  touch \${OUT_DIR}/iqtree.log
+  """  
+}
+
+process full_tree_iqtree {
+  // Tool: iqtree. 
+  // Tree construction of a specific replicon based on its core snps.
+
+  label 'highCPU'
+  storeDir params.result
+  debug false
+  tag "Iqtree on $replicon"  
+
+  when:
+    params.full_tree_iqtree.todo == 1
+  
+  input:
+    tuple val(replicon), path(core_full_aln)
+    val(out_prefix)
+
+  output:
+    tuple val(replicon), path("phylogeny/$replicon/$out_prefix/${replicon}.treefile")
+    path("phylogeny/$replicon/$out_prefix/iqtree.err")
+    path("phylogeny/$replicon/$out_prefix/iqtree.log")
+
+  script:
+  """
+  OUT_DIR=phylogeny/$replicon/$out_prefix
+  mkdir -p -m 777 \${OUT_DIR}
+  
+  iqtree -s $core_full_aln -m ${params.full_tree_iqtree["model"]} --prefix $replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
+  """
+
+  stub:
+  """
+  OUT_DIR=phylogeny/$replicon/$out_prefix
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/${replicon}.treefile
+  touch \${OUT_DIR}/iqtree.err
+  touch \${OUT_DIR}/iqtree.log
+  """  
+}
+
+process rec_removal_clonalframeml {
+  // Tool: ClonalFrameML. 
+  // Recombination correction on core SNPs tree.
+
+  label 'highCPU'
+  storeDir params.result
+  debug false
+  tag "ClonalFrameML on $replicon"  
+
+  when:
+    params.rec_removal_clonalframeml.todo == 1
+  
+  input:
+    tuple val(replicon), path(core_snps_aln), path(treefile)
+
+  output:
+    tuple val(replicon), path("phylogeny/$replicon/clonalframeml/${replicon}.labelled_tree.newick")
+    path("phylogeny/$replicon/clonalframeml/clonalframeml.err")
+    path("phylogeny/$replicon/clonalframeml/clonalframeml.log")
+
+  script:
+  """
+  OUT_DIR=phylogeny/$replicon/clonalframeml
+  mkdir -p -m 777 \${OUT_DIR}
+  
+  ClonalFrameML $treefile $core_snps_aln \${OUT_DIR}/$replicon 1> \${OUT_DIR}/clonalframeml.log 2> \${OUT_DIR}/clonalframeml.err
+  """
+
+  stub:
+  """
+  OUT_DIR=phylogeny/$replicon/clonalframeml
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/${replicon}.labelled_tree.newick
+  touch \${OUT_DIR}/clonalframeml.err
+  touch \${OUT_DIR}/clonalframeml.log
+  """  
+
+}
 
 
 

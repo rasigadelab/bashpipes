@@ -9,7 +9,9 @@ include {pan_genome_panaroo} from "${params.nfpath}/modules/module.nf"
 include {core_tree_iqtree} from "${params.nfpath}/modules/module.nf"
 include {create_input_tab} from "${params.nfpath}/modules/module.nf"
 include {core_snps_snippy} from "${params.nfpath}/modules/module.nf" 
-
+include {snps_tree_iqtree} from "${params.nfpath}/modules/module.nf" 
+include {full_tree_iqtree} from "${params.nfpath}/modules/module.nf" 
+include {rec_removal_clonalframeml} from "${params.nfpath}/modules/module.nf"
 
 // workflow script
 workflow bacteria_phylogeny {
@@ -50,8 +52,16 @@ workflow bacteria_phylogeny {
 
         //Step4- Core Tree construction on SNPS
         if ( params.iqtree_snps ) {
-          //core_tree_iqtree(ch_core_full, "iqtree_after_snippy_full")
-          //snps_tree_iqtree(ch_core_aln, "iqtree_after_snippy_snps")
+          snps_tree_iqtree(ch_core_aln, "iqtree_after_snippy_snps")
+          snps_tree_iqtree.out.treefiles.set{ ch_treefiles }
+          full_tree_iqtree(ch_core_full, "iqtree_after_snippy_full")
+        }
+
+          ch_core_snps.join(ch_treefiles).set{ ch_core_snps }
+          
+        //Step5- Recombination correction on core tree
+        if ( params.clonalframeml ) {
+          rec_removal_clonalframeml(ch_core_snps)
         }
 
 
