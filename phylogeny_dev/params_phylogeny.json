@@ -1,7 +1,7 @@
 {
     "version" : "",
     
-    "result" : "/home/afischer/11.Phylogeny_test",
+    "result" : "/mnt/c/Users/admin/Documents/Phylogeny_launch",
     "workflow" : "bacteria_phylogeny",
     "annotate" : true,
     "panaroo" : true,

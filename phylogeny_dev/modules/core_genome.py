@@ -5,7 +5,7 @@ import os
 def main(panaroo_dir, output_dir):
     core_genes = open(os.path.join(panaroo_dir,"core_alignment_filtered_header.embl"), "r")
     pan_genome = os.path.join(panaroo_dir, "pan_genome_reference.fa")
-    out_core_genome = open(os.path.join(output_dir, "core_genome_reference.fa"), "w")
+    out_core_genome = open(os.path.join(output_dir,"core_genome_reference.fa"), "w")
     #Step1- Get all core genes labels in a list
     core_labels = []
     for line in core_genes:

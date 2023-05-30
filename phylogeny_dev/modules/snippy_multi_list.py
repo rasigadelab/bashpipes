@@ -13,9 +13,10 @@ def main(work_dir, samples_list, out_dir):
     #Step 2- Write input.tab file in output dir [Sample \t R1_path \t R2_path]
     out_file = open(os.path.join(out_dir, "input.tab"), "w")
     for sample in samples_list:
+        sample_dir = os.path.join(out_dir, sample)
         R1 = os.path.join(genomes_dir, sample, sample+"_R1.fastq.gz")
         R2 = os.path.join(genomes_dir, sample, sample+"_R2.fastq.gz")
-        out_file.write(sample+"\t"+R1+"\t"+R2+"\n")
+        out_file.write(sample_dir+"\t"+R1+"\t"+R2+"\n")    
     out_file.close()
 
 if __name__ == '__main__':

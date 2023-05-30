@@ -2,7 +2,7 @@ process annotate_prokka {
   // Tool: prokka. 
   // Genome annotation consists in locating genes on the genome and giving their function 
 
-  label 'lowCPU'
+  label 'prokka'
   storeDir params.result
   debug false
   tag "Prokka on $sample"  
@@ -57,7 +57,7 @@ process pan_genome_panaroo {
 
   output:
     tuple val(replicon), path("phylogeny/$replicon/panaroo/core_gene_alignment_filtered.aln"), emit : core_genome_aln
-    tuple val(replicon), path("phylogeny/$replicon/panaroo/core_genome_reference.fa"), emit : core_genome_ref
+    tuple val(replicon), val(samples), path("phylogeny/$replicon/panaroo/core_genome_reference.fa"), emit : core_genome_ref
     path("phylogeny/$replicon/panaroo/summary_statistics.txt")
     path("phylogeny/$replicon/panaroo/panaroo.log")
 
@@ -106,6 +106,7 @@ process core_tree_iqtree {
 
   output:
     tuple val(replicon), path("phylogeny/$replicon/$out_prefix/${replicon}.treefile")
+    path("phylogeny/$replicon/$out_prefix/${replicon}.iqtree")
     path("phylogeny/$replicon/$out_prefix/iqtree.err")
     path("phylogeny/$replicon/$out_prefix/iqtree.log")
 
@@ -114,7 +115,7 @@ process core_tree_iqtree {
   OUT_DIR=phylogeny/$replicon/$out_prefix
   mkdir -p -m 777 \${OUT_DIR}
   
-  iqtree -s $core_genome_aln -m ${params.core_tree_iqtree["model"]} --prefix $replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
+  iqtree -s $core_genome_aln -m ${params.core_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
   """
 
   stub:
@@ -140,10 +141,10 @@ process create_input_tab {
     params.core_snps_snippy.todo == 1
   
   input:
-    tuple val(replicon), val(samples), path(gff_files)
+    tuple val(replicon), val(samples), path(core_genome_fasta)
 
   output:
-    tuple val(replicon), path("phylogeny/$replicon/snippy/input.tab"), emit : input_tab
+    tuple val(replicon), path("$core_genome_fasta"), path("phylogeny/$replicon/snippy/input.tab"), emit : input_tab
 
   script:
   """
@@ -200,7 +201,8 @@ process core_snps_snippy {
   OUT_DIR=phylogeny/$replicon/snippy
   mkdir -p -m 777 \${OUT_DIR}
 
-  snippy-multi $input_tab --ref $core_genome_fasta --cpus $task.cpus > \${OUT_DIR}/snippy_commands.sh
+  snippy-multi $input_tab --ref $core_genome_ref --cpus $task.cpus --force > \${OUT_DIR}/snippy_commands.sh
+  sed -i -e "s|snippy-core --ref '|snippy-core --prefix \${OUT_DIR}/core --ref '|g" \${OUT_DIR}/snippy_commands.sh
   sh \${OUT_DIR}/snippy_commands.sh 1> \${OUT_DIR}/snippy.log 2> \${OUT_DIR}/snippy.err
   """
 
@@ -240,6 +242,7 @@ process snps_tree_iqtree {
 
   output:
     tuple val(replicon), path("phylogeny/$replicon/$out_prefix/${replicon}.treefile"), emit : treefiles
+    path("phylogeny/$replicon/$out_prefix/${replicon}.iqtree")
     path("phylogeny/$replicon/$out_prefix/iqtree.err")
     path("phylogeny/$replicon/$out_prefix/iqtree.log")
 
@@ -248,7 +251,7 @@ process snps_tree_iqtree {
   OUT_DIR=phylogeny/$replicon/$out_prefix
   mkdir -p -m 777 \${OUT_DIR}
   
-  iqtree -s $core_snps_aln -m ${params.snps_tree_iqtree["model"]} --prefix $replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
+  iqtree -s $core_snps_aln -m ${params.snps_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
   """
 
   stub:
@@ -279,6 +282,7 @@ process full_tree_iqtree {
 
   output:
     tuple val(replicon), path("phylogeny/$replicon/$out_prefix/${replicon}.treefile")
+    path("phylogeny/$replicon/$out_prefix/${replicon}.iqtree")
     path("phylogeny/$replicon/$out_prefix/iqtree.err")
     path("phylogeny/$replicon/$out_prefix/iqtree.log")
 
@@ -287,7 +291,7 @@ process full_tree_iqtree {
   OUT_DIR=phylogeny/$replicon/$out_prefix
   mkdir -p -m 777 \${OUT_DIR}
   
-  iqtree -s $core_full_aln -m ${params.full_tree_iqtree["model"]} --prefix $replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
+  iqtree -s $core_full_aln -m ${params.full_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
   """
 
   stub:
