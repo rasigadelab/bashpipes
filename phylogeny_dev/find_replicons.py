@@ -25,10 +25,21 @@ def main(project_dir, output_dir):
     for sample_repo in os.listdir(dir_genomes):
         sample = sample_repo
         mob_recon_dir = os.path.join(dir_genomes, sample_repo, "mob_recon")
+        mlst_dir = os.path.join(dir_genomes, sample_repo, "mlst")
+        species = ""
+        #Step3A- Checking sample specie
+        for mlst_file in os.listdir(mlst_dir):
+            if mlst_file == "mlst.tsv":
+                mlst_path = os.path.join(mlst_dir, mlst_file)
+                f = open(mlst_path, "r")
+                species = f.readline().split('\t')[1]
+        #Step3B- Checking which replicons are in the sample
         for out_file in os.listdir(mob_recon_dir):
             if ".fasta" in out_file:
                 fasta_file = os.path.join(mob_recon_dir, out_file)
                 replicon = out_file.strip('.fasta')
+                if replicon == "chromosome" and species != "-":
+                    replicon = species
                 if replicon not in replicons_list.keys():
                     replicons_list[replicon] = []
                 replicons_list[replicon].append((sample, fasta_file))
