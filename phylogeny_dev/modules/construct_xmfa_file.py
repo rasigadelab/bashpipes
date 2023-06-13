@@ -11,17 +11,27 @@ def main(panaroo_dir, output_dir):
     core_labels = []
     for line in core_genes:
         line = line.split()
-        if line[0] == "FT" and len(line) == 2:
-            label = line[1].split("=")[1].strip('.aln')
+        if line[0] == "FT" and len(line) == 2:            
+            label = line[1].split("=")[1].replace('.aln','')
             if label not in core_labels:
                 core_labels.append(label)
 
     #Step2- Get core genes alignment file and write it to XMFA file
     for core_gene in core_labels:
         aln_file = os.path.join(panaroo_dir,"aligned_gene_sequences",core_gene+".aln.fas")
-        with open(aln_file) as f:
-            lines = f.readlines()
-            out_xmfa.writelines(lines)
+        for seq_record in SeqIO.parse(aln_file, "fasta"):
+            seq_id = seq_record.id
+            new_seq_id = seq_id.split(";")[0]+" +"+core_gene
+            seq = seq_record.seq
+            out_xmfa.write(">"+new_seq_id+"\n")
+            out_xmfa.write(str(seq)+"\n")
+        out_xmfa.write("=\n")
+
+
+        # with open(aln_file) as f:
+        #     lines = f.readlines()
+        #     out_xmfa.writelines(lines)
+        #     out_xmfa.write("=\n")
             
     core_genes.close()
     out_xmfa.close()

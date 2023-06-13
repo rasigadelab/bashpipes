@@ -11,7 +11,7 @@ def main(panaroo_dir, output_dir):
     for line in core_genes:
         line = line.split()
         if line[0] == "FT" and len(line) == 2:
-            label = line[1].split("=")[1].strip('.aln')
+            label = line[1].split("=")[1].replace('.aln','')
             if label not in core_labels:
                 core_labels.append(label)
 
