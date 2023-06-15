@@ -1,6 +1,8 @@
 from Bio import SeqIO
 import argparse
 import os
+import pandas
+import gffpandas.gffpandas as gffpd 
 
 # GOAL : build .xmfa file for aln input for ClonalFrameML
 
@@ -16,15 +18,55 @@ def main(panaroo_dir, output_dir):
             if label not in core_labels:
                 core_labels.append(label)
 
+    #Step2- Open Panaroo metadata on genes
+    panaroo_metadata = os.path.join(panaroo_dir, "gene_presence_absence.csv")
+    metadata_df = pandas.read_csv(panaroo_metadata, sep = ',', index_col = "Gene")
+    panaroo_gene_data = os.path.join(panaroo_dir, "gene_data.csv")
+    gene_data_df = pandas.read_csv(panaroo_gene_data, sep = ',', index_col = "clustering_id")
     #Step2- Get core genes alignment file and write it to XMFA file
     for core_gene in core_labels:
         aln_file = os.path.join(panaroo_dir,"aligned_gene_sequences",core_gene+".aln.fas")
         for seq_record in SeqIO.parse(aln_file, "fasta"):
+            # Work on having right IDs [>sample_name:start-end +gene_name]
             seq_id = seq_record.id
-            new_seq_id = seq_id.split(";")[0]+" +"+core_gene
+            # Correct if panaroo renamed gene by '_R_gene'
+            seq_id = seq_id.replace('_R_', '')
+            # Get gene start and end for sample
+            sample = seq_id.split(";")[0]
+            #Strat2 - step1 - Check the gene_id for the sample in panaroo_metadata
+            gff_id = metadata_df.loc[core_gene, sample]
+            # If it's a gene present in GFF file
+            if "refound" not in gff_id:
+                #Strat2 - step2 - Go to gff file and grep the line containing gff_id
+                gff_path = os.path.join(panaroo_dir, '..', "sequences", sample, "prokka", sample+'.gff')
+                gff_file=open(gff_path, "r")
+                seq_annotation = ""
+                for line in gff_file:
+                    if gff_id in line:
+                        seq_annotation = line
+                        
+                gff_file.close()
+                #Strat2 - step3 - grep start and end of gene sequence
+                seq_start = seq_annotation.split('\t')[3]
+                seq_end = seq_annotation.split('\t')[4]
+            # If it's a gene refound by Panaroo
+            else:
+                #Strat2 - step2 - Go to 'gene_data.csv' file
+                data = gene_data_df.loc[gff_id, "description"]
+                data = data.split(";")
+                for item in data:
+                    if "location" in item:
+                        data = item
+                        break
+                seq_start = data.split(":")[1].split("-")[0]
+                seq_end = data.split(":")[1].split("-")[1]
+
+            #Strat2 - final step :)
+            new_seq_id = sample+":"+seq_start+"-"+seq_end+" +"+core_gene
             seq = seq_record.seq
             out_xmfa.write(">"+new_seq_id+"\n")
             out_xmfa.write(str(seq)+"\n")
+        # Adding an "=" between each FASTA block, that's .XMFA formatting
         out_xmfa.write("=\n")
 
 
