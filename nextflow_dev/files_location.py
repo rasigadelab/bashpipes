@@ -41,8 +41,12 @@ def write_Illumina_reads(subrepo, abs_path_dir, output_file):
     if sample.count("-") > 1:
         sample = sample.rsplit('-',1)[0]
     sample_type = subrepo.split('_')[-1].split('.')[0]
+    # While R1/R2 info is not catched, continue to search in string where is it
     if sample_type != "R1" and sample_type != "R2":
-        sample_type = subrepo.split('_')[-2]
+        for i in range(2,len(subrepo.split('_'))):
+            sample_type = subrepo.split('_')[-i]
+            if sample_type == "R1" or sample_type == "R2":
+                break 
     sample = sample.replace("Epitrack", "Epi")
     output_file.write(full_path+"\t"+sample+"\t"+sample_type+"\n")
     return sample
