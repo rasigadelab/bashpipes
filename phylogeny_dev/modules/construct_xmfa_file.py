@@ -2,11 +2,10 @@ from Bio import SeqIO
 import argparse
 import os
 import pandas
-import gffpandas.gffpandas as gffpd 
 
 # GOAL : build .xmfa file for aln input for ClonalFrameML
 
-def main(panaroo_dir, output_dir):
+def main(prokka_dir, panaroo_dir, output_dir):
     core_genes = open(os.path.join(panaroo_dir,"core_alignment_filtered_header.embl"), "r")
     out_xmfa = open(os.path.join(output_dir,"core_genes_aln.xmfa"), "w")
     #Step1- Get all core genes labels in a list
@@ -38,7 +37,7 @@ def main(panaroo_dir, output_dir):
             # If it's a gene present in GFF file
             if "refound" not in gff_id:
                 #Strat2 - step2 - Go to gff file and grep the line containing gff_id
-                gff_path = os.path.join(panaroo_dir, '..', "sequences", sample, "prokka", sample+'.gff')
+                gff_path = os.path.join(prokka_dir, sample, "prokka", sample+'.gff')
                 gff_file=open(gff_path, "r")
                 seq_annotation = ""
                 for line in gff_file:
@@ -80,17 +79,19 @@ def main(panaroo_dir, output_dir):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Getting core reference genome FASTA')
-    parser.add_argument("-d", dest="path_to_panaroo", required=True, help="Path to the folder containing Panaroo outputs")
+    parser.add_argument("-d", dest="path_to_prokka_dir", required=True, help="Path to the folder containing prokka results")
+    parser.add_argument("-p", dest="path_to_panaroo_dir", required=True, help="Path to the folder containing panaroo results")
     parser.add_argument("-o", dest="output_dir", required=False, help="Path to output directory")
     args = parser.parse_args()
 
     if args.output_dir is None:
-        args.output_dir = args.path_to_panaroo
+        args.output_dir = args.path_to_panaroo_dir
 
-    path_to_panaroo = args.path_to_panaroo
+    path_to_prokka_dir = args.path_to_prokka_dir
+    path_to_panaroo_dir = args.path_to_panaroo_dir
     output_dir = args.output_dir
 
-    main(path_to_panaroo, output_dir)
+    main(path_to_prokka_dir, path_to_panaroo_dir, output_dir)
 
 # THE END
 

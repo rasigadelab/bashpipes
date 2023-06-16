@@ -46,15 +46,13 @@ workflow bacteria_phylogeny {
             create_input_tab.out.input_tab.set{ ch_input_tab }
             core_snps_snippy(ch_input_tab)
             core_snps_snippy.out.core_snps_aln.set{ ch_core_snps }
-            core_snps_snippy.out.core_full_aln.set{ ch_core_full }
-        }
+            }
       
         //Step4- Core Tree construction on SNPS
         if ( params.iqtree_snps ) {
           snps_tree_iqtree(ch_core_snps, "iqtree_after_snippy_snps")
           snps_tree_iqtree.out.treefiles.set{ ch_treefiles }
-          full_tree_iqtree(ch_core_full, "iqtree_after_snippy_full")
-        }
+          }
      
           ch_core_snps.join(ch_treefiles).set{ ch_core_snps }
           
