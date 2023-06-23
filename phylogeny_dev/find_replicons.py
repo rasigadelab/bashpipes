@@ -10,7 +10,7 @@ import argparse
 
 ## FUNCTIONS ##
 
-def main(project_dir, output_dir):
+def main(project_dir, output_dir, chr_only):
     #Step1 - output file creation
     output_name = os.path.join(output_dir,"replicons.tsv")
     output_file=open(output_name, "w")
@@ -35,7 +35,13 @@ def main(project_dir, output_dir):
                 species = f.readline().split('\t')[1]
         #Step3B- Checking which replicons are in the sample
         for out_file in os.listdir(mob_recon_dir):
-            if ".fasta" in out_file:
+            # Option to only analize chromosomes
+            if chr_only:
+                pattern = "chromosome.fasta"
+            else:
+                pattern = ".fasta"
+
+            if pattern in out_file:
                 fasta_file = os.path.join(mob_recon_dir, out_file)
                 replicon = out_file.strip('.fasta')
                 if replicon == "chromosome" and species != "-":
@@ -54,6 +60,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Creation of replicons.tsv')
     parser.add_argument("-d", dest="path_to_data", required=True, help="Path to the folder containing the genomes repository")
     parser.add_argument("-o", dest="output_dir", required=False, help="Path to output directory")
+    parser.add_argument("--only-chromosome", dest="chr_only", required=False, default=False, action="store_true", help="Option to only take into account chromosomes")
     args = parser.parse_args()
 
     if args.output_dir is None:
@@ -61,7 +68,8 @@ if __name__ == '__main__':
 
     path_to_data = args.path_to_data
     output_dir = args.output_dir
+    chr_only = args.chr_only
 
-    main(path_to_data, output_dir)
+    main(path_to_data, output_dir, chr_only)
 
 # THE END
