@@ -114,13 +114,14 @@ process core_tree_iqtree {
     path("phylogeny/$replicon/$out_prefix/${replicon}.iqtree")
     path("phylogeny/$replicon/$out_prefix/iqtree.err")
     path("phylogeny/$replicon/$out_prefix/iqtree.log")
+    path("phylogeny/$replicon/$out_prefix/${replicon}.alninfo")
 
   script:
   """
   OUT_DIR=phylogeny/$replicon/$out_prefix
   mkdir -p -m 777 \${OUT_DIR}
   
-  iqtree -s $core_genome_aln -m ${params.core_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
+  iqtree -s $core_genome_aln -m ${params.core_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus -alninfo 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
   """
 
   stub:
@@ -252,13 +253,14 @@ process snps_tree_iqtree {
     path("phylogeny/$replicon/$out_prefix/${replicon}.iqtree")
     path("phylogeny/$replicon/$out_prefix/iqtree.err")
     path("phylogeny/$replicon/$out_prefix/iqtree.log")
+    path("phylogeny/$replicon/$out_prefix/${replicon}.alninfo")
 
   script:
   """
   OUT_DIR=phylogeny/$replicon/$out_prefix
   mkdir -p -m 777 \${OUT_DIR}
   
-  iqtree -s $core_snps_aln -m ${params.snps_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
+  iqtree -s $core_snps_aln -m ${params.snps_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus -alninfo 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
   """
 
   stub:
