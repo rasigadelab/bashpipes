@@ -15,7 +15,12 @@ process quality_fastqc {
   
   output:
     tuple val(sample), path("genomes/$sample/$R1"), path("genomes/$sample/$R2"), emit : illumina_reads
-    path("genomes/$sample/fastqc/*")
+    path("genomes/$sample/fastqc/${sample}_R1_fastqc.html")
+    path("genomes/$sample/fastqc/${sample}_R2_fastqc.html")
+    path("genomes/$sample/fastqc/${sample}_R1_fastqc.zip")
+    path("genomes/$sample/fastqc/${sample}_R2_fastqc.zip")
+    path("genomes/$sample/fastqc/fastqc.err")
+    path("genomes/$sample/fastqc/fastqc.log")
 
   script:
   """
@@ -53,7 +58,12 @@ process trim_trimmomatic {
   
   output:
     tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit : illumina_trimmed
-    path("genomes/$sample/trimmomatic/*")
+    path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz")
+    path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz")
+    path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz")
+    path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz")
+    path("genomes/$sample/trimmomatic/trimmomatic.err")
+    path("genomes/$sample/trimmomatic/trimmomatic.log")
 
   script:
   """
@@ -217,8 +227,10 @@ process map_bowtie2 {
   output:
     tuple val(sample), path("genomes/$sample/polish/${sample}.sorted.bam"), emit : sorted_bam_files
     path("genomes/$sample/polish/${sample}.sorted.bam.bai")
-    path("genomes/$sample/polish/*.log")
-
+    path("genomes/$sample/polish/bowtie2.index.log")
+    path("genomes/$sample/polish/bowtie2.map.log")
+    path("genomes/$sample/polish/samtools.index.log")
+    path("genomes/$sample/polish/samtools.sort.log")
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -273,6 +285,7 @@ process polish_pilon {
     path("genomes/$sample/polish/pilon.log")
     path("genomes/$sample/${sample}_polished.fasta")
     path("genomes/$sample/polish/${sample}_polished.changes")
+    path("genomes/$sample/polish/polishing_is_done.txt")
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -284,6 +297,10 @@ process polish_pilon {
   pilon -Xmx${memory}G --genome $draft_assembly --bam $sorted_bam ${params.polish_pilon["list_changes"]} --output \${SAMPLE_POLISHED} &> \${OUT_DIR}/pilon.log
   cp \${SAMPLE_POLISHED}.fasta genomes/$sample/${sample}_polished.fasta
 
+  rm ${params.result}/\${OUT_DIR}/${sample}.sorted.bam 
+  rm ${params.result}/\${OUT_DIR}/${sample}.sorted.bam.bai
+  touch \${OUT_DIR}/polishing_is_done.txt
+  
   echo "Completed Pilon process for sample $sample"
   """
 
@@ -317,7 +334,16 @@ process qc_quast {
     tuple val(sample), path(draft_assembly)
 
   output:
-    path("genomes/$sample/quast/*")
+    path("genomes/$sample/quast/basic_stats/*")
+    path("genomes/$sample/quast/icarus_viewers/*")
+    path("genomes/$sample/quast/icarus.html")
+    path("genomes/$sample/quast/quast.err")
+    path("genomes/$sample/quast/quast.log")
+    path("genomes/$sample/quast/report.html")
+    path("genomes/$sample/quast/report.pdf")
+    path("genomes/$sample/quast/report.tsv")
+    path("genomes/$sample/quast/transposed_report.tsv")
+    path("genomes/$sample/quast/transposed_report.txt")
 
   script:
   """
@@ -354,7 +380,8 @@ process fixstart_circlator {
 
   output:
     tuple val(sample), path("genomes/$sample/circlator/${sample}_realigned.fasta"), emit : realigned_assembly
-    path("genomes/$sample/circlator/*.log")
+    path("genomes/$sample/circlator/${sample}_realigned.log")
+    path("genomes/$sample/circlator/${sample}_realigned.detailed.log")
     path("genomes/$sample/${sample}_realigned.fasta")
  
   script:
@@ -380,7 +407,7 @@ process mlst_sequence_typing {
   // Tool: mlst. 
   // Sequence typing consists in writing ST annotation for each isolate by checking the allele version of 7 house-keeping genes.
 
-  label 'highCPU'
+  label 'lowCPU'
   storeDir params.result
   debug false
   tag "MLST on $sample"
@@ -393,7 +420,8 @@ process mlst_sequence_typing {
 
   output:
     tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
-    path("genomes/$sample/mlst/*")
+    path("genomes/$sample/mlst/mlst.log")
+    path("genomes/$sample/mlst/mlst.tsv")
 
   script:
   """
@@ -418,7 +446,7 @@ process classify_sourmash {
   // Taxon classification consists in describing right taxonomy for each isolate. 
   // Outputs specifically genus and species in this pipeline.
 
-  label 'highCPU'
+  label 'lowCPU'
   storeDir params.result
   debug false
   tag "Sourmash on $sample"
@@ -431,7 +459,9 @@ process classify_sourmash {
 
   output:
     tuple val(sample), path("genomes/$sample/sourmash/sourmash.csv"), emit : sample_taxonomy
-    path("genomes/$sample/sourmash/*")
+    path("genomes/$sample/sourmash/${sample}_realigned.fasta.sig")
+    path("genomes/$sample/sourmash/sourmash.csv")
+    path("genomes/$sample/sourmash/sourmash.log")
 
   script:
   """
@@ -460,7 +490,7 @@ process amr_typer_amrfinder {
   // AMR genes typing consists in listing AMR genes present in the genome + some other genes of interest like biocide, stress response or virulence genes. 
   // Behave differently depending on genus and species given by Sourmash.
 
-  label 'highCPU'
+  label 'lowCPU'
   storeDir params.result
   debug false
   tag "AMRFinder on $sample"
@@ -473,7 +503,8 @@ process amr_typer_amrfinder {
 
   output:
     tuple val(sample), path("genomes/$sample/$final_assembly"), path("genomes/$sample/sourmash/$taxonomy_file"), emit : final_assembly
-    path("genomes/$sample/amrfinder/*")
+    path("genomes/$sample/amrfinder/amrfinder.log")
+    path("genomes/$sample/amrfinder/amrfinder.tsv")
   
   script:
   """
@@ -520,7 +551,9 @@ process annotate_prokka {
 
   output:
     tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
-    path("genomes/$sample/prokka/*")
+    path("genomes/$sample/prokka/${sample}.err")
+    path("genomes/$sample/prokka/${sample}.gff")
+    path("genomes/$sample/prokka/${sample}.log")
 
   script:
   """
@@ -551,9 +584,9 @@ process mge_mob_recon {
   // Tool: Mob_recon. 
   // MGE Analysis consists in finding and annotating plasmids, transposons and other mobile genetic elements encountered in the genome. 
 
-  label 'highCPU'
+  label 'lowCPU'
   storeDir params.result
-  debug true
+  debug false
   tag "Mob_Recon on $sample" 
 
   when:
@@ -563,7 +596,12 @@ process mge_mob_recon {
     tuple val(sample), path(final_assembly)
 
   output:
-    path("genomes/$sample/mob_recon/*")
+    path("genomes/$sample/mob_recon/*.fasta")
+    path("genomes/$sample/mob_recon/contig_report.txt")
+    path("genomes/$sample/mob_recon/mge.report.txt")
+    path("genomes/$sample/mob_recon/*.txt")
+    path("genomes/$sample/mob_recon/mob_recon.log")
+    path("genomes/$sample/mob_recon/mob_recon.err")
 
   script:
   """
@@ -572,7 +610,9 @@ process mge_mob_recon {
   
   source ~/miniconda3/etc/profile.d/conda.sh
   conda activate mob_suite2
-  mob_recon -n $task.cpus --force --infile $final_assembly --outdir \${OUT_DIR} 1> \${OUT_DIR}/mob_recon.log 2> \${OUT_DIR}/mob_recon.err
+  mob_recon -n $task.cpus --force --infile $final_assembly --outdir \${OUT_DIR} 1> mob_recon.log 2> mob_recon.err
+  mv mob_recon.log \${OUT_DIR}
+  mv mob_recon.err \${OUT_DIR}
   conda deactivate
   """
 
