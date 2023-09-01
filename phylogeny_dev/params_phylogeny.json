@@ -38,12 +38,12 @@
 
     "snps_tree_iqtree" : {
         "todo" : 1,
-        "model" : "GTR+ASC"
+        "model" : "GTR"
     },
 
     "full_tree_iqtree" : {
         "todo" : 1,
-        "model" : "HKY"
+        "model" : "GTR"
     },
 
     "rec_removal_clonalframeml" : {

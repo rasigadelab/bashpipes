@@ -57,7 +57,8 @@ process pan_genome_panaroo {
 
   output:
     tuple val(replicon), path("phylogeny/$replicon/panaroo/core_gene_alignment_filtered.aln"), emit : core_genome_aln
-    tuple val(replicon), val(samples), path("phylogeny/$replicon/panaroo/core_genome_reference.fa"), path("phylogeny/$replicon/panaroo/core_genes_aln.xmfa"), emit : core_genome_ref
+    tuple val(replicon), val(samples), path("phylogeny/$replicon/panaroo/core_genome_reference.fa"), emit : core_genome_ref
+    //tuple val(replicon), val(samples), path("phylogeny/$replicon/panaroo/core_genome_reference.fa"), path("phylogeny/$replicon/panaroo/core_genes_aln.xmfa"), emit : core_genome_ref
     path("phylogeny/$replicon/panaroo/summary_statistics.txt")
     path("phylogeny/$replicon/panaroo/panaroo.log")
 
@@ -75,7 +76,7 @@ process pan_genome_panaroo {
   python3 ${params.nfpath}/modules/core_genome.py -d \${OUT_DIR} 
   
   #Step3- Creating .xmfa core genome alignment file
-  python3 ${params.nfpath}/modules/construct_xmfa_file.py -d ${params.result}/phylogeny/$replicon/sequences -p \${OUT_DIR}
+  #python3 ${params.nfpath}/modules/construct_xmfa_file.py -d ${params.result}/phylogeny/$replicon/sequences -p \${OUT_DIR}
 
   """
 
@@ -97,7 +98,7 @@ process core_tree_iqtree {
   // Tool: iqtree. 
   // Tree construction of a specific replicon based on its core genome.
 
-  label 'highCPU'
+  label 'lowCPU'
   storeDir params.result
   debug false
   tag "Iqtree on $replicon"  
@@ -111,15 +112,18 @@ process core_tree_iqtree {
 
   output:
     tuple val(replicon), path("phylogeny/$replicon/$out_prefix/${replicon}.treefile")
-    path("phylogeny/$replicon/$out_prefix/${replicon}.iqtree")
-    path("phylogeny/$replicon/$out_prefix/iqtree.err")
-    path("phylogeny/$replicon/$out_prefix/iqtree.log")
-    path("phylogeny/$replicon/$out_prefix/${replicon}.alninfo")
+    path("phylogeny/$replicon/$out_prefix/*")
+    // path("phylogeny/$replicon/$out_prefix/${replicon}.iqtree")
+    // path("phylogeny/$replicon/$out_prefix/iqtree.err")
+    // path("phylogeny/$replicon/$out_prefix/iqtree.log")
+    // path("phylogeny/$replicon/$out_prefix/${replicon}.alninfo")
 
   script:
   """
   OUT_DIR=phylogeny/$replicon/$out_prefix
   mkdir -p -m 777 \${OUT_DIR}
+
+  
   
   iqtree -s $core_genome_aln -m ${params.core_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus -alninfo 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
   """
@@ -147,10 +151,11 @@ process create_input_tab {
     params.core_snps_snippy.todo == 1
   
   input:
-    tuple val(replicon), val(samples), path(core_genome_fasta), path(core_genes_aln)
+    tuple val(replicon), val(samples), path(core_genome_fasta)//, path(core_genes_aln)
 
   output:
-    tuple val(replicon), path("$core_genome_fasta"), path("phylogeny/$replicon/snippy/input.tab"), path("$core_genes_aln"), emit : input_tab
+    tuple val(replicon), path("$core_genome_fasta"), path("phylogeny/$replicon/snippy/input.tab"), emit : input_tab
+    //tuple val(replicon), path("$core_genome_fasta"), path("phylogeny/$replicon/snippy/input.tab"), path("$core_genes_aln"), emit : input_tab
 
   script:
   """
@@ -188,10 +193,11 @@ process core_snps_snippy {
     params.core_snps_snippy.todo == 1
   
   input:
-    tuple val(replicon), path(core_genome_ref), path(input_tab), path(core_genes_aln)
+    tuple val(replicon), path(core_genome_ref), path(input_tab)//, path(core_genes_aln)
 
   output:
-    tuple val(replicon), path("phylogeny/$replicon/snippy/core_without_ref.aln"), path("$core_genes_aln"), emit : core_snps_aln
+    tuple val(replicon), path("phylogeny/$replicon/snippy/core_without_ref.aln"), emit : core_snps_aln
+    //tuple val(replicon), path("phylogeny/$replicon/snippy/core_without_ref.aln"), path("$core_genes_aln"), emit : core_snps_aln
     path("phylogeny/$replicon/snippy/*/snps.aligned.fa")
     path("phylogeny/$replicon/snippy/*/snps.log")
     path("phylogeny/$replicon/snippy/*/snps.subs.vcf")
@@ -206,11 +212,11 @@ process core_snps_snippy {
   OUT_DIR=phylogeny/$replicon/snippy
   mkdir -p -m 777 \${OUT_DIR}
 
-  snippy-multi $input_tab --ref $core_genome_ref --cpus $task.cpus --force > \${OUT_DIR}/snippy_commands.sh
+  snippy-multi $input_tab --ref $core_genome_ref --cpus $task.cpus --force --mincov 30 > \${OUT_DIR}/snippy_commands.sh
   sed -i -e "s|snippy-core --ref '|snippy-core --prefix \${OUT_DIR}/core --ref '|g" \${OUT_DIR}/snippy_commands.sh
   sh \${OUT_DIR}/snippy_commands.sh 1> \${OUT_DIR}/snippy.log 2> \${OUT_DIR}/snippy.err
   # Remove 2 last lines because it's the reference sequence and we don't want it in phylogeny
-  head -n -2 \${OUT_DIR}/core.aln > \${OUT_DIR}/core_without_ref.aln
+  head -n -2 \${OUT_DIR}/core.full.aln > \${OUT_DIR}/core_without_ref.aln
   """
 
   stub:
@@ -236,7 +242,7 @@ process snps_tree_iqtree {
   // Tool: iqtree. 
   // Tree construction of a specific replicon based on its core snps.
 
-  label 'highCPU'
+  label 'lowCPU'
   storeDir params.result
   debug false
   tag "Iqtree on $replicon"  
@@ -245,22 +251,28 @@ process snps_tree_iqtree {
     params.snps_tree_iqtree.todo == 1
   
   input:
-    tuple val(replicon), path(core_snps_aln), path(core_genes_aln)
+    tuple val(replicon), path(core_snps_aln)//, path(core_genes_aln)
     val(out_prefix)
 
   output:
     tuple val(replicon), path("phylogeny/$replicon/$out_prefix/${replicon}.treefile"), emit : treefiles
-    path("phylogeny/$replicon/$out_prefix/${replicon}.iqtree")
-    path("phylogeny/$replicon/$out_prefix/iqtree.err")
-    path("phylogeny/$replicon/$out_prefix/iqtree.log")
-    path("phylogeny/$replicon/$out_prefix/${replicon}.alninfo")
+    path("phylogeny/$replicon/$out_prefix/*")
+    // path("phylogeny/$replicon/$out_prefix/${replicon}.iqtree")
+    // path("phylogeny/$replicon/$out_prefix/iqtree.err")
+    // path("phylogeny/$replicon/$out_prefix/iqtree.log")
+    // path("phylogeny/$replicon/$out_prefix/${replicon}.alninfo")
+    // path("phylogeny/$replicon/$out_prefix/${replicon}.timetree.lsd")
+    // path("phylogeny/$replicon/$out_prefix/${replicon}.timetree.nwk")
+    // path("phylogeny/$replicon/$out_prefix/${replicon}.timetree.nex")
 
   script:
   """
   OUT_DIR=phylogeny/$replicon/$out_prefix
   mkdir -p -m 777 \${OUT_DIR}
+  # TO DELETE AFTER
+  sed -n '/>Reference/q;p' $core_snps_aln > \${OUT_DIR}/snps.aln
+  iqtree -s \${OUT_DIR}/snps.aln -m ${params.snps_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus -alninfo --date $params.result/${replicon}_sampling_list.txt 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
   
-  iqtree -s $core_snps_aln -m ${params.snps_tree_iqtree["model"]} --prefix \${OUT_DIR}/$replicon -T $task.cpus -alninfo 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
   """
 
   stub:
