@@ -49,9 +49,9 @@ def main(project_dir, output_dir, chr_only):
                 if replicon not in replicons_list.keys():
                     replicons_list[replicon] = []
                 replicons_list[replicon].append((sample, fasta_file))
-    #Step4- Only writing replicons with at least 2 samples (because needed to compare at least 2 genomes)
+    #Step4- Only writing replicons with at least 3 samples (iqtree requirement)
     for rep in replicons_list:
-        if len(replicons_list[rep]) >= 2:
+        if len(replicons_list[rep]) >= 3:
             for sample_item in replicons_list[rep]:
                 output_file.write(sample_item[1]+"\t"+sample_item[0]+"\t"+rep+"\n")
     output_file.close()

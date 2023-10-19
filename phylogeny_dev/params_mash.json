@@ -1,0 +1,17 @@
+{
+    "version" : "",
+    
+    "result" : "/mnt/c/Users/admin/Documents/Phylogeny_launch",
+    "workflow" : "bacteria_mash_clustering",
+    "mash" : true,
+
+    "rename_fasta" : {
+        "todo" : 1
+    },
+
+    "distance_matrix_mash" : {
+        "todo" : 1,
+        "mash_threshold" : 0.006
+    }
+        
+}

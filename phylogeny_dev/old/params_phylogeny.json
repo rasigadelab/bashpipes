@@ -1,0 +1,53 @@
+{
+    "version" : "",
+    
+    "result" : "/mnt/c/Users/admin/Documents/Phylogeny_launch",
+    "workflow" : "bacteria_phylogeny",
+    "annotate" : true,
+    "panaroo" : true,
+    "iqtree_fast" : true,
+    "snippy": true,
+    "iqtree_snps": true,
+    "clonalframeml": true,
+        
+    "annotate_prokka" : {
+        "todo" : 1,
+        "genes" : "--addgenes",
+        "mode" : "--compliant"
+    },
+
+    "pan_genome_panaroo" : {
+        "todo" : 1,
+        "clean_mode" : "strict",
+        "gene_alignment" : "core",
+        "core_threshold" : 1
+    },
+    
+    "core_tree_iqtree" : {
+        "todo" : 1,
+        "model" : "HKY"
+    },
+
+    "make_core_genome_ref" : {
+        "todo" : 1
+    },
+    
+    "core_snps_snippy" : {
+        "todo" : 1
+    },
+
+    "snps_tree_iqtree" : {
+        "todo" : 1,
+        "model" : "GTR"
+    },
+
+    "full_tree_iqtree" : {
+        "todo" : 1,
+        "model" : "GTR"
+    },
+
+    "rec_removal_clonalframeml" : {
+        "todo" : 1
+    }
+    
+}

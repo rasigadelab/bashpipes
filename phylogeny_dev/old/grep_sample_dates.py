@@ -27,11 +27,10 @@ def main(project_dir, output_dir):
             replicon_dict[rep].append(sample)
     #Write down to output file
     for repl in replicon_dict.keys():
-        out_file = open(os.path.join(output_dir,repl+"_sampling_list.csv"), "w")
-        out_file.write("strain,date\n")
+        out_file = open(os.path.join(output_dir,repl+"_sampling_list.txt"), "w")
         for sample in replicon_dict[repl]:
             sample_date = df.loc[df['SAMPLE_ID'] == sample, ['DATE_PRELEVEMENT']].values[0][0]
-            out_file.write(sample+","+sample_date+"\n")
+            out_file.write(sample+"\t"+sample_date+"\n")
         out_file.close()
 
 if __name__ == '__main__':

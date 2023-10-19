@@ -7,6 +7,8 @@ nextflow.enable.dsl = 2
 include {printHelp} from "${params.nfpath}/modules/help.nf"
 
 // import subworkflows
+include {bacteria_mash_clustering} from "${params.nfpath}/workflows/workflow.nf"
+include {bacteria_variant_calling} from "${params.nfpath}/workflows/workflow.nf"
 include {bacteria_phylogeny} from "${params.nfpath}/workflows/workflow.nf"
 
 def raiseError ( value ) {
@@ -22,17 +24,36 @@ if (params.help) {
 
 // main workflow
 workflow {
-    //Step1- create a Channel based on content of replicons.tsv
-    replicons_files = Channel.fromPath(params.result+"/replicons.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
-    replicons_ch = replicons_files.map { row -> tuple(row.replicon, row.Sample, row.fasta_file) }
-    //replicons_ch.groupTuple(by: 0).set{ replicons_ch }
-    //replicons_ch.view()
-    
+
     main:
-    //Step2- launch the appropriate workflow
-    if ( params.workflow == 'bacteria_phylogeny') {
+    
+    if ( params.workflow == 'bacteria_mash_clustering') {
+        //Step1- create a Channel based on content of replicons.tsv
+        replicons_files = Channel.fromPath(params.result+"/replicons.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
+        replicons_ch = replicons_files.map { row -> tuple(row.replicon, row.Sample, row.fasta_file) }
+        //Step2- launch the appropriate workflow
+        bacteria_mash_clustering(replicons_ch)
+    } else if ( params.workflow == 'bacteria_variant_calling') {
+        //Step1- create a Channel based on content of replicons.tsv
+        replicons_files = Channel.fromPath(params.result+"/replicons.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
+        replicons_ch = replicons_files.map { row -> tuple(row.Sample, row.replicon) }
+        //Step2- Create a Channel based on content of mini_clusters.tsv
+        clusters_files = Channel.fromPath(params.result+"/phylogeny/*/mash/mini_clusters.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
+        clusters_ch = clusters_files.map { row -> tuple(row.sample_names, row.mini_clusters) }
+        //Step3- Join both Channels
+        input_ch = replicons_ch.join(clusters_ch).groupTuple(by: [1,2])
+        //Step4- Launch appropriate workflow
+        bacteria_variant_calling(input_ch)
+    } else if ( params.workflow == 'bacteria_phylogeny') {
+        //Step1- create a Channel based on content of replicons.tsv
+        replicons_files = Channel.fromPath(params.result+"/replicons.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
+        replicons_ch = replicons_files.map { row -> tuple(row.replicon, row.Sample) }
+        //Step2- Gather samples for each replicon
+        replicons_ch.groupTuple(by: 0).set{ replicons_ch }
+        //Step3- launch the appropriate workflow
         bacteria_phylogeny(replicons_ch)
-    } 
+    
+    }
     
    
 }

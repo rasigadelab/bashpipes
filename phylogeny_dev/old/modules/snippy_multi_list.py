@@ -14,8 +14,8 @@ def main(work_dir, samples_list, out_dir):
     out_file = open(os.path.join(out_dir, "input.tab"), "w")
     for sample in samples_list:
         sample_dir = os.path.join(out_dir, sample)
-        R1 = os.path.join(genomes_dir, sample, "trimmomatic", sample+"_R1_paired.trimmed.fastq.gz")
-        R2 = os.path.join(genomes_dir, sample, "trimmomatic", sample+"_R2_paired.trimmed.fastq.gz")
+        R1 = os.path.join(genomes_dir, sample, sample+"_R1.fastq.gz")
+        R2 = os.path.join(genomes_dir, sample, sample+"_R2.fastq.gz")
         out_file.write(sample_dir+"\t"+R1+"\t"+R2+"\n")    
     out_file.close()
 
