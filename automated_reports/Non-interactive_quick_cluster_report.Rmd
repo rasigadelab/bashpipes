@@ -1,0 +1,332 @@
+---
+title: "Rapport Cluster `r params$cluster_id`"
+subtitle: "GH Est, Service Réanimation Neurologique UF31800, *P.aeruginosa* (`r params$replicon`)"
+author: "Equipe PHE3ID"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+params:
+  cluster_id: "1"
+  species: "paeruginosa"
+  replicon: "Chromosome"
+  path_to_reports: "../Script_Tests/2023-10-18_clone_reports.Rdata"
+  path_to_scan:  "../Script_Tests/2023-10-18_annotation_scan.Rdata"
+output:
+  pdf_document: default
+fontsize: 12pt
+#classoption: landscape
+header-includes:
+- \usepackage{graphicx}
+- \usepackage{fancyhdr}
+- \usepackage{titling}
+- \usepackage{svg}
+- \pagestyle{fancy}
+- \fancyhead[L]{Equipe PHE3ID}
+- \fancyhead[C]{Cluster `r params$cluster_id` - `r params$replicon` - `r params$species`}
+- \fancyhead[R]{\includegraphics[width=30pt]{pictures/logo_hcl.png}}
+- \setlength{\headheight}{35pt}
+- \addtolength{\topmargin}{-19pt}
+- \pretitle{\begin{center}
+  \hfill
+  \includegraphics[width=1in,height=1in]{pictures/logo_hcl.png}\LARGE\\}
+- \posttitle{\end{center}}
+---
+
+Ce rapport d'études du cluster `r params$cluster_id` étudie les souches de l'espèce ___P. aeruginosa___ du cluster, du service Réanimation Neurologique du GH Est.
+
+```{r setup, include=FALSE}
+# Some cleaning [no: if cleaning, then we cannot use params data]
+# rm(list = ls())
+
+# Setting R chunks options
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = 'center')
+
+# Loading libraries
+usePackage <- function(p) {
+  if (!is.element(p, installed.packages()[,1]))
+    install.packages(p, dep = TRUE)
+  require(p, character.only = TRUE)
+}
+libraries <- c("lubridate", "data.table", "stringr", "knitr", "ggplot2", "dplyr", "scales", "tidyr", "kableExtra", "ggpubr", "RColorBrewer")
+for (lib in libraries){usePackage(lib)}
+
+
+# Loading Data
+load(params$path_to_reports)
+reports <- final_data[cluster_id == params$cluster_id]
+# Studied species
+species <- params$species
+reports <- reports[mlst_species == species]
+rm(final_data)
+
+# Global ggplot theme settings
+global_theme <- theme(plot.title=element_text(size=16, face="plain", hjust = 0.5, vjust=2),
+            axis.text.x=element_text(size=9),
+            axis.text.y=element_text(size=10),
+            axis.title.x=element_text(size=12, vjust = -1),
+            axis.title.y=element_text(size=12, angle = 90, vjust = 2),
+            legend.title=element_text(size=12),
+            legend.text = element_text(size=9))
+theme_set(global_theme)
+
+rm(lib, libraries)
+```
+
+# Prélèvement des souches
+
+```{r global_infos}
+# Calcul de la date de prélèvement la + précoce
+earliest <- format(min(reports$sampling_date), "%d/%m/%Y")
+# Calcul de la date de prélèvement la + tardive
+latest <- format(max(reports$sampling_date), "%d/%m/%Y")
+# Nombre d'échantillons dans le cluster
+nb_samples <- length(reports$sampling_date)
+```
+
+Les souches du cluster ont été prélevées entre le `r earliest` et le `r latest`.
+Le cluster de *P. aeruginosa* est actuellement composé de `r nb_samples` souches.
+
+```{r dates}
+# Computing limits of histogram (earliest and latest months)
+first_month <- floor_date(min(reports$sampling_date), "month")
+last_month <- ceiling_date(max(reports$sampling_date), "month")
+
+# Break data by month, e.g one bin one month 
+out <- reports %>%
+  select(genome, mlst_species, sampling_date) %>%
+  mutate(month = floor_date(sampling_date, "month"))
+
+# Plotting as a barplot of month categories
+g <- ggplot(data=out, aes(x=month, fill = mlst_species)) +
+  geom_bar(stat="count", aes(text = paste('Nombre: ', after_stat(count)))) +
+  ggtitle("Histogramme des dates de prélèvement") +
+  labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Espèces (dérivées du MLST)") +
+  scale_x_date(date_breaks = "month", date_labels = "%m/%Y") +
+  scale_y_continuous(breaks= pretty_breaks()) +
+  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+g
+
+rm(first_month, last_month, out, g, earliest, latest, nb_samples)
+
+```
+
+# Etudes comparatives basées sur les SNPs
+
+```{r which_dist}
+# Working on second scale of SNPs[10 or 15 SNPs generally]
+clust_dist <- sort(str_match(colnames(reports), "clust_dist_\\d+"))[2]
+nb_snps <- str_extract(clust_dist, "\\d+")
+```
+
+Les SNPs détectés au sein de chaque souche nous permettent d'évaluer la distance génétique entre les isolats présents dans le cluster. A partir de cette distance génétique, on peut regrouper les isolats les plus proches d'un point de vue génétique. 
+
+Un cluster est défini par une distance génétique inférieure ou égale **à `r nb_snps` SNPs**. A titre informatif, des clusterings à différentes échelles ont été réalisés, on peut donc voir également les clusterings à 5, 50 et 100 SNPs.
+
+## Bilan par clone identifié
+
+```{r clone}
+# Barplot of number of samples per clone
+dist_plot <- function(distance) {
+  if(distance == clust_dist){
+      g <- ggplot(data=reports, aes(x=as.factor(eval(as.name(distance))))) +
+        geom_bar(stat="count", fill = "darkblue", aes(text = paste0("Nombre: ", after_stat(count)))) +
+        ggtitle(str_replace(distance, "clust_dist_", "Clustering Distance ")) +
+        labs(x = "Clusters", y = "Nombre d'échantillons") +
+        scale_y_continuous(breaks= pretty_breaks()) +
+        theme(panel.border = element_rect(colour = "red", fill=NA, size=2), plot.title = element_text(colour = "red"))
+  } else {
+      g <- ggplot(data=reports, aes(x=as.factor(eval(as.name(distance))))) +
+        geom_bar(stat="count", fill = "lightblue", aes(text = paste0("Nombre: ", after_stat(count)))) +
+        ggtitle(str_replace(distance, "clust_dist_", "Clustering Distance ")) +
+        labs(x = "Clusters", y = "Nombre d'échantillons") +
+        scale_y_continuous(breaks= pretty_breaks())
+    }
+  return(g)
+}
+
+dist <- colnames(reports)[!is.na(str_match(colnames(reports), "clust_dist_*"))]
+plot_list <- lapply(dist, dist_plot)
+gg <- ggarrange(plotlist = plot_list, ncol = 2, nrow = 2)
+print(gg)
+
+rm(g, dist, plot_list)
+```
+
+Avec un seuil de 15 SNPs, trois clusters de souches sont formés. Le cluster A est composé de 3 souches, dont 2 ont été isolées chez le même patient. Les clusters B et C sont tous deux composés de 2 souches, provenant du même patient. Les autres souches sont plus éloignées génétiquement les unes des autres.
+
+## Bilan par échantillon
+
+Voici la description des échantillons étudiés. Les clusters indiqués pour chacun des isolats correspond aux résultats du clustering à `r nb_snps` SNPs.
+
+```{r final_table}
+# Arranging data
+tab <- reports %>%
+  select(glims, ipp, sampling_date, soc_species, sequence_type, as.name(clust_dist)) %>%
+  arrange(eval(as.name(clust_dist)))
+
+# Outputting table 
+kable(tab, col.names = c("GLIMS", "Identifiant Patient (IPP)", "Date de prélèvement", "Espèce MALDI-ToF",
+                       "MLST Sequence Type", "Cluster"),
+      align = "lllcc", "latex", booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "scale_down", "HOLD_position", "repeat_header"))
+
+rm(tab)
+```
+
+
+```{r nb_clust}
+# Computing number of clusters found
+nb_clusters <- length(unique(reports[[ clust_dist ]]))
+# Getting the cluster with max number of samples
+clust_count <- table(reports[[ clust_dist ]])
+biggest_clust <- which.max(clust_count)
+nb_biggest_clust <- clust_count[biggest_clust]
+
+rm(clust_count)
+```
+
+# Conclusion du clustering
+
+```{r conclusion, results="asis"}
+cat(readLines('conclusion.txt'), sep = '\n')
+rm(nb_clusters, nb_biggest_clust, biggest_clust)
+```
+
+# Informations complémentaires
+
+```{r only_2_samples_clone, include=TRUE}
+# First thing to do, only keep clone with nb of samples > 2 
+singletons <- names(which(table(reports[[ clust_dist ]]) == 1))
+reports[[clust_dist]][which(reports[[clust_dist]] %in% singletons)] <- "singletons"
+
+# Compute proportion of non-singleton/singletons
+prop_singleton <- round(length(reports$genome[which(reports[[clust_dist]] == "singletons")]) * 100 / length(reports$genome), digits = 2) 
+prop_non_singleton <- 100 - prop_singleton
+
+rm(singletons)
+```
+
+La proportion de singletons est de `r prop_singleton` %, contre `r prop_non_singleton` % de souches qui sont associées à d'autres souches dans des clusters.
+
+## Temporalité des clones
+
+```{r prlvt}
+# Computing limits of histogram (earliest and latest months)
+first_month <- floor_date(min(reports$sampling_date), "month")
+last_month <- ceiling_date(max(reports$sampling_date), "month")
+
+# Break data by month, e.g one bin one month 
+out <- reports %>%
+  select(genome, as.name(clust_dist), sampling_date) %>%
+  mutate(month = floor_date(sampling_date, "month"))
+
+#cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+#cbPalette <- c('#999999', colorRampPalette(c("lightblue", "red"))(3))
+#cbPalette <- c("#999999", palette(rainbow(3)))
+cbPalette <- c("#D2C9CA", brewer.pal(length(unique(reports[[ clust_dist ]]))-1, "RdYlBu"))
+# Plotting as a barplot of month categories
+g <- ggplot(data=out, aes(x=month, fill = relevel(as.factor(eval(as.name(clust_dist))), "singletons"))) +
+  geom_bar(colour = "black", aes(text = paste0("Nombre: ", after_stat(count)))) +
+  ggtitle("Histogramme de dates de prélèvement") +
+  labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Cluster") +
+  scale_x_date(date_breaks = "month", date_labels = "%m/%Y") +
+  scale_y_continuous(breaks= pretty_breaks()) +
+  scale_fill_manual(values=cbPalette) +
+  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+
+g
+
+rm(first_month, last_month, out, g, earliest, latest, nb_samples, prop_singleton, prop_non_singleton, cbPalette)
+
+```
+
+## Classes d'AMR par cluster
+
+```{r amr_barplot_per_classes, include=FALSE}
+# Creating a list of AMR class found per clone
+amr_list <- reports %>%
+  select(as.name(clust_dist), amr_classes) %>%
+  mutate(amr_classes = tolower(amr_classes))
+amr_list <- separate_longer_delim(amr_list, amr_classes, ",")
+
+# Histogram of AMR_classes (aminoglycoside, phenicol, etc.)
+g <- ggplot(data=amr_list, aes(x=amr_classes)) +
+  geom_bar(stat="count", fill = "lightblue", aes(text = paste0("Count: ", after_stat(count)))) +
+  ggtitle("AMR classes") +
+  labs(x = "AMR class", y = "Count") +
+  scale_y_continuous(breaks= pretty_breaks()) +
+  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+
+g
+
+rm(g, amr_list)
+```
+
+```{r new_amr}
+# Loading Data with AMRFinder report [GLOBALLY]
+load(params$path_to_scan)
+rm(amrfinder_reports, contig_reports, mge_reports, mlst_reports, quast_reports, sourmash_reports)
+```
+
+```{r amr_class_clone, results='asis'}
+clones <- sort(unique(reports[[clust_dist]]))
+for(c in clones){
+  if(c == "singletons"){
+    cat("### Singletons \n\n")
+    cat("Au sein des **singletons**, on retrouve ces gènes de résistances aux antibiotiques : \n\n")
+  } else {
+    cat("### Cluster ", c, " \n\n")
+    cat("Au sein du **cluster ", c, ",** on retrouve ces gènes de résistances aux antibiotiques : \n\n")    
+  }
+  
+  # Which genomes are in my clusters ?
+  samples <- reports$genome[reports[[clust_dist]] == c]
+  # Get AMR report of those genomes
+  amr_report <- combined_amr_report[`Element type` == "AMR" & genome %in% samples]
+  # Loading only replicon AMR genes
+  list_arg <- amr_report[molecule_type == str_to_lower(params$replicon)]
+  
+  # Arranging AMR results
+  out <- list_arg %>%
+    select(genome, `Gene symbol`, `Sequence name`, Class, Subclass) %>%
+    distinct() %>%
+    group_by(`Gene symbol`, `Sequence name`, Class, Subclass) %>%
+    mutate(Class = str_to_title(Class), Subclass = str_to_title(Subclass)) %>%
+    summarise(Pourcentage=round(n()*100/length(samples), digits = 2)) %>%
+    arrange(-Pourcentage) %>%
+    mutate(Pourcentage=paste(Pourcentage, "%"))
+  
+  # Print table with AMR results
+  d <- kable(out, col.names = c("Nom du gène", "Description", "Classe d'AMR", "Sous-classe d'AMR", "Pourcentage de présence dans le cluster"), 
+             align = "llllr", "latex", booktabs = TRUE) %>%
+    kable_styling(latex_options = c("striped", "scale_down", "HOLD_position")) %>%
+    column_spec(5, width = "8em")
+  print(d)
+  
+  cat("\n\n")
+}
+
+rm(amr_report, combined_amr_report, list_arg, out, c, clones, samples, d)
+```
+
+## Phylogénie
+
+A partir de l'alignement des SNPs détectés dans les échantillons, un arbre phylogénétique du cluster est inféré. Vous le retrouverez ci-dessous, les souches associées au même cluster étant coloriées d'une couleur différente à chaque fois.
+
+```{r tree, echo=FALSE}
+
+# path_to_tree <- paste0("../phylogeny/cluster_",params$cluster_id,"/",params$species,
+#                        "/phylogenetic_tree/GTR_tree.jpeg")
+# htmltools::img(src = path_to_tree, 
+#                alt = 'Arbre phylogénétique inférée de la détection des SNPs',
+#                style="display: block; margin-left: auto; margin-right: auto;")
+# rm(path_to_tree)
+```
+
+```{r cleaning}
+rm(global_theme, params, reports, species, dist_plot, usePackage)
+```
+
+
+
+
+
+

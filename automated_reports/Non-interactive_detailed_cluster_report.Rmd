@@ -1,0 +1,305 @@
+---
+title: "Rapport Cluster `r params$cluster_id`"
+author: "Equipe PHE3ID"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+params:
+  cluster_id: "1"
+  path_to_reports: "../Script_Tests/2023-08-21_Epitrack_annotation_report.Rdata"
+  path_to_scan:  "../Script_Tests/2023-08-21_annotation_scan.Rdata"
+output:
+  pdf_document: default
+fontsize: 12pt
+header-includes:
+- \usepackage{graphicx}
+- \usepackage{fancyhdr}
+- \usepackage{titling}
+- \usepackage{svg}
+- \pagestyle{fancy}
+- \fancyhead[L]{Equipe PHE3ID}
+- \fancyhead[C]{Rapport Cluster `r params$cluster_id`}
+- \fancyhead[R]{\includegraphics[width=30pt]{pictures/logo_hcl.png}}
+- \setlength{\headheight}{35pt}
+- \addtolength{\topmargin}{-19pt}
+- \pretitle{\begin{center}
+  \hfill
+  \includegraphics[width=1in,height=1in]{pictures/logo_hcl.png}\LARGE\\}
+- \posttitle{\end{center}}
+---
+Ce rapport d'analyses fait état des investigations génomiques réalisées sur un groupe de souches signalé comme cluster soit par un service d'hygiène des HCL, soit par le logiciel Epitrack destiné à détecter de potentielles épidémies dans les services hospitaliers.
+
+Après séquençage du génome de chaque souche bactérienne du cluster, le génome est réassemblé puis annoté notamment dans le but de :
+
+  * déterminer la taxonomie de la souche ;
+  * détecter les gènes de résistance présents dans le génome ;
+  * différencier les séquences de plasmides de la séquence du chromosome ;
+  * repérer les éléments génétiques mobiles des souches.
+
+```{r setup, include=FALSE}
+# Some cleaning
+# rm(list = ls())
+# Setting R chunks options
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = 'center')
+
+# Loading libraries
+usePackage <- function(p) {
+  if (!is.element(p, installed.packages()[,1]))
+    install.packages(p, dep = TRUE)
+  require(p, character.only = TRUE)
+}
+libraries <- c("lubridate", "data.table", "stringr", "knitr", "ggplot2", "plotly", "dplyr", "scales", "tidyr", "kableExtra")
+for (lib in libraries){usePackage(lib)}
+
+# Loading Data
+load(params$path_to_reports)
+reports <- reports[cluster_id == params$cluster_id]
+
+# Global ggplot theme settings
+global_theme <- theme(plot.title=element_text(size=16, face="plain", hjust = 0.5, vjust=2),
+            axis.text.x=element_text(size=9),
+            axis.text.y=element_text(size=10),
+            axis.title.x=element_text(size=12, vjust = -1),
+            axis.title.y=element_text(size=12, angle = 90, vjust = 2),
+            legend.title=element_text(size=12),
+            legend.text = element_text(size=9))
+theme_set(global_theme)
+
+rm(lib, libraries)
+```
+
+# Prélèvement des souches
+
+```{r global_infos}
+# Calcul de la date de prélèvement la + précoce
+earliest <- format(min(reports$sampling_date), "%d/%m/%Y")
+# Calcul de la date de prélèvement la + tardive
+latest <- format(max(reports$sampling_date), "%d/%m/%Y")
+# Nombre d'échantillons dans le cluster
+nb_samples <- length(reports$sampling_date)
+```
+
+Les souches du cluster ont été prélevées entre le `r earliest` et le `r latest`.
+Le cluster est actuellement composé de `r nb_samples` souches.
+
+```{r dates}
+# Computing limits of histogram (earliest and latest months)
+first_month <- floor_date(min(reports$sampling_date), "month")
+last_month <- ceiling_date(max(reports$sampling_date), "month")
+
+# Break data by month, e.g one bin one month 
+out <- reports %>%
+        select(genome, sampling_date, mlst_species) %>%
+        mutate(month = floor_date(sampling_date, "month"))
+
+# Plotting as a barplot of month categories
+g <- ggplot(data=out, aes(x=month, fill = mlst_species)) +
+    geom_bar(stat="count", aes(text = paste0("Nombre: ", after_stat(count)))) +
+    ggtitle("Histogramme des dates de prélèvement") +
+    labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Espèces (dérivées du MLST)") +
+    scale_x_date(date_breaks = "month", date_labels = "%m/%Y") +
+    scale_y_continuous(breaks= pretty_breaks()) +
+    theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+
+g
+
+rm(first_month, last_month, out, g, earliest, latest, nb_samples)
+
+```
+
+# Composition du cluster
+
+## Espèces MLST
+
+Voici la composition en espèces du cluster. L'espèce de chaque souche est déterminée par MLST (**M**ulti **L**ocus **S**equence **T**yping). Veuillez noter que le genre Serratia n'est pas référencée en MLST. Dans le cas où le cluster devrait être composé majoritairement de cette espèce, nous vous invitons à vous référer à la compostion du cluster selon Sourmash indiquée à la suite de ce graphique.
+
+```{r mlst}
+# Plotting barplot of MLST species
+g <- ggplot(data=reports, aes(x=mlst_species)) +
+    geom_bar(stat="count", fill = "lightblue", aes(text = paste0("Nombre: ", after_stat(count)))) +
+    ggtitle("Espèces (dérivées du MLST)") +
+    labs(x = "Espèces", y = "Nombre d'échantillons") +
+    scale_y_continuous(breaks= pretty_breaks())
+
+g
+
+rm(g)
+```
+
+<!-- ## Sourmash genus -->
+
+<!-- La méthode Sourmash est une méthode différente employée pour classifier les souches. Elle indique la taxonomie en se basant sur le génome assemblé. Ici est décrit le genre attribué par cette méthode à chaque souche analysee.  -->
+
+```{r sourmash, include = FALSE}
+# Arranging data
+out <- reports %>%
+        select(genome, sourmash_genus)
+out$sourmash_genus[is.na(out$sourmash_genus)] <- "Unknown"
+
+# Plotting barplot of Sourmash genus
+g <- ggplot(data=out, aes(x=sourmash_genus)) +
+    geom_bar(stat="count", fill = "lightblue", aes(text = paste0("Count: ", after_stat(count)))) +
+    ggtitle("SOURMASH-derived genus") +
+    labs(x = "Sourmash-derived genus", y = "Count") +
+    scale_y_continuous(breaks= pretty_breaks())
+
+rm(g, out)
+```
+
+## Composition ST
+
+La méthode MLST attribue à chaque isolat un ST (Sequence Type). Ce sequence type est propre à une souche bactérienne spécifique. Il est créé en analysant les allèles de 7 gènes de maison chez chaque souche, chaque combinaison d'allèles est associé à un ST unique. 
+
+Le cluster analysé est composé de `r length(unique(reports$sequence_type))` ST différents.
+
+Un ST est spécifique à une espèce. Pour chaque espèce étudiée, on retrouvera ainsi une composition en ST différente. L'espèce MLST notée "-" indique que l'espèce n'a pas pu être identifiée après analyse du Sequence Type. Quant au ST noté "-", il représente les souches pour lesquelles l'analyse MLST n'a pu définir un ST spécifique. Cela peut être dû au fait que la combinaison d'allèles trouvée n'est pas référencée dans la base de données utilisée (PubMLST). 
+
+```{r new_mlst}
+# Arranging data to create a tooltip (text that will be written when going over the graph)
+out <- reports %>%
+        group_by(mlst_species, sequence_type) %>%
+        summarise(Count=n()) %>%
+        arrange(-Count) %>%
+        mutate(tooltip = paste0("ST ", sequence_type, "\nNombre: ", Count))
+
+# Plotting interactive barplot of sequence type by species
+g <- ggplot(data=out, aes(x=sequence_type, y=Count, fill = sequence_type)) +
+                geom_bar(data=out, aes(x=sequence_type, y=Count, fill = sequence_type), stat="identity", colour = "black") +
+                ggtitle("Composition ST par espèce") +
+                labs(x = "MLST Sequence Type", y = "Nombre d'échantillons", fill='Sequence Type (ST)') +
+                scale_y_continuous(breaks= pretty_breaks()) +
+                facet_wrap( ~ mlst_species, ncol = 2, scales = "free")
+
+g
+
+rm(out, g)
+```
+
+
+# Gènes de résistance aux antibiotiques [ARGs]
+
+```{r load_amr}
+# Loading Data with AMRFinder report [GLOBALLY]
+load(params$path_to_scan)
+rm(amrfinder_reports, contig_reports, mge_reports, mlst_reports, quast_reports, sourmash_reports)
+```
+
+Les gènes de résistance sont identifiés avec AMRFinder, qui prend la base de données NCBI de gènes de résistance comme référence. Certains gènes de résistance sont localisés sur la partie chromosomique du génome des souches, d'autres sont positionnés sur des plasmides. 
+
+Lorsqu'il est localisé sur un plasmide, un gène de résistance est plus susceptible d'être échangé avec une autre bactérie. En effet, les plasmides font partie des éléments génétiques mobiles, qui peuvent, par mécanisme de conjugaison, passer d'une bactérie à une autre.
+
+```{r tab_arg, results='asis'}
+# Table containing chromosomal ARGs
+species <- unique(reports$mlst_species)
+for(s in species){
+  # Genomes concerned
+  samples <- reports[mlst_species == s]$genome
+  cat("## Espèce ", s," (", length(samples)," échantillon(s)) \n\n")
+  # Get AMR report of those genomes
+  amr_report <- combined_amr_report[`Element type` == "AMR" & genome %in% samples]
+  cat("### ARGs chromosomiques \n\n")
+  # Loading only chromosomal ARGs
+  chr_arg <- amr_report[molecule_type == "chromosome"]
+  # Arranging AMR results
+  out <- chr_arg %>%
+        select(genome, `Gene symbol`, `Sequence name`, Class, Subclass) %>%
+        distinct() %>%
+        group_by(`Gene symbol`, `Sequence name`, Class, Subclass) %>%
+        mutate(Class = str_to_title(Class), Subclass = str_to_title(Subclass)) %>%
+        summarise(Pourcentage=round(n()*100/length(samples), digits = 2)) %>%
+        arrange(-Pourcentage) %>%
+        mutate(Pourcentage=paste(Pourcentage, "%"))
+
+  # Print table with AMR results
+  d <- kable(out, col.names = c("Nom du gène", "Description", "Classe d'AMR", "Sous-classe d'AMR", "Pourcentage de présence dans les échantillons"),
+             align = "llllr", "latex", booktabs = TRUE) %>%
+    kable_styling(latex_options = c("striped", "scale_down", "HOLD_position")) %>%
+    #column_spec(2, width = "25em") %>%
+    column_spec(5, width = "8em")
+  print(d)
+  cat("\n\n")
+  cat("### ARGs plasmidiques \n\n")
+  # Loading only plasmidic ARGs
+  plasmid_arg <- amr_report[molecule_type == "plasmid"]
+  # Arranging AMR results
+  out <- plasmid_arg %>%
+        select(genome, `Gene symbol`, `Sequence name`, Class, Subclass) %>%
+        distinct() %>%
+        group_by(`Gene symbol`, `Sequence name`, Class, Subclass) %>%
+        mutate(Class = str_to_title(Class), Subclass = str_to_title(Subclass)) %>%
+        summarise(Pourcentage=round(n()*100/length(samples), digits = 2)) %>%
+        arrange(-Pourcentage) %>%
+        mutate(Pourcentage=paste(Pourcentage, "%"))
+  # Print table with AMR results
+  d <- kable(out, col.names = c("Nom du gène", "Description", "Classe d'AMR", "Sous-classe d'AMR", "Pourcentage de présence dans les échantillons"),
+             align = "llllr", "latex", booktabs = TRUE) %>%
+    kable_styling(latex_options = c("striped", "scale_down", "HOLD_position")) %>%
+    #column_spec(2, width = "25em") %>%
+    column_spec(5, width = "8em")
+  print(d)
+  cat("\n\n")
+}
+rm(out, g, len_chr_arg, amr_report, chr_arg, combined_amr_report, d, plasmid_arg, s, samples, species)
+```
+
+## Classes d'AMR (Antimicrobial Resistance)
+
+Les souches du cluster ne possèdent pas forcément toutes les mêmes gènes de résistance aux antibiotiques. Les mécanismes d'échanges génétiques pouvant être rapides chez les bactéries, elles peuvent potentiellement perdre ou gagner des gènes de résistance. Il est intéressant de regarder le nombre de classes de résistance aux antibiotiques chez les souches du cluster, pour évaluer l'accumulation de résistances chez ces souches.
+
+```{r drug_targets}
+# Computing length of AMR classes per sample
+len_amr_classes <- sapply(reports$amr_classes, function(rep) length(unlist(strsplit(rep, ","))))
+# Arranging data
+out <- as.data.frame(len_amr_classes) 
+
+# Displaying histogram of number of classes
+g <- ggplot(out, aes(x=len_amr_classes)) +
+    geom_histogram(breaks = seq(0, max(len_amr_classes), 2), fill = "lightblue", colour = "black", aes(text = paste0("Count: ", after_stat(count)))) +
+    labs(x = "Number of AMR classes", y = "Count") + 
+    ggtitle("No. of AMR classes per isolate") +
+    scale_x_continuous(breaks = seq(0, max(len_amr_classes), 2)) +
+    scale_y_continuous(breaks= pretty_breaks()) 
+
+g
+
+rm(out, len_amr_classes, g)
+```
+
+On peut également mesurer la présence de chaque classe de résistance aux antibiotiques dans le cluster. 
+
+```{r amr_barplot_per_classes}
+# Creating a list of AMR class found per species
+amr_list <- reports %>%
+                select(mlst_species, amr_classes) %>%
+                mutate(amr_classes = tolower(amr_classes))
+amr_list <- separate_longer_delim(amr_list, amr_classes, ",")
+
+# Histogram of AMR_classes (aminoglycoside, phenicol, etc.)
+g <- ggplot(data=amr_list, aes(x=amr_classes, fill = mlst_species)) +
+    geom_bar(stat="count", aes(text = paste0("Count: ", after_stat(count)))) +
+    ggtitle("AMR classes") +
+    labs(x = "AMR class", y = "Count", fill = "Espèce MLST") +
+    scale_y_continuous(breaks= pretty_breaks()) +
+    theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+
+g
+
+rm(g, amr_list)
+```
+
+# Analyses phylogénétiques du cluster
+
+L'analyse phylogénétique conduite se constitue de quelques étapes. On notera que les différents types de réplicons sont analysés séparément, ainsi on sépare le chromosome des plasmides.
+
+Le génome du réplicon est étudié pour le cluster d'isolat. Uniquement le core génome, c'est-à-dire l'ensemble des gènes présents dans toutes les souches, est utilisé pour créer la phylogénie. Les SNPs (**S**ingle **N**ucleotide **P**olymorphisms) sont détectés sur le core génome. L'arbre phylogénétique est alors créé en se basant sur l'alignement des SNPs détectés.
+
+## Phylogénie du chromosome
+
+```{r fig_construct, fig.align = 'center', out.width = 200}
+
+#![]("pictures/under-construction.jpg"){#id .class width=50% height=50%}
+include_graphics("pictures/under-construction.jpg")
+
+```
+
+## Phylogénie des plasmides 
+
+[Coming later]
