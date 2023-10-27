@@ -54,6 +54,7 @@ process distance_matrix_mash {
     path("phylogeny/$replicon/mash/mash_analysis.log")
     path("phylogeny/$replicon/mash/mini_clusters.tsv")
     path("phylogeny/$replicon/mash/no_clonal_samples.tsv")
+    path("phylogeny/$replicon/mash/reference_for_phylogeny.tsv")
 
   script:
   """
@@ -77,7 +78,6 @@ process distance_matrix_mash {
 
 process duplicate_masker_repeatmasker {
   // Tool: RepeatMasker
-  // Random choice of a reference sample in subgroup (CAN BE CHANGED LATER)
   // Mask duplicated regions of the reference genome
 
   label 'repeatmasker'
@@ -89,10 +89,10 @@ process duplicate_masker_repeatmasker {
     params.duplicate_masker_repeatmasker.todo == 1
   
   input:
-    tuple val(samples), val(replicon), val(subgroup)
+    tuple val(samples), val(replicon), val(subgroup), val(ref)
 
   output:
-    tuple val(replicon), val(samples), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/*.bed"), emit : replicons_ch
+    tuple val(replicon), val(samples), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/masked_${ref}.bed"), emit : replicons_ch
     path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/repeatmasker.log")
     path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/repeatmasker.err")
     
@@ -103,16 +103,12 @@ process duplicate_masker_repeatmasker {
   OUT_DIR=phylogeny/$replicon/minicluster_$subgroup/repeatmasker
   mkdir -p -m 777 \${OUT_DIR}
 
-  SAMPLES_LIST=\$(echo "$samples" | tr -d "[]" | tr -d ",")
-  ARRAY=(\$SAMPLES_LIST)
-  SIZE=\${#ARRAY[@]}
-  RANDOM_INDEX=\$((\$RANDOM % \$SIZE))
-  RANDOMLY_CHOSEN_REF=\${ARRAY[\$RANDOM_INDEX]}
+  PATH_TO_REF=${params.result}/phylogeny/$replicon/sequences/${ref}.fasta
 
   source ~/miniconda3/etc/profile.d/conda.sh
   conda activate repeatmasker
-  RepeatMasker -dir \${OUT_DIR} ${params.result}/phylogeny/$replicon/sequences/\${RANDOMLY_CHOSEN_REF}.fasta 1> \${OUT_DIR}/repeatmasker.log 2> \${OUT_DIR}/repeatmasker.err
-  rmsk2bed < \${OUT_DIR}/\${RANDOMLY_CHOSEN_REF}.fasta.out | bedops --merge - > \${OUT_DIR}/masked_\${RANDOMLY_CHOSEN_REF}.bed
+  RepeatMasker -dir \${OUT_DIR} \${PATH_TO_REF} 1> \${OUT_DIR}/repeatmasker.log 2> \${OUT_DIR}/repeatmasker.err
+  rmsk2bed < \${OUT_DIR}/${ref}.fasta.out | bedops --merge - > \${OUT_DIR}/masked_${ref}.bed
   conda deactivate
   """
 
@@ -251,10 +247,10 @@ process duplicate_masker_phylogeny {
     params.duplicate_masker_phylogeny.todo == 1
   
   input:
-    tuple val(replicon), val(samples)
+    tuple val(replicon), val(samples), val(ref)
 
   output:
-    tuple val(replicon), val(samples), path("phylogeny/$replicon/phylogenetic_tree/repeatmasker/*.bed"), emit : replicons_ch
+    tuple val(replicon), val(samples), path("phylogeny/$replicon/phylogenetic_tree/repeatmasker/masked_${ref}.bed"), emit : replicons_ch
     path("phylogeny/$replicon/phylogenetic_tree/repeatmasker/repeatmasker.log")
     path("phylogeny/$replicon/phylogenetic_tree/repeatmasker/repeatmasker.err")
     
@@ -263,12 +259,10 @@ process duplicate_masker_phylogeny {
   OUT_DIR=phylogeny/$replicon/phylogenetic_tree/repeatmasker
   mkdir -p -m 777 \${OUT_DIR}
 
-  REF=${params.duplicate_masker_phylogeny["reference_sample"]}
-
   source ~/miniconda3/etc/profile.d/conda.sh
   conda activate repeatmasker
-  RepeatMasker -dir \${OUT_DIR} ${params.result}/phylogeny/$replicon/sequences/\${REF}.fasta 1> \${OUT_DIR}/repeatmasker.log 2> \${OUT_DIR}/repeatmasker.err
-  rmsk2bed < \${OUT_DIR}/\${REF}.fasta.out | bedops --merge - > \${OUT_DIR}/masked_\${REF}.bed
+  RepeatMasker -dir \${OUT_DIR} ${params.result}/phylogeny/$replicon/sequences/${ref}.fasta 1> \${OUT_DIR}/repeatmasker.log 2> \${OUT_DIR}/repeatmasker.err
+  rmsk2bed < \${OUT_DIR}/${ref}.fasta.out | bedops --merge - > \${OUT_DIR}/masked_${ref}.bed
   conda deactivate
   """
 

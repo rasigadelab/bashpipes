@@ -17,6 +17,8 @@ args <- parser$parse_args()
 cat("Moving to directory containing mash matrix.\n")
 setwd(args$path_to_mash_dist)
 getwd()
+replicon <- unlist(str_split(getwd(), "/"))
+replicon <- replicon[length(replicon)-1]
 cat("Loading mash matrix.\n")
 {
   # Load file
@@ -41,7 +43,7 @@ cat("Clustering based on mash matrix.\n")
   # Hierarchical clustering based on mash matrix, single linkage method.
   mash_distances <- my_mat_sym
   hc <- hclust(as.dist(mash_distances), method="single")
-  mini_clusters <- cutree(hc, h=args$threshold)
+  mini_clusters <- cutree(hc, h=as.numeric(args$threshold))
   rm(hc, my_mat_sym)
 }
 cat("Get reference sample for each minicluster.")
@@ -58,7 +60,7 @@ cat("Get reference sample for each minicluster.")
       sub_mash_df <- mash_df[which(sample_names %in% cl_samples), cl_samples]
       # Compute mean column
       mean_cols <- colMeans(sub_mash_df, na.rm=T)
-      ref <- names(mean_cols[which.max(mean_cols)])
+      ref <- names(mean_cols[which.min(mean_cols)])
       mini_cl_df[mini_cl_df$sample_names %in% cl_samples,]$reference <- ref
     }
   }
@@ -70,12 +72,10 @@ cat("Get reference sample for each minicluster.")
 cat("Output to TSV file.\n")
 {
   # If sample alone in a cluster, write it to no_clonal_samples.tsv
-  fwrite(mini_cl_df[mini_cl_df$cluster_count == 1,1:2], file = "no_clonal_samples.tsv", sep = "\t", col.names = TRUE)
+  fwrite(mini_cl_df[mini_cl_df$cluster_count == 1,], file = "no_clonal_samples.tsv", sep = "\t", col.names = TRUE)
   # Else, write it to mini_clusters.tsv
-  fwrite(mini_cl_df[mini_cl_df$cluster_count > 1,1:2], file = "mini_clusters.tsv", sep = "\t", col.names = TRUE)
+  fwrite(mini_cl_df[mini_cl_df$cluster_count > 1,], file = "mini_clusters.tsv", sep = "\t", col.names = TRUE)
   # Write reference in reference_for_phylogeny.tsv
-  outfile<-file("reference_for_phylogeny.tsv")
-  writeLines(ref, outfile)
-  close(outfile)
-  rm(mini_cl_df, sample_names, mini_clusters, lib, usePackage, ref, outfile)
+  fwrite(data.table(replicon = replicon, reference = as.character(ref)), file = "reference_for_phylogeny.tsv", sep = "\t", col.names = TRUE)
+  rm(mini_cl_df, sample_names, mini_clusters, lib, usePackage, ref)
 }

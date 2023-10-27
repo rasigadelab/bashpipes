@@ -39,17 +39,20 @@ workflow {
         replicons_ch = replicons_files.map { row -> tuple(row.Sample, row.replicon) }
         //Step2- Create a Channel based on content of mini_clusters.tsv
         clusters_files = Channel.fromPath(params.result+"/phylogeny/*/mash/mini_clusters.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
-        clusters_ch = clusters_files.map { row -> tuple(row.sample_names, row.mini_clusters) }
+        clusters_ch = clusters_files.map { row -> tuple(row.sample_names, row.mini_clusters, row.reference) }
         //Step3- Join both Channels
-        input_ch = replicons_ch.join(clusters_ch).groupTuple(by: [1,2])
+        input_ch = replicons_ch.join(clusters_ch).groupTuple(by: [1,2,3])
         //Step4- Launch appropriate workflow
         bacteria_variant_calling(input_ch)
     } else if ( params.workflow == 'bacteria_phylogeny') {
         //Step1- create a Channel based on content of replicons.tsv
         replicons_files = Channel.fromPath(params.result+"/replicons.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
         replicons_ch = replicons_files.map { row -> tuple(row.replicon, row.Sample) }
-        //Step2- Gather samples for each replicon
-        replicons_ch.groupTuple(by: 0).set{ replicons_ch }
+        //Step2- Create a Channel based on content of mini_clusters.tsv
+        reference_files = Channel.fromPath(params.result+"/phylogeny/*/mash/reference_for_phylogeny.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
+        reference_ch = reference_files.map { row -> tuple(row.replicon, row.reference) }
+        //Step3- Gather samples for each replicon
+        replicons_ch = replicons_ch.combine(reference_ch, by: 0).groupTuple(by: [0,2])
         //Step3- launch the appropriate workflow
         bacteria_phylogeny(replicons_ch)
     
