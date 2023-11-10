@@ -41,6 +41,39 @@ process quality_fastqc {
 
 }
 
+process stats_nanoplot{
+  
+  // Computing statistics on Nanopore FastQ and plotting some plots related.
+
+  label 'lowCPU'
+  storeDir params.result
+  debug false
+  tag "Computing ONT stats of sample $sample"
+
+  when:
+    params.stats_nanoplot.todo == 1 
+
+  input:
+    tuple val(sample), path(ont_reads)
+
+  output:
+    tuple val(sample), path("genomes/$sample/filtlong/${sample}_filtered_ONT.fastq.gz"), emit : nanopore_reads
+    path("genomes/$sample/nanoplot/*.log")
+    path("genomes/$sample/nanoplot/NanoPlot-report.html")
+    path("genomes/$sample/nanoplot/NanoStats.txt")
+    
+  
+  """
+  OUT_DIR=genomes/$sample/nanoplot
+  mkdir -p -m 777 \${OUT_DIR}
+
+  source ~/miniconda3/etc/profile.d/conda.sh
+  conda activate nanoplot
+  NanoPlot -t $task.cpus --fastq $ont_reads -o \${OUT_DIR} --tsv_stats --N50 -f png 1> \${OUT_DIR}/nanoplot.log 2> \${OUT_DIR}/nanoplot.err
+  conda deactivate
+  """
+}
+
 process trim_trimmomatic {
   // Tool: trimmomatic
   // Trimming adapters and filtering reads of bad quality
@@ -94,6 +127,45 @@ process trim_trimmomatic {
 
 }
 
+process filter_filtlong {
+
+  // Tool: Filtlong
+  // Filtering of Nanopore reads.  
+
+  label 'lowCPU'
+  storeDir (params.result)
+  debug false
+  tag "Filtlong on $ont_reads.simpleName"
+
+  when:
+    params.filter_filtlong.todo == 1
+
+  input:
+    tuple val(sample), path(ont_reads)
+  
+  output:
+    tuple val(sample), path("genomes/$sample/filtlong/${sample}_filtered_ONT.fastq.gz"), emit : filtered_nanopore
+
+  script:
+  """
+  OUT_DIR=genomes/$sample/filtlong
+  mkdir -p -m 777 \${OUT_DIR}
+
+  source ~/miniconda3/etc/profile.d/conda.sh
+  conda activate filtlong
+  echo "hey"
+  filtlong --min_length ${params.filter_filtlong["min_read_length"]} --keep_percent ${params.filter_filtlong["keep_percent"]} $ont_reads | gzip > \${OUT_DIR}/${sample}_filtered_ONT.fastq.gz 
+  conda deactivate
+  """
+
+  stub:
+  """
+  OUT_DIR=genomes/$sample/filtlong
+  mkdir -p -m 777 \${OUT_DIR}
+  touch \${OUT_DIR}/${sample}_filtered_ONT.fastq.gz
+  """  
+}
+
 process assembly_flye {
 
   // Tool: Flye
@@ -122,7 +194,7 @@ process assembly_flye {
   OUT_DIR=genomes/$sample/flye
   mkdir -p -m 777 \${OUT_DIR}
 
-  flye ${params.assembly_flye["ont_type"]} $ont_reads -o \${OUT_DIR} --threads $task.cpus 1> \${OUT_DIR}/flye.log 2> \${OUT_DIR}/flye.err 
+  flye ${params.assembly_flye["ont_type"]} $ont_reads -o \${OUT_DIR} --threads $task.cpus --meta 1> \${OUT_DIR}/flye.log 2> \${OUT_DIR}/flye.err 
   cp \${OUT_DIR}/assembly.fasta genomes/$sample/${sample}_assembly_raw.fasta
 
   echo "Completed Flye process for sample $sample"
@@ -285,7 +357,6 @@ process polish_pilon {
     path("genomes/$sample/polish/pilon.log")
     path("genomes/$sample/${sample}_polished.fasta")
     path("genomes/$sample/polish/${sample}_polished.changes")
-    path("genomes/$sample/polish/polishing_is_done.txt")
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -296,10 +367,6 @@ process polish_pilon {
 
   pilon -Xmx${memory}G --genome $draft_assembly --bam $sorted_bam ${params.polish_pilon["list_changes"]} --output \${SAMPLE_POLISHED} &> \${OUT_DIR}/pilon.log
   cp \${SAMPLE_POLISHED}.fasta genomes/$sample/${sample}_polished.fasta
-
-  rm ${params.result}/\${OUT_DIR}/${sample}.sorted.bam 
-  rm ${params.result}/\${OUT_DIR}/${sample}.sorted.bam.bai
-  touch \${OUT_DIR}/polishing_is_done.txt
   
   echo "Completed Pilon process for sample $sample"
   """
@@ -596,8 +663,8 @@ process mge_mob_recon {
     tuple val(sample), path(final_assembly)
 
   output:
+    tuple val(sample), path("genomes/$sample/mob_recon/contig_report.txt"), emit : samples_list
     path("genomes/$sample/mob_recon/*.fasta")
-    path("genomes/$sample/mob_recon/contig_report.txt")
     path("genomes/$sample/mob_recon/mge.report.txt")
     path("genomes/$sample/mob_recon/*.txt")
     path("genomes/$sample/mob_recon/mob_recon.log")
@@ -622,6 +689,41 @@ process mge_mob_recon {
   mkdir -p -m 777 \${OUT_DIR}
   touch \${OUT_DIR}/mob_recon.err
   touch \${OUT_DIR}/mob_recon.log
+  """  
+
+}
+
+process cleaning {
+  // Tool: Unix command
+  // Remove temporary files (for example BAM files). 
+
+  label 'lowCPU'
+  storeDir params.result
+  debug false
+  tag "Cleaning on $sample" 
+
+  when:
+    params.cleaning.todo == 1
+
+  input:
+    tuple val(sample), path(contig_report)
+
+  output:
+    path("genome/$sample/cleaning_is_done.txt")
+
+  script:
+  """
+  rm ${params.result}/genome/${sample}/polish/${sample}.sorted.bam
+  rm ${params.result}/genome/${sample}/polish/${sample}.sorted.bam.bai
+  touch genome/$sample/cleaning_is_done.txt
+
+  """
+
+  stub:
+  """
+  rm ${params.result}/genome/${sample}/polish/${sample}.sorted.bam
+  rm ${params.result}/genome/${sample}/polish/${sample}.sorted.bam.bai
+  touch genome/$sample/cleaning_is_done.txt
   """  
 
 }

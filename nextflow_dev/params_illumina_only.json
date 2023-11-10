@@ -5,6 +5,8 @@
     "workflow" : "bacteria_denovo",
     "hybrid_assembly" : false,
     "fastqc" : true,
+    "nano_filtering" : false,
+    "nanoplot" : false,
     "trimming" : true,
     "assembler" : "spades",
     "map" : false,
@@ -16,6 +18,7 @@
     "amr_typer" : true,
     "annotate" : true,
     "mge" : true,
+    "clean" : false,
 
     "quality_fastqc" : {
         "todo" : 1
@@ -25,6 +28,14 @@
         "todo" : 1,
         "adapter" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/11.Illumina_pipeline/Trimmomatic-0.39/adapters/NexteraPE-PE.fa",
         "Trimmomatic" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/11.Illumina_pipeline/Trimmomatic-0.39/dist/jar/trimmomatic-0.39.jar"
+    },
+
+    "stats_nanoplot" : {
+        "todo" : 0
+    },
+
+    "filter_filtlong" : {
+        "todo" : 0
     },
 
     "trim_cutadapt" : {
@@ -92,6 +103,10 @@
        
     "mge_mob_recon" : {
         "todo" : 1
+    },
+
+    "cleaning" : {
+        "todo" : 0
     }
     
 }

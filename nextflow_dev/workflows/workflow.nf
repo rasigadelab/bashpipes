@@ -4,6 +4,7 @@
 nextflow.enable.dsl = 2
 
 // import modules
+include {filter_filtlong} from "${params.nfpath}/modules/module.nf"
 include {assembly_flye} from "${params.nfpath}/modules/module.nf"
 include {assembly_spades} from "${params.nfpath}/modules/module.nf"
 include {map_bowtie2} from "${params.nfpath}/modules/module.nf"
@@ -18,7 +19,9 @@ include {annotate_prokka} from "${params.nfpath}/modules/module.nf"
 include {mge_mob_recon} from "${params.nfpath}/modules/module.nf"
 include {quality_fastqc} from "${params.nfpath}/modules/module.nf"
 include {trim_trimmomatic} from "${params.nfpath}/modules/module.nf"
+include {stats_nanoplot} from "${params.nfpath}/modules/module.nf"
 
+include{cleaning} from "${params.nfpath}/modules/module.nf"
 
 // workflow script
 workflow bacteria_denovo {
@@ -37,6 +40,16 @@ workflow bacteria_denovo {
        if ( params.trimming ) {
             trim_trimmomatic(ch_illumina)
             trim_trimmomatic.out.illumina_trimmed.set{ ch_illumina }
+       }
+
+       if ( params.nano_filtering ) {
+            filter_filtlong(ch_ont)
+            filter_filtlong.out.filtered_nanopore.set{ ch_ont }
+       }
+
+       if ( params.nanoplot ) {
+            stats_nanoplot(ch_ont)
+            stats_nanoplot.out.nanopore_reads.set{ ch_ont }
        }
 
         //StepA- De novo assembly
@@ -102,6 +115,12 @@ workflow bacteria_denovo {
         //StepI- MGE Analysis (mobile genetic elements)
         if ( params.mge ) {
             mge_mob_recon(ch_final_assembly)
+            mge_mob_recon.out.samples_list.set{ ch_samples }
+        }
+
+        //StepJ- Cleaning
+        if ( params.clean ) {
+            cleaning(ch_samples)
         }
     
 }
