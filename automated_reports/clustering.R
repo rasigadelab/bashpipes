@@ -42,7 +42,7 @@ cat(sprintf("Entering phylogeny directory: %s\n", phylogeny_dir))
 
 # Analyze clusters
 fnames <- dir(recursive = TRUE, full.names = TRUE)
-clusters <- c("cluster_1/paeruginosa") # unique(str_match(fnames, "cluster_\\d+/\\w+"))
+clusters <- unique(str_match(fnames, "cluster_\\d+/\\w+")) # c("cluster_1/paeruginosa")
 
 cat(sprintf("  Phylogeny directory contains %i files in %i clusters.\n", length(fnames), length(clusters)))
 
@@ -116,7 +116,7 @@ cat("Transform genetic distance (substitions/sites) into substitions number.\n")
       }
     }
   }
-  rm(iqtree_reports, mldist_reports, cluster, main_cl, mini_cl, minicluster)
+  rm(mldist_reports, cluster, main_cl, mini_cl, minicluster)
 }
 
 cat("Loading outliers.\n")
@@ -128,7 +128,7 @@ cat("Loading outliers.\n")
   outliers_reports <- list()
   for(cluster in clusters) {
     outliers_reports[[ cluster ]] <- list()
-    outlier_data <- read.table(outliers_fnames, sep = "\t", header = TRUE)
+    outlier_data <- read.table(outliers_fnames[cluster], sep = "\t", header = TRUE)
     outliers_reports[[ cluster ]] <- outlier_data$sample_names
   }
   rm(outlier_data, outliers_clusters, cluster, outliers_fnames)

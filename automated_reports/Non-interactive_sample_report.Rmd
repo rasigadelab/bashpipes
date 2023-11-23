@@ -1,20 +1,27 @@
 ---
-title: "Echantillon `r params$sample_glims`"
+title: "Séquençage génomique complet d'isolat bactérien"
+subtitle: "Prélèvement `r params$sample_glims`"
 author: "Equipe PHE3ID"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 params:
-  sample_glims: "022192023701-01"
-  illumina_only: TRUE
-  path_to_reports: "../Script_Tests/2023-09-21_Epitrack_annotation_report.Rdata"
-  path_to_scan: "../Script_Tests/2023-09-21_annotation_scan.Rdata"
+  sample_glims: "022081308401-01"
+  illumina_only: FALSE
+  path_to_reports: "../Script_Tests/2023-11-23_Epitrack_annotation_report.Rdata"
+  path_to_scan: "../Script_Tests/2023-11-23_annotation_scan.Rdata"
 output:
-  pdf_document: default
+  pdf_document:
+      toc: true
+      toc_depth: 2
+      number_sections: true
 fontsize: 12pt
 header-includes:
+- \usepackage{float}
 - \usepackage{graphicx}
 - \usepackage{fancyhdr}
 - \usepackage{titling}
 - \usepackage{svg}
+- \usepackage{booktabs}
+- \usepackage[table]{xcolor}
 - \pagestyle{fancy}
 - \fancyhead[L]{Equipe PHE3ID}
 - \fancyhead[C]{Echantillon `r params$sample_glims`}
@@ -26,30 +33,15 @@ header-includes:
   \includegraphics[width=1in,height=1in]{pictures/logo_hcl.png}\LARGE\\}
 - \posttitle{\end{center}}
 ---
-
-Ce rapport d'analyses met en lumière les investigations génomiques réalisées sur une souche du projet Epitrack. Il est écrit à la demande des services d'hygiène des HCL pour avoir un détail sur l'apport en informations du séquençage de la souche. 
-
-Après séquençage du génome de la souche bactérienne étudiée, le génome est réassemblé puis annoté notamment dans le but de :
-
-  * déterminer la taxonomie de la souche ;
-  * détecter les gènes de résistance présents dans le génome ;
-  * différencier les séquences de plasmides de la séquence du chromosome ;
-  * repérer les éléments génétiques mobiles au sein du génome.
   
-```{r, results='asis', echo = FALSE}
-if(params$illumina_only == TRUE){
-  cat("La souche a été séquencée **en Illumina uniquement**.\n\n")
-} else {
-  cat("La souche a été séquencée **en Nanopore et en Illumina**. Un assemblage Nanopore est tout d'abord réalisé puis il est corrigé à partir des séquences Illumina.\n\n")
-}
-```
-
 
 ```{r, echo=FALSE}
 htmltools::img(src = "pictures/logo_hcl.svg", 
                alt = 'logo_hcl', 
                style = 'position:absolute; top:0; right:1%; padding:10px; max-width:10%')
 ```
+
+\newpage 
 
 ```{r setup, include=FALSE}
 # Some cleaning
@@ -84,9 +76,15 @@ theme_set(global_theme)
 rm(lib, libraries)
 ```
 
-# Carte d'identité de la souche
+# Carte d'identité de l'isolat
 
-La souche `r params$sample_glims` est référencée par un identifiant Epi-XXX, ceci de sorte à anonymiser les données lorsqu'elles sont analysées. 
+```{r, results='asis', echo = FALSE}
+if(params$illumina_only == TRUE){
+  cat("L'isolat a été séquencé **en Illumina uniquement**.\n\n")
+} else {
+  cat("L'isolat a été séquencé **en Nanopore et en Illumina**. Un assemblage Nanopore est tout d'abord réalisé puis il est corrigé à partir des séquences Illumina.\n\n")
+}
+```
 
 ```{r infos}
 out <- reports %>%
@@ -100,9 +98,7 @@ kable(out, col.names = c("PHE3ID ID", "N° GLIMS", "Date de prélèvement", "Esp
 rm(out)
 ```
 
-# Qualité du séquençage 
- 
-Une fois la souche séquencée et son génome réassemblé, il est important de considérer que la qualité de l'assemblage peut affecter les résultats d'annotation donnés par la suite. La qualité de l'assemblage est directement influencée par les potentielles erreurs accumulées lors du séquençage de la souche. 
+# Qualité du séquençage/assemblage 
 
 ```{r qc}
 # Accessing data
@@ -120,8 +116,7 @@ if(params$illumina_only==TRUE){
                                                   big.mark=" ",digits=0))
 
   # Outputting table
-  kable(assembly_qc, col.names = c("PHE3ID ID", "Espèce MLST", "N50", "Nombre de contigs (>500 bp)", "Longueur du plus grand contig", "Couverture du plus grand contig", "Nombre de reads Illumina"), 
-        align = "llccccc", "latex", booktabs = TRUE) %>%
+  kable(assembly_qc, col.names = c("PHE3ID ID", "Espèce MLST", "N50", "Nombre de contigs (>500 bp)", "Longueur du plus grand contig", "Couverture du plus grand contig", "Nombre de reads Illumina", "Couverture moyenne de l'assemblage"), align = "llccccc", "latex", booktabs = TRUE) %>%
     kable_styling(latex_options = c("striped", "scale_down", "HOLD_position")) %>%
     reduce(c(4,5,6,7,8,9), column_spec, width = "5em", .init = .)
 } else {
@@ -131,7 +126,11 @@ if(params$illumina_only==TRUE){
   
   assembly_qc <- assembly_qc %>%
                   select(-QC_illumina_pass, -QC_nano_pass) %>%
-                  mutate(n_reads = formatC(n_reads, format="f", big.mark=" ", 
+                  mutate(nano_reads = formatC(nano_reads, format="f", big.mark=" ", 
+                                           digits=0),
+                         nano_bases = formatC(nano_bases, format="f", big.mark=" ", 
+                                           digits=0),
+                         illumina_reads = formatC(illumina_reads, format="f", big.mark=" ", 
                                            digits=0),
                          pilon_corrections = formatC(pilon_corrections, format="f", big.mark=" ", digits=0),
                          length_largest = formatC(length_largest, format="f",
@@ -139,14 +138,16 @@ if(params$illumina_only==TRUE){
   
   # Outputting table
   kable(assembly_qc, col.names = c("PHE3ID ID", "Espèce MLST", 
-                         "Nombre de contigs", "Nombre de contigs circulaires", "Longueur du plus grand contig", "Couverture du plus grand contig", "Nombre de reads Illumina", "Taux d'alignement global Illumina/Nanopore", "Taux d'alignements uniques Illumina/Nanopore", "Couverture moyenne assemblage final", "Nombre de corrections de l'assemblage Nanopore"), 
-        align = "llccccccccc", "latex", booktabs = TRUE) %>%
-    kable_styling(latex_options = c("striped", "scale_down", "HOLD_position"))
+                         "Nombre de contigs", "Nombre de contigs circulaires", "Longueur du plus grand contig", "Couverture du plus grand contig", "Nombre de reads Nanopore", "Nombre de bases Nanopore", "Nombre de reads Illumina", "Taux d'alignement global Illumina/Nanopore", "Taux d'alignements uniques Illumina/Nanopore", "Couverture moyenne assemblage final", "Nombre de corrections de l'assemblage Nanopore"), 
+        align = "llccccccccccc", "latex", booktabs = TRUE) %>%
+    kable_styling(latex_options = c("striped", "scale_down", "HOLD_position")) %>%
+    reduce(c(1,2,3,4,5,6,7,8,9,10,11,12,13), column_spec, width = "5em", .init = .) %>%
+    reduce(c(11,10), column_spec, width = "8em", .init = .)
 }
 
 ```
 
-La qualité du séquençage est évaluée à partir de plusieurs critères, si un critère passe le QC, alors la case qui lui est associé dans le tableau ci-dessus sera colorée en vert. Si ce n'est pas le cas, elle sera colorée en rouge.
+Conformité du génome assemblé :
 
 ```{r qc_table}
 # Accessing data
@@ -177,20 +178,22 @@ if(params$illumina_only==TRUE){
   # Output QC table
   kable(qc_df, col.names = c("Nombre de contigs $\\le$ 20", "Couverture du plus long contig $\\ge$ 20", "Couverture moyenne de l'assemblage $\\ge$ 30", "Nombre de corrections apportées par les séquences Illumina (entre 100 et 10 000)"), escape = FALSE,
         align = "llll", "latex", booktabs = TRUE) %>%
-    kable_styling(latex_options = c("HOLD_position")) %>%
+    kable_styling(latex_options = c("scale_down", "HOLD_position")) %>%
     column_spec(1, background = ifelse(qc_df$contig_test == "NON CONFORME", "red", "green")) %>%
     column_spec(2, background = ifelse(qc_df$cov_test == "NON CONFORME", "red", "green")) %>%
     column_spec(3, background = ifelse(qc_df$pilon_cov_test == "NON CONFORME", "red", "green")) %>%
-    column_spec(4, background = ifelse(qc_df$pilon_correc_test == "NON CONFORME", "red", "green"))
+    column_spec(4, background = ifelse(qc_df$pilon_correc_test == "NON CONFORME", "red", "green")) %>%
+    reduce(c(1,2,3,4), column_spec, width = "10em", .init = .)
 }
 
 rm(assembly_qc, qc_df)
 ```
 
+\newpage
+
 # Gènes de résistance
 
 ## Résistances sur le chromosome
-
 
 ```{r nb_chr_args}
 # Loading Data with AMRFinder report [GLOBALLY]
@@ -204,7 +207,7 @@ nb_chr_arg <- nrow(chr_arg)
 
 ```
 
-Le chromosome de la souche **présente `r nb_chr_arg` gènes de résistance** aux antibiotiques. Les gènes répertoriés par AMRFinder sont les suivants :
+Le chromosome de l'isolat **présente `r nb_chr_arg` gènes de résistance** aux antibiotiques. Les gènes répertoriés par AMRFinder sont les suivants :
 
 
 ```{r chr_tab}
@@ -228,22 +231,26 @@ list_plasmids <- unlist(strsplit(reports$plasmid_ID, ","))
 nb_plasmid <- length(list_plasmids)
 ```
 
-La souche `r params$sample_glims` est composée de `r nb_plasmid` plasmides. Voyons la composition en gènes de résistance de chacun d'entre eux. 
+L'isolat `r params$sample_glims` est composé de `r nb_plasmid` plasmides. Voici le détail de la composition en gènes de résistance de chacun d'entre eux. 
 
 
 ```{r plasmid_arg, results='asis'}
 args_plasmids <- combined_amr_report[molecule_type == "plasmid"]
 
 for(plasmid in list_plasmids){
-  plasmid_id1 <- unlist(strsplit(plasmid, "-"))[1]
-  plasmid_id2 <- unlist(strsplit(plasmid, "-"))[2]
+  plasmid_id1 <- sub("-+$", "\\1", plasmid) # unlist(strsplit(plasmid, "-", perl=TRUE))[1]
+  plasmid_id2 <- sub("^[^-\r\n]+-", "", plasmid) # unlist(strsplit(plasmid, "-", perl=TRUE))[2]
   cat("### Plasmid ", plasmid,"\n\n")
   args <- args_plasmids[primary_cluster_id == plasmid_id1 & secondary_cluster_id == plasmid_id2]
   nb_args <- nrow(args)
   if(nb_args==0){
-    cat("Sur le plasmide ", plasmid, "de la souche, **aucun gène de résistance** aux antibiotiques n'a été identifié.")
-  } else{
-    cat("Sur le plasmide ", plasmid, "de la souche sont **présents ", nb_args, " gènes de résistance** aux antibiotiques. Les gènes identifiés par AMRFinder sur ce plasmide sont les suivants :\n\n")
+    cat("Sur le plasmide ", plasmid, "de l'isolat, **aucun gène de résistance** aux antibiotiques n'a été identifié.")
+  } else {
+    if (nb_args == 1) {
+      cat("Sur le plasmide ", plasmid, "de l'isolat est **présent ", nb_args, " gène de résistance** aux antibiotiques. Le gène identifié par AMRFinder sur ce plasmide est le suivant :\n\n")
+    } else {
+     cat("Sur le plasmide ", plasmid, "de l'isolat sont **présents ", nb_args, " gènes de résistance** aux antibiotiques. Les gènes identifiés par AMRFinder sur ce plasmide sont les suivants :\n\n") 
+    }
     # Arranging AMR results
     out <- args %>%
             select(`Gene symbol`, `Sequence name`, Class, Subclass) %>%
@@ -261,13 +268,13 @@ for(plasmid in list_plasmids){
 rm(combined_amr_report, d, out, args, args_plasmids, list_plasmids, nb_args, nb_plasmid, plasmid)
 ```
 
-## Classes de résistance `
+## Classes de résistance
 
 ```{r amr_class}
 amr_class <- unlist(strsplit(reports$amr_classes, ","))
 ```
 
-Les classes de résistance présentes dans le génome de la souche sont indiqués ci-dessous.
+Les classes de résistance présentes dans le génome sont indiqués ci-dessous.
 
 ```{r desc_classes, results='asis'}
 for(category in amr_class){
@@ -286,9 +293,5 @@ Pour ne se concentrer que sur la résistance aux béta-lactames, les gènes de r
 ```{r clean}
 rm(beta_lactam)
 ```
-
-# Antibiogramme
-
-[Insérer ici <span style="color:blue">**superbe antibiogramme**</span> magnifique très attendu]
 
 

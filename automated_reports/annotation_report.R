@@ -32,7 +32,7 @@ today <- Sys.Date()
 sample_data <- paste0(today, "_annotation_scan.Rdata")
 rm(today)
 # Specify metadata file
-metadata_file <- "Metadata_eq_rasigade.xlsx"
+metadata_file <- "~/Projets/5.Suivi/Metadata_eq_rasigade.xlsx"
 # Specify project name : "Epitrack" or "Resistrack"
 project <- "Epitrack"
 # Specify output directory path
@@ -68,7 +68,7 @@ cat("Rebuild tables with Epitrack format.\n")
     }
   } 
   
-  rm(raw_table_names, tbname, item, sourmash_reports, quast_reports, mlst_reports, mge_reports, metadata, contig_reports, amrfinder_reports, combined_amr_report)
+  rm(raw_table_names, tbname, item, sourmash_reports, mlst_reports, mge_reports, metadata, contig_reports, amrfinder_reports, combined_amr_report)
 }
 
 # Set a proper "genome" key in each df

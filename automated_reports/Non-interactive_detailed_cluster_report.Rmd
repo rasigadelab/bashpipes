@@ -3,9 +3,9 @@ title: "Rapport Cluster `r params$cluster_id`"
 author: "Equipe PHE3ID"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 params:
-  cluster_id: "1"
-  path_to_reports: "../Script_Tests/2023-08-21_Epitrack_annotation_report.Rdata"
-  path_to_scan:  "../Script_Tests/2023-08-21_annotation_scan.Rdata"
+  cluster_id: "9"
+  path_to_reports: "../Script_Tests/2023-11-23_Epitrack_annotation_report.Rdata"
+  path_to_scan:  "../Script_Tests/2023-11-23_annotation_scan.Rdata"
 output:
   pdf_document: default
 fontsize: 12pt
@@ -14,6 +14,9 @@ header-includes:
 - \usepackage{fancyhdr}
 - \usepackage{titling}
 - \usepackage{svg}
+- \usepackage{float}
+- \usepackage{booktabs}
+- \usepackage[table]{xcolor}
 - \pagestyle{fancy}
 - \fancyhead[L]{Equipe PHE3ID}
 - \fancyhead[C]{Rapport Cluster `r params$cluster_id`}
@@ -284,22 +287,3 @@ g
 
 rm(g, amr_list)
 ```
-
-# Analyses phylogénétiques du cluster
-
-L'analyse phylogénétique conduite se constitue de quelques étapes. On notera que les différents types de réplicons sont analysés séparément, ainsi on sépare le chromosome des plasmides.
-
-Le génome du réplicon est étudié pour le cluster d'isolat. Uniquement le core génome, c'est-à-dire l'ensemble des gènes présents dans toutes les souches, est utilisé pour créer la phylogénie. Les SNPs (**S**ingle **N**ucleotide **P**olymorphisms) sont détectés sur le core génome. L'arbre phylogénétique est alors créé en se basant sur l'alignement des SNPs détectés.
-
-## Phylogénie du chromosome
-
-```{r fig_construct, fig.align = 'center', out.width = 200}
-
-#![]("pictures/under-construction.jpg"){#id .class width=50% height=50%}
-include_graphics("pictures/under-construction.jpg")
-
-```
-
-## Phylogénie des plasmides 
-
-[Coming later]
