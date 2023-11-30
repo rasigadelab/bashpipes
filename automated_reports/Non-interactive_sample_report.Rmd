@@ -4,10 +4,10 @@ subtitle: "Prélèvement `r params$sample_glims`"
 author: "Equipe PHE3ID"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 params:
-  sample_glims: "022081308401-01"
-  illumina_only: FALSE
+  sample_glims: "022119761201-03"
+  illumina_only: TRUE
   path_to_reports: "../Script_Tests/2023-11-23_Epitrack_annotation_report.Rdata"
-  path_to_scan: "../Script_Tests/2023-11-23_annotation_scan.Rdata"
+  path_to_scan: "../Script_Tests/2023-11-24_annotation_scan.Rdata"
 output:
   pdf_document:
       toc: true
@@ -231,14 +231,14 @@ list_plasmids <- unlist(strsplit(reports$plasmid_ID, ","))
 nb_plasmid <- length(list_plasmids)
 ```
 
-L'isolat `r params$sample_glims` est composé de `r nb_plasmid` plasmides. Voici le détail de la composition en gènes de résistance de chacun d'entre eux. 
+L'isolat `r params$sample_glims` est composé de `r nb_plasmid` plasmides.
 
 
 ```{r plasmid_arg, results='asis'}
 args_plasmids <- combined_amr_report[molecule_type == "plasmid"]
 
 for(plasmid in list_plasmids){
-  plasmid_id1 <- sub("-+$", "\\1", plasmid) # unlist(strsplit(plasmid, "-", perl=TRUE))[1]
+  plasmid_id1 <- sub("-[^-\r\n]+", "", plasmid) # unlist(strsplit(plasmid, "-", perl=TRUE))[1]
   plasmid_id2 <- sub("^[^-\r\n]+-", "", plasmid) # unlist(strsplit(plasmid, "-", perl=TRUE))[2]
   cat("### Plasmid ", plasmid,"\n\n")
   args <- args_plasmids[primary_cluster_id == plasmid_id1 & secondary_cluster_id == plasmid_id2]
