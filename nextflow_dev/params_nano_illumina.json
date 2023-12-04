@@ -4,7 +4,7 @@
     "result" : "/mnt/c/Users/admin/Documents/Pipeline_launch2",
     "workflow" : "bacteria_denovo",
     "hybrid_assembly" : true,
-    "fastqc" : true,
+    "fastp" : true,
     "trimming" : true,
     "nano_filtering" : true,
     "nanoplot" : true,
@@ -18,9 +18,9 @@
     "amr_typer" : true,
     "annotate" : true,
     "mge" : true,
-    "clean" : true,
+    "clean" : false,
     
-    "quality_fastqc" : {
+    "quality_fastp" : {
         "todo" : 1
     },
 
@@ -107,7 +107,7 @@
     },
 
     "cleaning" : {
-        "todo" : 1
+        "todo" : 0
     }
     
 }

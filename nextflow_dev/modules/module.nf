@@ -1,44 +1,34 @@
-process quality_fastqc {
-  // Tool: fastqc
+process quality_fastp {
+  // Tool: fastp
   // Quality control on FASTQ reads. 
 
-  label 'lowCPU'
+  label 'highCPU'
   storeDir (params.result)
   debug false
-  tag "Fastqc on $sample"
+  tag "Fastp on $sample"
 
   when:
-    params.quality_fastqc.todo == 1
+    params.quality_fastp.todo == 1
 
   input:
     tuple val(sample), path(R1), path(R2)
   
   output:
     tuple val(sample), path("genomes/$sample/$R1"), path("genomes/$sample/$R2"), emit : illumina_reads
-    path("genomes/$sample/fastqc/${sample}_R1_fastqc.html")
-    path("genomes/$sample/fastqc/${sample}_R2_fastqc.html")
-    path("genomes/$sample/fastqc/${sample}_R1_fastqc.zip")
-    path("genomes/$sample/fastqc/${sample}_R2_fastqc.zip")
-    path("genomes/$sample/fastqc/fastqc.err")
-    path("genomes/$sample/fastqc/fastqc.log")
+    path("genomes/$sample/fastp/fastp.json")
+    path("genomes/$sample/fastp/fastp.html")
+    path("genomes/$sample/fastp/fastp.err")
+    path("genomes/$sample/fastp/fastp.log")
 
   script:
   """
-  OUT_DIR=genomes/$sample/fastqc
+  OUT_DIR=genomes/$sample/fastp
   mkdir -p -m 777 \${OUT_DIR}
 
-  fastqc $R1 $R2 -o \${OUT_DIR} -t $task.cpus 1> \${OUT_DIR}/fastqc.log 2> \${OUT_DIR}/fastqc.err 
+  fastp -i $R1 -I $R2 -w $task.cpus --json \${OUT_DIR}/fastp.json --html \${OUT_DIR}/fastp.html \
+  1> \${OUT_DIR}/fastp.log 2> \${OUT_DIR}/fastp.err
   
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/fastqc
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/fastqc.err
-  touch \${OUT_DIR}/fastqc.log
-  """ 
-
 }
 
 process stats_nanoplot{
@@ -112,19 +102,6 @@ process trim_trimmomatic {
     1> \${OUT_DIR}/trimmomatic.log 2> \${OUT_DIR}/trimmomatic.err
   
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/trimmomatic
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/$sample"_R1_paired.trimmed.fastq.gz"
-  touch \${OUT_DIR}/$sample"_R1_unpaired.trimmed.fastq.gz"
-  touch \${OUT_DIR}/$sample"_R2_paired.trimmed.fastq.gz"
-  touch \${OUT_DIR}/$sample"_R2_unpaired.trimmed.fastq.gz"
-  touch \${OUT_DIR}/trimmomatic.err
-  touch \${OUT_DIR}/trimmomatic.log
-  """     
-
 }
 
 process filter_filtlong {
@@ -153,17 +130,9 @@ process filter_filtlong {
 
   source ~/miniconda3/etc/profile.d/conda.sh
   conda activate filtlong
-  echo "hey"
   filtlong --min_length ${params.filter_filtlong["min_read_length"]} --keep_percent ${params.filter_filtlong["keep_percent"]} $ont_reads | gzip > \${OUT_DIR}/${sample}_filtered_ONT.fastq.gz 
   conda deactivate
-  """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/filtlong
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/${sample}_filtered_ONT.fastq.gz
-  """  
+  """ 
 }
 
 process assembly_flye {
@@ -199,24 +168,13 @@ process assembly_flye {
 
   echo "Completed Flye process for sample $sample"
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/flye
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/assembly.fasta
-  touch genomes/$sample/${sample}_assembly_raw.fasta
-  touch \${OUT_DIR}/flye.log
-  touch \${OUT_DIR}/flye.err
-  touch \${OUT_DIR}/assembly_info.txt
-  echo "Completed Flye process for sample $sample"
-  """  
 }
 
 process assembly_spades {
 
   // Tool: SPAdes. 
   // De novo assembler for Illumina short reads.
+  // Filter for only contigs > 500bp
 
   label 'spades'
   storeDir params.result
@@ -231,10 +189,11 @@ process assembly_spades {
   //  tuple val(sample), path(R1), path(R2)
   
   output:
-    tuple val(sample), path("genomes/$sample/spades/contigs.fasta"), emit : draft_assembly
+    tuple val(sample), path("genomes/$sample/spades/contigs_filtered.fasta"), emit : draft_assembly
     path("genomes/$sample/spades/spades_1.log")
     path("genomes/$sample/spades/spades.err")
     path("genomes/$sample/${sample}_assembly_raw.fasta")
+    path("genomes/$sample/spades/contigs.fasta")
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -251,31 +210,11 @@ process assembly_spades {
       spades.py -1 $R1 -2 $R2 --s1 $R1_UNPAIRED --s2 $R2_UNPAIRED ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus -m ${memory} 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
   fi
 
-  cp \${OUT_DIR}/contigs.fasta genomes/$sample/${sample}_assembly_raw.fasta
+  reformat.sh in=\${OUT_DIR}/contigs.fasta out=\${OUT_DIR}/contigs_filtered.fasta minlength=500
+  cp \${OUT_DIR}/contigs_filtered.fasta genomes/$sample/${sample}_assembly_raw.fasta
 
   echo "Completed SPAdes process for sample $sample"
   """
-  /*
-  If unpaired files are empty
-  UNPAIRED_R1_SIZE=\$(wc -c $R1_UNPAIRED | awk '{print \$1}')
-  UNPAIRED_R2_SIZE=\$(wc -c $R2_UNPAIRED | awk '{print \$1}')
-  if [ \${UNPAIRED_R1_SIZE} -le 1000 ] || [ \${UNPAIRED_R2_SIZE} -le 1000 ]; then
-      spades.py -1 $R1 -2 $R2 ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus -m ${memory} 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
-  else
-      spades.py -1 $R1 -2 $R2 --s1 $R1_UNPAIRED --s2 $R2_UNPAIRED ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus -m ${memory} 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
-  fi
-  */
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/spades
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/contigs.fasta
-  touch genomes/$sample/${sample}_assembly_raw.fasta
-  touch \${OUT_DIR}/spades_1.log
-  touch \${OUT_DIR}/spades.err
-  echo "Completed SPAdes process for sample $sample"
-  """ 
 }
 
 process map_bowtie2 {
@@ -318,23 +257,6 @@ process map_bowtie2 {
   samtools sort \${SAMPLE_BAM} -o \${SAMPLE_BAM_SORTED} -@ $task.cpus -m ${memory}G 2>> \${OUT_DIR}/samtools.sort.log
   samtools index \${SAMPLE_BAM_SORTED} -@ $task.cpus 2>> \${OUT_DIR}/samtools.index.log
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/polish
-  SAMPLE_BAM=\${OUT_DIR}/${sample}.bam
-  SAMPLE_BAM_SORTED=\${OUT_DIR}/${sample}.sorted.bam
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/index.1.bt2
-  touch \${OUT_DIR}/index.2.bt2
-  touch \${OUT_DIR}/bowtie2.index.log
-  touch \${SAMPLE_BAM}
-  touch \${OUT_DIR}/bowtie2.map.log
-  touch \${SAMPLE_BAM_SORTED}
-  touch \${OUT_DIR}/samtools.sort.log
-  touch \${SAMPLE_BAM_SORTED}.bai
-  touch \${OUT_DIR}/samtools.index.log
-  """ 
 }
 
 process polish_pilon {
@@ -370,19 +292,6 @@ process polish_pilon {
   
   echo "Completed Pilon process for sample $sample"
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/polish
-  SAMPLE_POLISHED=\${OUT_DIR}/${sample}_polished
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${SAMPLE_POLISHED}.fasta
-  touch genomes/$sample/${sample}_polished.fasta
-  touch \${OUT_DIR}/pilon.log
-
-  echo "Completed Pilon process for sample $sample"
-  """
-
 }
 
 process qc_quast {
@@ -419,15 +328,6 @@ process qc_quast {
 
   quast -o \${OUT_DIR} $draft_assembly 1> \${OUT_DIR}/quast.log 2> \${OUT_DIR}/quast.err
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/quast
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/quast.log
-  touch \${OUT_DIR}/quast.err
-  """  
-
 }
 
 process fixstart_circlator {
@@ -459,15 +359,6 @@ process fixstart_circlator {
   circlator fixstart $denovo_assembly \${OUT_DIR}/${sample}_realigned
   cp \${OUT_DIR}/${sample}_realigned.fasta genomes/$sample/${sample}_realigned.fasta
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/circlator
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/${sample}_realigned.fasta
-  touch genomes/$sample/${sample}_realigned.fasta
-  touch \${OUT_DIR}/circlator.log
-  """  
 }
 
 process mlst_sequence_typing {
@@ -497,15 +388,6 @@ process mlst_sequence_typing {
 
   mlst $final_assembly --threads $task.cpus > \${OUT_DIR}/mlst.tsv 2>> \${OUT_DIR}/mlst.log
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/mlst
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/mlst.tsv
-  touch \${OUT_DIR}/mlst.log
-  """  
- 
 }
 
 process classify_sourmash {
@@ -539,17 +421,6 @@ process classify_sourmash {
   sourmash sketch dna -o \${OUT_SIG_FILE} -p scaled=${params.classify_sourmash["scale"]},k=${params.classify_sourmash["k"]} $final_assembly &> \${OUT_DIR}/sourmash.log
   sourmash lca classify --query \${OUT_SIG_FILE} --db ${params.classify_sourmash["db"]} > \${OUT_DIR}/sourmash.csv 2>> \${OUT_DIR}/sourmash.log
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/sourmash
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/sourmash.csv
-  echo "genus,species" > \${OUT_DIR}/sourmash.csv
-  echo "Klebsiella,pneumoniae" >> \${OUT_DIR}/sourmash.csv
-  touch \${OUT_DIR}/sourmash.log
-  """  
-
 }
 
 process amr_typer_amrfinder {
@@ -590,15 +461,6 @@ process amr_typer_amrfinder {
 
   amrfinder --plus --nucleotide $final_assembly --threads $task.cpus \${ORGANISM_FLAG} > \${OUT_DIR}/amrfinder.tsv 2> \${OUT_DIR}/amrfinder.log
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/amrfinder
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/amrfinder.tsv
-  touch \${OUT_DIR}/amrfinder.log
-  """  
-
 }
 
 process annotate_prokka {
@@ -637,14 +499,6 @@ process annotate_prokka {
       --prefix $sample –-usegenus –-genus \$GENUS –-species \$SPECIES &> \${OUT_DIR}/prokka.log
   conda deactivate
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/prokka
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/prokka.gff
-  touch \${OUT_DIR}/prokka.log
-  """  
 }
 
 process mge_mob_recon {
@@ -682,15 +536,6 @@ process mge_mob_recon {
   mv mob_recon.err \${OUT_DIR}
   conda deactivate
   """
-
-  stub:
-  """
-  OUT_DIR=genomes/$sample/mob_recon
-  mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/mob_recon.err
-  touch \${OUT_DIR}/mob_recon.log
-  """  
-
 }
 
 process cleaning {
@@ -713,19 +558,11 @@ process cleaning {
 
   script:
   """
-  rm ${params.result}/genome/${sample}/polish/${sample}.sorted.bam
-  rm ${params.result}/genome/${sample}/polish/${sample}.sorted.bam.bai
-  touch genome/$sample/cleaning_is_done.txt
+  rm ${params.result}/genomes/${sample}/polish/${sample}.sorted.bam
+  rm ${params.result}/genomes/${sample}/polish/${sample}.sorted.bam.bai
+  touch ${params.result}/genomes/$sample/cleaning_is_done.txt
 
   """
-
-  stub:
-  """
-  rm ${params.result}/genome/${sample}/polish/${sample}.sorted.bam
-  rm ${params.result}/genome/${sample}/polish/${sample}.sorted.bam.bai
-  touch genome/$sample/cleaning_is_done.txt
-  """  
-
 }
 
 

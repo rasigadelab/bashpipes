@@ -4,7 +4,7 @@
     "result" : "/mnt/c/Users/admin/Documents/Pipeline_launch",
     "workflow" : "bacteria_denovo",
     "hybrid_assembly" : false,
-    "fastqc" : true,
+    "fastp" : true,
     "nano_filtering" : false,
     "nanoplot" : false,
     "trimming" : true,
@@ -20,7 +20,7 @@
     "mge" : true,
     "clean" : false,
 
-    "quality_fastqc" : {
+    "quality_fastp" : {
         "todo" : 1
     },
 
