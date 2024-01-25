@@ -29,7 +29,7 @@ runsh <- function(sh) wsl(sprintf("./%s", sh))
 output_dir <- getwd()
 
 # Where to find the genomes
-genome_dir <- "../genomes_illumina"
+genome_dir <- "."
 
 # Include an excel output ? (may be lengthy)
 excel_output <- TRUE
@@ -158,7 +158,7 @@ cat("Scanning AMRFINDER+ reports.\n")
 
   rm(amrfinder_report_fnames, amrfinder_report_inames, iname)
 }
-cat("  Finished scanning MLST reports.\n")
+cat("  Finished scanning AMRFinder+ reports.\n")
 
 # Sourmash reports
 cat("Scanning SOURMASH reports.\n")

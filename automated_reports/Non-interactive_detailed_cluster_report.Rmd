@@ -3,9 +3,9 @@ title: "Rapport Cluster `r params$cluster_id`"
 author: "Equipe PHE3ID"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 params:
-  cluster_id: "9"
-  path_to_reports: "../Script_Tests/2023-11-23_Epitrack_annotation_report.Rdata"
-  path_to_scan:  "../Script_Tests/2023-11-23_annotation_scan.Rdata"
+  cluster_id: "39"
+  path_to_reports: "../Script_Tests/2023-12-14_Epitrack_annotation_report.Rdata"
+  path_to_scan:  "../Script_Tests/2023-12-14_annotation_scan.Rdata"
 output:
   pdf_document: default
 fontsize: 12pt
@@ -66,7 +66,7 @@ global_theme <- theme(plot.title=element_text(size=16, face="plain", hjust = 0.5
             legend.text = element_text(size=9))
 theme_set(global_theme)
 
-rm(lib, libraries)
+rm(lib, libraries, usePackage)
 ```
 
 # Prélèvement des souches
@@ -168,7 +168,7 @@ g <- ggplot(data=out, aes(x=sequence_type, y=Count, fill = sequence_type)) +
                 geom_bar(data=out, aes(x=sequence_type, y=Count, fill = sequence_type), stat="identity", colour = "black") +
                 ggtitle("Composition ST par espèce") +
                 labs(x = "MLST Sequence Type", y = "Nombre d'échantillons", fill='Sequence Type (ST)') +
-                scale_y_continuous(breaks= pretty_breaks()) +
+                scale_y_continuous(breaks= pretty_breaks(), minor_breaks = 1) +
                 facet_wrap( ~ mlst_species, ncol = 2, scales = "free")
 
 g
@@ -182,7 +182,7 @@ rm(out, g)
 ```{r load_amr}
 # Loading Data with AMRFinder report [GLOBALLY]
 load(params$path_to_scan)
-rm(amrfinder_reports, contig_reports, mge_reports, mlst_reports, quast_reports, sourmash_reports)
+rm(amrfinder_reports, contig_reports, mge_reports, mlst_reports, sourmash_reports)
 ```
 
 Les gènes de résistance sont identifiés avec AMRFinder, qui prend la base de données NCBI de gènes de résistance comme référence. Certains gènes de résistance sont localisés sur la partie chromosomique du génome des souches, d'autres sont positionnés sur des plasmides. 
@@ -286,4 +286,7 @@ g <- ggplot(data=amr_list, aes(x=amr_classes, fill = mlst_species)) +
 g
 
 rm(g, amr_list)
+```
+```{r cleaning}
+rm(global_theme, params, reports)
 ```

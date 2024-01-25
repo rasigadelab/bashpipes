@@ -1,15 +1,15 @@
 ---
 title: "Comparaison d'isolats bactériens par séquençage génomique complet"
-subtitle: "GH Nord, Services de Réanimation-Soins intensifs-Néonatologie UF24170/24171/24172, *S. marcescens* (`r params$replicon`)"
+subtitle: "GH Centre, HS Hépato-Gastro-Entérologie (Pavillon L RDC) UF21230, *Enterobacter cloacae* (`r params$replicon`)"
 author: "Equipe PHE3ID"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 params:
-  cluster_id: "3"
-  species: "chromosome"
+  cluster_id: "65"
+  species: "ecloacae"
   replicon: "Chromosome"
   env_samples: ""
-  path_to_reports: "../Script_Tests/2023-11-23_clone_reports.Rdata"
-  path_to_scan:  "../Script_Tests/2023-11-23_annotation_scan.Rdata"
+  path_to_reports: "../Script_Tests/2024-01-25_clone_reports.Rdata"
+  path_to_scan:  "../Script_Tests/2024-01-25_annotation_scan.Rdata"
 output:
   pdf_document:
       toc: true
@@ -39,7 +39,7 @@ header-includes:
 
 \newpage
 
-Ce rapport d'études de cluster étudie les isolats de l'espèce ___S. marcescens___ des services de réanimation, soins intensifs et néonatologie du GH Nord.
+Ce rapport d'études de cluster étudie les isolats de l'espèce ___E. cloacae___ du HS d'hépato-gastro-entérologie (Pavillon L RDC) du GH Est.
 
 ```{r setup, include=FALSE}
 # Some cleaning [no: if cleaning, then we cannot use params data]
@@ -67,7 +67,12 @@ if(params$species=="chromosome"){
 } else {
   species <- params$species
 }
-reports <- reports[mlst_species == species]
+# In case of ecloacae, include cronobacter !
+if(params$species=="ecloacae"){
+  reports <- reports[mlst_species == species | mlst_species == "cronobacter",]
+} else {
+  reports <- reports[mlst_species == species,]
+}
 rm(final_data)
 
 # Global ggplot theme settings
@@ -80,7 +85,7 @@ global_theme <- theme(plot.title=element_text(size=16, face="plain", hjust = 0.5
             legend.text = element_text(size=9))
 theme_set(global_theme)
 
-rm(lib, libraries)
+rm(lib, libraries, usePackage)
 ```
 
 # Description des prélèvements
@@ -111,23 +116,43 @@ if(nb_env_samples != 0){
   cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients," patients, prélevés du ", earliest," au ",latest,".")
 
 }
+rm(nb_env_samples, nb_samples, nb_patients, earliest, latest)
 ```
-
-
 ```{r dates, out.height="500pt"}
 # Computing limits of histogram (earliest and latest months)
-first_month <- floor_date(min(reports$sampling_date), "month")
+first_month <- floor_date(min(reports$sampling_date), "month") %m-% months(1)
 last_month <- ceiling_date(max(reports$sampling_date), "month")
+months_period <- interval(ymd(first_month),ymd(last_month)) %/% months(1)
+if(months_period < 6){
+  first_month <- as.Date("2023-01-01")
+  last_month <- as.Date("2024-01-01")
+}
 
 if(params$species == "chromosome" & params$cluster_id == 3){
   species_in_title <- "S. marcescens"
+} else if(params$species == "cfreundii" & params$cluster_id == 39) {
+  species_in_title <- "C. freundii/braakii/youngae"
+} else if(params$species == "chromosome" & params$cluster_id == 50){
+  species_in_title <- "A. faecalis"
+} else if(params$species == "chromosome" & params$cluster_id == 48){
+  species_in_title <- "B. fragilis"
+} else if(params$cluster_id == 60){
+  species_in_title <- "A. ursingii"
+} else if(params$cluster_id == 40){
+  species_in_title <- "P. mirabilis"
+} else if(params$cluster_id == 99){
+  species_in_title <- "A. xylosidans"
+} else if(params$cluster_id == 87){
+  species_in_title <- "A. nosocomialis"
+} else if(params$cluster_id == 46){
+  species_in_title <- "A. baumannii"
 } else {
   species_in_title <- gsub("^([A-Z])", "\\1. ", str_to_title(params$species))
 }
 # If there are some environmental samples in the group
 # Break data by month, e.g one bin one month
 out <- reports %>%
-  select(genome, mlst_species, sampling_date, ipp) %>%
+  select(genome, sampling_date, ipp) %>%
   mutate(month = floor_date(sampling_date, "month")) %>%
   mutate(patients=ifelse(ipp==params$env_samples, "environnement", "patient")) %>%
   select(-ipp)
@@ -135,27 +160,23 @@ out <- reports %>%
 g <- ggplot(data=out, aes(x=month, fill = patients)) +
    geom_bar(stat="count", aes(text = paste('Nombre: ', after_stat(count))), width = 20) +
    ggtitle(paste("Histogramme des dates de prélèvement \nde l'espèce", species_in_title)) +
-   labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Type de souches prélevées") +
+   labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Type de prélèvement") +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
-               limits = c(as.Date("2022-01-01"), as.Date("2023-01-01"))) +
+               limits = c(first_month, last_month)) +
+  scale_y_continuous(n.breaks = 5) +
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
 
-if(length(out$genome) < 10){
-  g <- g + 
-    scale_y_continuous(n.breaks = length(out$genome))
-} else {
-  g <- g + 
-    scale_y_continuous(n.breaks = 10)
-}
+# if(length(out$genome) < 10){
+#   g <- g +
+#     scale_y_continuous(n.breaks = length(out$genome))
+# } else {
+#   g <- g +
+#     scale_y_continuous(n.breaks = 10)
+# }
 
 g
 
-rm(first_month, last_month, out, g, earliest, latest, nb_samples, nb_patients)
-
-# In case you need to add limits to the graph because everything is located on 1 month:
-# scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
-#                limits = c(as.Date("2023-01-01"), as.Date("2023-06-01"))) +
-
+rm(first_month, last_month, out, g, species_in_title, months_period)
 ```
 \newpage
 
@@ -175,16 +196,20 @@ Deux isolats sont clonaux s'ils sont distants de moins **de `r nb_snps` SNPs**. 
 out <- reports %>%
   mutate(ipp=ifelse(ipp==params$env_samples, "environnement", ipp))
 
+# Color editing
+cbPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
 # Barplot of number of samples per clone
 g <- ggplot(data=out, aes(x=as.factor(eval(as.name(clust_dist))), fill = ipp)) +
       geom_bar(stat="count", aes(text = paste0("Nombre: ", after_stat(count)))) +
       ggtitle(str_replace(clust_dist, "clust_dist_", "Clustering Distance ")) +
       labs(x = "Clusters", y = "Nombre d'échantillons", fill = "Identifiant Patient (IPP)") +
-      scale_y_continuous(breaks= pretty_breaks())
+      scale_y_continuous(n.breaks = 3)+
+      scale_fill_manual(values=cbPalette(length(unique(reports$ipp))))
 
 g
 
-rm(g)
+rm(g, cbPalette)
 ```
 
 ```{r desc_clust, results='asis'}
@@ -218,6 +243,8 @@ for(cl in clusters){
   }
   cat(".\n\n")
 }
+
+rm(out, samples_clustered, cl, clusters, nb_clusters)
 ```
 \newpage
 
@@ -228,65 +255,54 @@ La description des isolats étudiés :
 ```{r final_table}
 # Arranging data
 tab <- reports %>%
-  select(glims, ipp, sampling_date, soc_species, sequence_type, as.name(clust_dist)) %>%
-  arrange(eval(as.name(clust_dist)))
+  select(glims, ipp, sampling_date, type_prlvt, soc_species, sequence_type,
+         as.name(clust_dist)) %>%
+  arrange(eval(as.name(clust_dist))) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="SURV", "Surveillance de flore", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="ECBU", "Examen cytobactériologique des urines", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="BPO", "Broncho-pulmonaire", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="CATHE", "Cathéter", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMOA", "Hémoculture Flacon A", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMOC", "Hémoculture Flacon C", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="LIQBIO", "Liquide Biologique", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="MUCO", "Mucoviscidose", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMOA", "Hémoculture Flacon A", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="ORLC", "Oto-rhino-laryngologie", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="OSTEOC", "Infection osteo-articulaire", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="SELLE", "Selle", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="SUPE", "Suppuration prélevée par écouvillon", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="SUPP", "Suppuration profonde", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMOA", "Hémoculture Flacon A", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(is.na(type_prlvt), "", type_prlvt))
 
 if(!(params$env_samples=="")){
   tab <- tab %>%
     mutate(ipp=ifelse(ipp==params$env_samples, "Prélèvement d'environnement", ipp))
 }
-
-if(params$cluster_id=="2"){
-  rectal <- c("022119761201-03", "022153065501-02", "022178399701-03", "022098072101-02",
-              "022106460701-01", "022113256501-01", "022152814701-03", "022165829801-02",
-              "022161261701-01", "022178953001-01", "022081308401-01")
-  liquide_drain <- c("022150003401-01")
-
-  tab <- tab %>%
-    mutate(type_prlvt=ifelse(ipp=="Prélèvement d'environnement", "Ecouvillon", "")) %>% 
-    mutate(type_prlvt=ifelse(glims %in% rectal, "Dépistage rectal", type_prlvt)) %>%
-    mutate(type_prlvt=ifelse(glims %in% liquide_drain, "Liquide de drain", type_prlvt)) %>%
-    relocate(type_prlvt, .before =3)
   
-  # Outputting table 
-  kable(tab, col.names = c("GLIMS", "Identifiant Patient (IPP)", "Type de prélèvement", "Date de prélèvement", "Espèce MALDI-ToF", "MLST Sequence Type", "Cluster"),
-        align = "lllcc", "latex", booktabs = TRUE) %>%
-    kable_styling(latex_options = c("striped", "scale_down", "HOLD_position", "repeat_header")) %>%
-    column_spec(3, width = "8em")
-} else {
-  # Outputting table 
-  kable(tab, col.names = c("GLIMS", "Identifiant Patient (IPP)", "Date de prélèvement", "Espèce MALDI-ToF", "MLST Sequence Type", "Cluster"),
-        align = "lllcc", "latex", booktabs = TRUE) %>%
-    kable_styling(latex_options = c("striped", "scale_down", "HOLD_position", "repeat_header"))
-}
 
+# Outputting table 
+kable(tab, col.names = c("GLIMS", "Identifiant Patient (IPP)", "Date de prélèvement", 
+                         "Type de prélèvement", "Espèce MALDI-ToF", "MLST Sequence Type",
+                         "Cluster"),
+      align = "llllccc", "latex", booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "scale_down", "HOLD_position", "repeat_header")) %>%
+  column_spec(4, width = "15em")
 
 rm(tab)
-```
-
-
-```{r nb_clust}
-# Computing number of clusters found
-nb_clusters <- length(unique(reports[[ clust_dist ]]))
-# Getting the cluster with max number of samples
-clust_count <- table(reports[[ clust_dist ]])
-biggest_clust <- which.max(clust_count)
-nb_biggest_clust <- clust_count[biggest_clust]
-
-rm(clust_count)
 ```
 
 # Conclusion du clustering
 
 ```{r conclusion, results="asis"}
 cat(readLines('conclusion.txt'), sep = '\n')
-rm(nb_clusters, nb_biggest_clust, biggest_clust)
 ```
+
 \newpage
 
 # Informations complémentaires
 
-```{r only_2_samples_clone, include=TRUE}
+```{r only_2_samples_clone, include=TRUE, results='asis'}
 # First thing to do, only keep clone with nb of samples > 2 
 singletons <- names(which(table(reports[[ clust_dist ]]) == 1))
 reports[[clust_dist]][which(reports[[clust_dist]] %in% singletons)] <- "singletons"
@@ -295,7 +311,13 @@ reports[[clust_dist]][which(reports[[clust_dist]] %in% singletons)] <- "singleto
 prop_singleton <- round(length(reports$genome[which(reports[[clust_dist]] == "singletons")]) * 100 / length(reports$genome), digits = 2) 
 prop_non_singleton <- 100 - prop_singleton
 
-rm(singletons)
+# Compute number of SNPs between samples if it's two non-clonal samples
+if((length(reports$genome) == 2) & (prop_non_singleton == 0)){
+  nb_variants <- unique(as.numeric(reports$nb_snps))
+  cat("Les deux souches analysées ne sont pas clonales, elles sont distantes de ", nb_variants, " SNPs.")
+}
+
+rm(singletons, nb_variants)
 ```
 
 La proportion de singletons est de `r prop_singleton` %, contre `r prop_non_singleton` % d'isolats clonaux.
@@ -306,8 +328,13 @@ N.B: Un singleton correspond à un isolat qui n'appartient à aucun cluster, il 
 
 ```{r prlvt, out.height="500pt"}
 # Computing limits of histogram (earliest and latest months)
-first_month <- floor_date(min(reports$sampling_date), "month")
+first_month <- floor_date(min(reports$sampling_date), "month") %m-% months(1)
 last_month <- ceiling_date(max(reports$sampling_date), "month")
+months_period <- interval(ymd(first_month),ymd(last_month)) %/% months(1)
+if(months_period < 6){
+  first_month <- as.Date("2023-01-01")
+  last_month <- as.Date("2024-01-01")
+}
 
 # Break data by month, e.g one bin one month 
 out <- reports %>%
@@ -325,7 +352,8 @@ if("singletons" %in% out[[clust_dist]]){
   ggtitle("Histogramme de dates de prélèvement") +
   labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Cluster") +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
-               limits = c(as.Date("2022-01-01"), as.Date("2023-01-01"))) +
+               limits = c(first_month, last_month)) +
+  scale_y_continuous(n.breaks = 5) +
   scale_fill_manual(values=cbPalette) +
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
 } else {
@@ -334,23 +362,23 @@ if("singletons" %in% out[[clust_dist]]){
   ggtitle("Histogramme de dates de prélèvement") +
   labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Cluster") +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
-               limits = c(as.Date("2022-01-01"), as.Date("2023-01-01"))) +
+               limits = c(first_month, last_month)) +
+  scale_y_continuous(n.breaks = 5) +
   scale_fill_manual(values=cbPalette[-1]) +
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
 }
 
-if(length(out$genome) < 10){
-  g <- g + 
-    scale_y_continuous(n.breaks = length(out$genome))
-} else {
-  g <- g + 
-    scale_y_continuous(n.breaks = 10)
-}
+# if(length(out$genome) < 10){
+#   g <- g +
+#     scale_y_continuous(n.breaks = length(out$genome))
+# } else {
+#   g <- g +
+#     scale_y_continuous(n.breaks = 10)
+# }
 
 g
 
-rm(first_month, last_month, out, g, earliest, latest, nb_samples, prop_singleton, prop_non_singleton, cbPalette)
-
+rm(first_month, last_month, out, g, earliest, latest, nb_samples, prop_singleton, prop_non_singleton, cbPalette, months_period)
 ```
 \newpage
 
@@ -428,26 +456,27 @@ rm(amr_report, combined_amr_report, list_arg, out, c, clones, samples, d)
 
 ```{r tree, echo=FALSE, results='asis'}
 # out.height="300pt"
-if(length(reports$genome) > 2){
-  cat("\\newpage \n\n")
-  cat("## Phylogénie \n\n")
-  cat("A partir de l'alignement des SNPs détectés dans les échantillons, un arbre phylogénétique du cluster est inféré.\n\n")
-  if(length(samples_clustered)>0){
-    cat("Les isolats clonaux sont coloriés d'une couleur spécifique.\n\n")
-  }
-  path_to_tree <- paste0("../phylogeny/cluster_",params$cluster_id,"/",params$species,
-                         "/phylogenetic_tree/clonalframeml/GTR_tree.jpeg")
-  i <- include_graphics(path_to_tree)
-  cat("\\begin{center}")
-  cat("\\includegraphics[width=5in,height=7.5in]{", path_to_tree, "}")
-  cat("\\end{center}")
-  rm(path_to_tree)
-}
-
+# samples_clustered <- reports[[clust_dist]][which(reports[[clust_dist]] != "singletons")]
+# if(length(reports$genome) > 2){
+#   cat("\\newpage \n\n")
+#   cat("## Phylogénie \n\n")
+#   cat("A partir de l'alignement des SNPs détectés dans les échantillons, un arbre phylogénétique du cluster est inféré.\n\n")
+#   if(length(samples_clustered)>0){
+#     cat("Les isolats clonaux sont coloriés d'une couleur spécifique.\n\n")
+#   }
+#   path_to_tree <- paste0("../phylogeny/cluster_",params$cluster_id,"/",params$species,
+#                          "/phylogenetic_tree/clonalframeml/GTR_tree.jpeg")
+#   i <- include_graphics(path_to_tree)
+#   cat("\\begin{center}")
+#   cat("\\includegraphics[width=5in,height=7.5in]{", path_to_tree, "}")
+#   cat("\\end{center}")
+#   rm(path_to_tree)
+# }
+# rm(out.height)
 ```
 
 ```{r cleaning}
-rm(global_theme, params, reports, species, dist_plot, usePackage, nb_snps, clust_dist)
+rm(global_theme, params, reports, species, nb_snps, clust_dist, samples_clustered)
 ```
 
 

@@ -108,6 +108,7 @@ cat("Gathering data for each isolate as JSON_like list.\n")
       glims = sub$metadata$GLIMS,
       sampling_date = ymd(sub$metadata$DATE_PRELEVEMENT),
       ipp = sub$metadata$`IPP (identifiant patient)`,
+      type_prlvt = sub$metadata$Type_prelev,
       soc_species = sub$metadata$SPECIES,
       sourmash_status = sub$sourmash_reports$status,
       sourmash_genus = sub$sourmash_reports$genus,

@@ -22,10 +22,10 @@ library(phytools)
 ## GLOBAL PARAMETERS ##
 file_extension="newick"
 out_prefix="GTR_tree"
-replicon="Cluster 3 S.marcescens"
+replicon="Cluster 11 B. cereus"
 metadata_file="~/Projets/5.Suivi/Metadata_eq_rasigade.xlsx"
-cluster_id=3
-mlst_species="chromosome"
+cluster_id=11
+mlst_species="bcereus"
 
 ## PROGRAM ##
 cat("Searching tree file.\n")
@@ -53,28 +53,29 @@ cat("Output tree file and color clonal samples.")
   colorClonal <- function(id1, id2, coloring){
     bottom <- which(t$tip.label == id1)
     top <- which(t$tip.label == id2)
-    return(rect(pp$xx[bottom] - 0.1, pp$yy[bottom] - 0.5, pp$xx[bottom] + 2, pp$yy[top] + 0.5,
+    return(rect(pp$xx[bottom] - 0.01, pp$yy[bottom] - 0.05, pp$xx[bottom] + 0.02, pp$yy[top] + 0.05,
          col = coloring, border = NA))
     
   }
   # Get tree in JPEG file
-  jpeg(file = sprintf("%s.jpeg", out_prefix), 3000, 6000, quality = 98, pointsize = 48)
+  jpeg(file = sprintf("%s.jpeg", out_prefix), 2000, 3000, quality = 98, pointsize = 48)
   layout(matrix(1:1, 1))
   plot.phylo(t, type = "phylogram", main = replicon,
-             align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 3.5, plot = FALSE)
+             align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 2, plot = FALSE)
   pp <- get("last_plot.phylo", envir = .PlotPhyloEnv)
-  colorClonal("022156756801-01", "022176281806-02", "lightsalmon")
-  # colorClonal("022106460701-01", "022186972005-01", "lightgoldenrod1")
-  # colorClonal("022081308401-01", "022081308401-01", "lightblue")
-  # colorClonal("022184231101-02", "022184231101-02", "lightblue")
+  colorClonal("023157153601-01", "023140769901-02", "lightsalmon")
+  # colorClonal("023157323401-01", "023140769901-02", "lightgoldenrod1")
+  # colorClonal("023157319701-01", "023157319701-01", "lightgoldenrod1")
+  # colorClonal("022203893701-02", "022203893701-02", "lightblue")
+  # colorClonal("022191621001-02", "022191621001-02", "lightblue")
   par(new = TRUE)
   plot.phylo(t, type = "phylogram", main = replicon,
-             align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 3.5)
-  axisPhylo(lwd = 5, cex.axis = 2)
-  mtext("Substitutions/site", side = 1, line = 3, cex = 2)
-  legend(x = 'bottomright', inset=c(0,0), border = "black", cex = 2,
-         fill = c("lightsalmon"), 
-         legend = c("Cluster A"))
+             align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 2)
+  axisPhylo(lwd = 5, cex.axis = 1)
+  mtext("Substitutions/site", side = 1, line = 3, cex = 1)
+  # legend(x = 'bottomright', inset=c(0,0), border = "black", cex = 1,
+  #        fill = c("lightsalmon"), 
+  #        legend = c("Cluster A"))
   dev.off()
 }
 

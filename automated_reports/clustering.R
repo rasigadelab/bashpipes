@@ -104,6 +104,7 @@ cat("Scanning IQTREE file from IQtree output.\n")
 cat("Transform genetic distance (substitions/sites) into substitions number.\n")
 {
   genetic_distances <- list()
+  snps_df <- data.table()
   for(cluster in names(mldist_reports)) {
     main_cl <- mldist_reports[[ cluster ]]
     genetic_distances[[ cluster ]] <- list()
@@ -111,12 +112,18 @@ cat("Transform genetic distance (substitions/sites) into substitions number.\n")
       mini_cl <- main_cl[[ minicluster ]]
       if(mode == "snps"){
         genetic_distances[[ cluster ]][[ minicluster ]] <- as.dist(mini_cl)
+        # Add number of SNPs if it's cluster with only 2 samples
+        if ((length(names(main_cl))==1) & (length(names(mini_cl)) == 2)) {
+          mini_snps_df <- data.table(genome = names(mini_cl))
+          mini_snps_df$nb_snps <- genetic_distances[[ cluster ]][[ minicluster ]]
+          snps_df <- rbind.data.frame(snps_df, mini_snps_df)
+        }
       } else if(mode == "mldist"){
         genetic_distances[[ cluster ]] <- as.dist(mldist_reports[[ cluster ]]) * iqtree_reports[[ cluster ]]
       }
     }
   }
-  rm(mldist_reports, cluster, main_cl, mini_cl, minicluster)
+  rm(mldist_reports, cluster, main_cl, mini_cl, minicluster, mini_snps_df)
 }
 
 cat("Loading outliers.\n")
@@ -142,10 +149,12 @@ cat("Executing clustering.\n")
   for(cluster in names(genetic_distances)) {
     main_cl <- genetic_distances[[ cluster ]]
     subclustering_df <- data.table()
+    print(paste0("Analysing big ", cluster))
     # Minicluster scale
     for(minicluster in names(main_cl)) {
       mini_cl <- main_cl[[ minicluster ]]
       num_mini_cl <- str_extract(minicluster, "\\d$")
+      print(paste0("Minicluster n° ", num_mini_cl))
       # Do hierarchical clustering
       cl <- hclust(mini_cl, method = "single")
       # Cut groups for each distance chosen before
@@ -160,7 +169,9 @@ cat("Executing clustering.\n")
         distances_df <- merge(distances_df, tmp, key = "genome")
       }
       # Merge results for this minicluster with those from other miniclusters 
+      print("Is this rbindlist ok ? [Line 166]")
       subclustering_df <- rbind(subclustering_df, distances_df)
+      print("Yep")
     }
     # Appending outliers to clustering results
     for(outlier in outliers_reports[[cluster]]){
@@ -168,10 +179,13 @@ cat("Executing clustering.\n")
       out_index <- which(outliers_reports[[cluster]] == outlier)
       outlier_line <- data.table(outlier, paste0("out-", out_index), paste0("out-", out_index), paste0("out-", out_index), paste0("out-", out_index))
       colnames(outlier_line) <- c("genome", paste0("clust_dist_", chosen_distances) )
+      print("Is this rbindlist OK ? [Line 175]")
       subclustering_df <- rbind(subclustering_df, outlier_line)
+      print("Yep")
     }
     # Now let's sort results, to get biggest cluster names 'A' -> smallest cluster 'Z'
     for(dist in chosen_distances){
+      print(paste0("Distance analysée = ", dist, " SNPs"))
       # Alphabet in R = LETTERS
       # Set biggest group as cluster 1, etc. to get groups in ascending order
       dist_column <- paste0("clust_dist_",dist)
@@ -184,7 +198,9 @@ cat("Executing clustering.\n")
       }
     }
     clustering[[ cluster ]] <- subclustering_df
+    print("Is this rbindlist OK ? [Line 194]")
     clustering_df <- rbind(clustering_df, subclustering_df)
+    print("Yep")
   }
   rm(cl, groups, sorted, i, cluster, genetic_distances, distances_df, main_cl, subclustering_df,
      tmp, dist, dist_column, index_to_change, mini_cl, minicluster, new_name, num_mini_cl, old_name,
@@ -196,11 +212,12 @@ cat("Merging results with metadata table.\n")
   cat("Moving to output directory.\n")
   setwd(output_dir)
   
+  clustering_df <- merge(clustering_df, snps_df, key = "genome", all = TRUE)
   final_data <- merge(clustering_df, reports, key = "genome")
   today_date <- Sys.Date()
   save(final_data, file = paste0(today_date, "_clone_reports.Rdata"))
   
-  rm(clustering_df, reports, today_date, fnames)
+  rm(clustering_df, reports, today_date, fnames, snps_df)
 }
 
 cat("Cleaning environment.")
