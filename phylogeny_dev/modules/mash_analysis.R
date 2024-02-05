@@ -66,7 +66,12 @@ cat("Get reference sample for each minicluster.")
   }
   # Take reference in biggest cluster
   ref <- mini_cl_df[which.max(mini_cl_df$cluster_count),]$reference
-  
+  if(is.na(ref)){
+    # Compute mean column
+    mean_cols <- colMeans(mash_df, na.rm=T)
+    ref <- names(mean_cols[which.min(mean_cols)])
+  }
+
   rm(mash_df, mash_distances, sub_mash_df, cl, cl_samples, mean_cols)
 }
 cat("Output to TSV file.\n")

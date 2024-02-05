@@ -33,6 +33,8 @@ def main(project_dir, output_dir, chr_only):
                 mlst_path = os.path.join(mlst_dir, mlst_file)
                 f = open(mlst_path, "r")
                 species = f.readline().split('\t')[1]
+                if species == "cronobacter":
+                    species = "ecloacae"
         #Step3B- Checking which replicons are in the sample
         for out_file in os.listdir(mob_recon_dir):
             # Option to only analize chromosomes

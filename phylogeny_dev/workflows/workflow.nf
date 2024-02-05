@@ -7,11 +7,13 @@ nextflow.enable.dsl = 2
 include {rename_fasta} from "${params.nfpath}/modules/module.nf"
 include {distance_matrix_mash} from "${params.nfpath}/modules/module.nf"
 
+include {map_bowtie2} from "${params.nfpath}/modules/module.nf"
+include {polish_pilon} from "${params.nfpath}/modules/module.nf"
 include {duplicate_masker_repeatmasker} from "${params.nfpath}/modules/module.nf"
 include {create_input_tab} from "${params.nfpath}/modules/module.nf"
 include {core_snps_snippy} from "${params.nfpath}/modules/module.nf" 
 
-include {duplicate_masker_phylogeny} from "${params.nfpath}/modules/module.nf" 
+include {ref_phylogeny} from "${params.nfpath}/modules/module.nf" 
 include {create_input_tab_phylogeny} from "${params.nfpath}/modules/module.nf" 
 include {core_snps_snippy_phylogeny} from "${params.nfpath}/modules/module.nf" 
 include {snps_tree_iqtree} from "${params.nfpath}/modules/module.nf" 
@@ -44,6 +46,10 @@ workflow bacteria_variant_calling {
 
           //Step0- Preparation of reference genome
           if ( params.ref_preparation ) {
+               map_bowtie2(ch_replicons)
+               map_bowtie2.out.sorted_bam_files.set{ ch_replicons }
+               polish_pilon(ch_replicons)
+               polish_pilon.out.polished_reference.set{ ch_replicons }
                duplicate_masker_repeatmasker(ch_replicons)
                duplicate_masker_repeatmasker.out.replicons_ch.set{ ch_replicons }
           }
@@ -61,11 +67,11 @@ workflow bacteria_phylogeny {
         ch_replicons
 
     main:
-
+          
           //Step0- Preparation of reference genome
-          if ( params.remove_duplicate ) {
-               duplicate_masker_phylogeny(ch_replicons)
-               duplicate_masker_phylogeny.out.replicons_ch.set{ ch_replicons }
+          if ( params.ref ) {
+               ref_phylogeny(ch_replicons)
+               ref_phylogeny.out.replicons_ch.set{ ch_replicons }
           }
 
           //Step1- Core SNPs calling
