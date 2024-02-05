@@ -2,7 +2,7 @@ process quality_fastp {
   // Tool: fastp
   // Quality control on FASTQ reads. 
 
-  label 'highCPU'
+  label 'lowCPU'
   storeDir (params.result)
   debug false
   tag "Fastp on $sample"
@@ -153,10 +153,11 @@ process assembly_flye {
   
   output:
     tuple val(sample), path("genomes/$sample/flye/assembly.fasta"), emit : draft_assembly
-    path("genomes/$sample/flye/flye.log")
-    path("genomes/$sample/flye/flye.err")
-    path("genomes/$sample/flye/assembly_info.txt")
-    path("genomes/$sample/${sample}_assembly_raw.fasta")
+    path("genomes/$sample/flye/*")
+    // path("genomes/$sample/flye/flye.log")
+    // path("genomes/$sample/flye/flye.err")
+    // path("genomes/$sample/flye/assembly_info.txt")
+    // path("genomes/$sample/${sample}_assembly_raw.fasta")
 
   script:
   """
