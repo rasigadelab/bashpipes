@@ -7,6 +7,7 @@ nextflow.enable.dsl = 2
 include {filter_filtlong} from "${params.nfpath}/modules/module.nf"
 include {assembly_flye} from "${params.nfpath}/modules/module.nf"
 include {assembly_spades} from "${params.nfpath}/modules/module.nf"
+include {filter_contigs_bbmap} from "${params.nfpath}/modules/module.nf"
 include {map_bowtie2} from "${params.nfpath}/modules/module.nf"
 include {polish_pilon} from "${params.nfpath}/modules/module.nf"
 include {qc_quast} from "${params.nfpath}/modules/module.nf"
@@ -15,13 +16,11 @@ include {fixstart_circlator} from "${params.nfpath}/modules/module.nf"
 include {mlst_sequence_typing} from "${params.nfpath}/modules/module.nf"
 include {classify_sourmash} from "${params.nfpath}/modules/module.nf"
 include {amr_typer_amrfinder} from "${params.nfpath}/modules/module.nf"
-include {annotate_prokka} from "${params.nfpath}/modules/module.nf"
+include {annotate_bakta} from "${params.nfpath}/modules/module.nf"
 include {mge_mob_recon} from "${params.nfpath}/modules/module.nf"
 include {quality_fastp} from "${params.nfpath}/modules/module.nf"
 include {trim_trimmomatic} from "${params.nfpath}/modules/module.nf"
 include {stats_nanoplot} from "${params.nfpath}/modules/module.nf"
-
-include{cleaning} from "${params.nfpath}/modules/module.nf"
 
 // workflow script
 workflow bacteria_denovo {
@@ -59,6 +58,8 @@ workflow bacteria_denovo {
         } else if ( params.assembler == 'spades' ) {
             assembly_spades(ch_illumina)
             assembly_spades.out.draft_assembly.set{ ch_denovo_assembly }
+            filter_contigs_bbmap(ch_denovo_assembly)
+            filter_contigs_bbmap.out.draft_assembly.set{ ch_denovo_assembly }
         }
 
         //Case: Nanopore-Illumina hybrid assembly
@@ -108,8 +109,8 @@ workflow bacteria_denovo {
         
         //StepH- Genome annotation
         if ( params.annotate ) {
-            annotate_prokka(ch_final_assembly)
-            annotate_prokka.out.final_assembly.set{ ch_final_assembly }
+            annotate_bakta(ch_final_assembly)
+            annotate_bakta.out.final_assembly.set{ ch_final_assembly }
         }
 
         //StepI- MGE Analysis (mobile genetic elements)
@@ -117,10 +118,4 @@ workflow bacteria_denovo {
             mge_mob_recon(ch_final_assembly)
             mge_mob_recon.out.samples_list.set{ ch_samples }
         }
-
-        //StepJ- Cleaning
-        if ( params.clean ) {
-            cleaning(ch_samples)
-        }
-    
 }

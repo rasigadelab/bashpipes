@@ -1,7 +1,7 @@
 {
     "version" : "",
     
-    "result" : "/mnt/c/Users/admin/Documents/Pipeline_launch2",
+    "result" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/16.Singularity/Pipeline_launch2",
     "workflow" : "bacteria_denovo",
     "hybrid_assembly" : true,
     "fastp" : true,
@@ -26,8 +26,7 @@
 
     "trim_trimmomatic" : {
         "todo" : 1,
-        "adapter" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/11.Illumina_pipeline/Trimmomatic-0.39/adapters/NexteraPE-PE.fa",
-        "Trimmomatic" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/11.Illumina_pipeline/Trimmomatic-0.39/dist/jar/trimmomatic-0.39.jar"
+        "adapter" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/16.Singularity/db/trimmomatic/NexteraPE-PE.fa"
     },
 
     "stats_nanoplot" : {
@@ -36,22 +35,8 @@
 
     "filter_filtlong" : {
         "todo" : 1,
-        "min_read_length" : 5000,
-        "keep_percent" : 80
-    },
-
-    "trim_cutadapt" : {
-        "todo" : 0,
-        "minimum_length" : 30,
-        "error_rate" : 0,
-        "quality" : 20,
-        "overlap" : 1,
-        "adapter_f" : ["AGATGTGTATAAGAGACAG", "CTGTCTCTTATACACATCT"],
-        "adapter_r" : ["AGATGTGTATAAGAGACAG", "CTGTCTCTTATACACATCT"],
-        "front_f" : ["TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG","GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG","CTGTCTCTTATACACATCTCCGAGCCCACGAGAC","CTGTCTCTTATACACATCTGACGCTGCCGACGA"],
-        "front_r" : ["TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG","GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG","CTGTCTCTTATACACATCTCCGAGCCCACGAGAC","CTGTCTCTTATACACATCTGACGCTGCCGACGA"],
-        "anywhere_f" : [],
-        "anywhere_r" : []
+        "min_read_length" : "5000",
+        "keep_percent" : "80"
     },
 
     "assembly_flye" : {
@@ -63,6 +48,10 @@
         "todo" : 0,
         "sample_type" : "--isolate"
     },
+
+    "filter_contigs_bbmap" : {
+        "todo" : 0
+    },
         
     "map_bowtie2" : {
         "todo" : 1
@@ -72,7 +61,7 @@
         "todo" : 1,
         "list_changes" : "--changes"
     },
-        
+    
     "qc_quast" : {
         "todo" : 0
     },
@@ -84,30 +73,25 @@
     "mlst_sequence_typing" : {
         "todo" : 1
     },
-        
+
     "classify_sourmash" : {
         "todo" : 1,
         "scale" : "1000",
         "k" : "21",
-        "db" : "/home/jpr/common_db/sourmash-genbank-k21.json.gz"
+        "db" : "/home/jpr/common_db/sourmash_db/gtdb-rs207.genomic.k21.lca.json.gz"
     },
         
     "amr_typer_amrfinder" : {
         "todo" : 1
     },
         
-    "annotate_prokka" : {
+    "annotate_bakta" : {
         "todo" : 1,
-        "genes" : "--addgenes",
-        "mode" : "--compliant"
+        "db" : "/home/jpr/common_db/bakta_db/db"
     },
-     
+       
     "mge_mob_recon" : {
         "todo" : 1
-    },
-
-    "cleaning" : {
-        "todo" : 0
     }
     
 }

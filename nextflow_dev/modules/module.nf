@@ -2,7 +2,7 @@ process quality_fastp {
   // Tool: fastp
   // Quality control on FASTQ reads. 
 
-  label 'lowCPU'
+  label 'fastp'
   storeDir (params.result)
   debug false
   tag "Fastp on $sample"
@@ -27,7 +27,6 @@ process quality_fastp {
 
   fastp -i $R1 -I $R2 -w $task.cpus --json \${OUT_DIR}/fastp.json --html \${OUT_DIR}/fastp.html \
   1> \${OUT_DIR}/fastp.log 2> \${OUT_DIR}/fastp.err
-  
   """
 }
 
@@ -35,7 +34,7 @@ process stats_nanoplot{
   
   // Computing statistics on Nanopore FastQ and plotting some plots related.
 
-  label 'lowCPU'
+  label 'nanoplot'
   storeDir params.result
   debug false
   tag "Computing ONT stats of sample $sample"
@@ -56,11 +55,8 @@ process stats_nanoplot{
   """
   OUT_DIR=genomes/$sample/nanoplot
   mkdir -p -m 777 \${OUT_DIR}
-
-  source ~/miniconda3/etc/profile.d/conda.sh
-  conda activate nanoplot
+  
   NanoPlot -t $task.cpus --fastq $ont_reads -o \${OUT_DIR} --tsv_stats --N50 -f png 1> \${OUT_DIR}/nanoplot.log 2> \${OUT_DIR}/nanoplot.err
-  conda deactivate
   """
 }
 
@@ -68,7 +64,7 @@ process trim_trimmomatic {
   // Tool: trimmomatic
   // Trimming adapters and filtering reads of bad quality
 
-  label 'trimmomatic'
+  label 'trim'
   storeDir (params.result)
   debug false
   tag "Trimmomatic on $sample"  
@@ -91,14 +87,14 @@ process trim_trimmomatic {
   script:
   """
   OUT_DIR=genomes/$sample/trimmomatic
-  TRIM_R1=\${OUT_DIR}/$sample"_R1_paired.trimmed.fastq.gz"
-  TRIM_R1_unpaired=\${OUT_DIR}/$sample"_R1_unpaired.trimmed.fastq.gz"
-  TRIM_R2=\${OUT_DIR}/$sample"_R2_paired.trimmed.fastq.gz"
-  TRIM_R2_unpaired=\${OUT_DIR}/$sample"_R2_unpaired.trimmed.fastq.gz"
+  TRIM_R1=\${OUT_DIR}/${sample}_R1_paired.trimmed.fastq.gz
+  TRIM_R1_unpaired=\${OUT_DIR}/${sample}_R1_unpaired.trimmed.fastq.gz
+  TRIM_R2=\${OUT_DIR}/${sample}_R2_paired.trimmed.fastq.gz
+  TRIM_R2_unpaired=\${OUT_DIR}/${sample}_R2_unpaired.trimmed.fastq.gz
   PARAMS="ILLUMINACLIP:${params.trim_trimmomatic["adapter"]}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
   mkdir -p -m 777 \${OUT_DIR}
 
-  java -jar ${params.trim_trimmomatic["Trimmomatic"]} PE -validatePairs -threads $task.cpus $R1 $R2 \$TRIM_R1 \$TRIM_R1_unpaired \$TRIM_R2 \$TRIM_R2_unpaired \$PARAMS \
+  trimmomatic PE -validatePairs -threads $task.cpus $R1 $R2 \$TRIM_R1 \$TRIM_R1_unpaired \$TRIM_R2 \$TRIM_R2_unpaired \$PARAMS \
     1> \${OUT_DIR}/trimmomatic.log 2> \${OUT_DIR}/trimmomatic.err
   
   """
@@ -109,7 +105,7 @@ process filter_filtlong {
   // Tool: Filtlong
   // Filtering of Nanopore reads.  
 
-  label 'lowCPU'
+  label 'filtlong'
   storeDir (params.result)
   debug false
   tag "Filtlong on $ont_reads.simpleName"
@@ -122,16 +118,14 @@ process filter_filtlong {
   
   output:
     tuple val(sample), path("genomes/$sample/filtlong/${sample}_filtered_ONT.fastq.gz"), emit : filtered_nanopore
+    path("genomes/$sample/filtlong/filtlong.err")
 
   script:
   """
   OUT_DIR=genomes/$sample/filtlong
   mkdir -p -m 777 \${OUT_DIR}
 
-  source ~/miniconda3/etc/profile.d/conda.sh
-  conda activate filtlong
-  filtlong --min_length ${params.filter_filtlong["min_read_length"]} --keep_percent ${params.filter_filtlong["keep_percent"]} $ont_reads | gzip > \${OUT_DIR}/${sample}_filtered_ONT.fastq.gz 
-  conda deactivate
+  filtlong --min_length ${params.filter_filtlong["min_read_length"]} --keep_percent ${params.filter_filtlong["keep_percent"]} $ont_reads | gzip > \${OUT_DIR}/${sample}_filtered_ONT.fastq.gz 2> \${OUT_DIR}/filtlong.err
   """ 
 }
 
@@ -190,11 +184,9 @@ process assembly_spades {
   //  tuple val(sample), path(R1), path(R2)
   
   output:
-    tuple val(sample), path("genomes/$sample/spades/contigs_filtered.fasta"), emit : draft_assembly
+    tuple val(sample), path("genomes/$sample/spades/contigs.fasta"), emit : draft_assembly
     path("genomes/$sample/spades/spades_1.log")
     path("genomes/$sample/spades/spades.err")
-    path("genomes/$sample/${sample}_assembly_raw.fasta")
-    path("genomes/$sample/spades/contigs.fasta")
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -211,10 +203,41 @@ process assembly_spades {
       spades.py -1 $R1 -2 $R2 --s1 $R1_UNPAIRED --s2 $R2_UNPAIRED ${params.assembly_spades["sample_type"]} -o \${OUT_DIR} -t $task.cpus -m ${memory} 1> \${OUT_DIR}/spades_1.log 2> \${OUT_DIR}/spades.err
   fi
 
-  reformat.sh in=\${OUT_DIR}/contigs.fasta out=\${OUT_DIR}/contigs_filtered.fasta minlength=500
+  echo "Completed SPAdes process for sample $sample"
+  """
+}
+
+process filter_contigs_bbmap {
+
+  // Tool: BBmap reformat.sh. 
+  // Filter for only contigs > 500bp in final assembly
+
+  label 'bbmap'
+  storeDir params.result
+  debug false
+  tag "Contigs filtering on $sample"
+
+  when:
+    params.filter_contigs_bbmap.todo == 1
+
+  input:
+    tuple val(sample), path(raw_assembly)
+  
+  output:
+    tuple val(sample), path("genomes/$sample/spades/contigs_filtered.fasta"), emit : draft_assembly
+    path("genomes/$sample/spades/bbmap.log")
+    path("genomes/$sample/spades/bbmap.err")
+    path("genomes/$sample/${sample}_assembly_raw.fasta")
+
+  script:
+  memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
+  """
+  OUT_DIR=genomes/$sample/spades
+  mkdir -p -m 777 \${OUT_DIR}
+
+  reformat.sh in=$raw_assembly out=\${OUT_DIR}/contigs_filtered.fasta minlength=500 1> \${OUT_DIR}/bbmap.log 2> \${OUT_DIR}/bbmap.err
   cp \${OUT_DIR}/contigs_filtered.fasta genomes/$sample/${sample}_assembly_raw.fasta
 
-  echo "Completed SPAdes process for sample $sample"
   """
 }
 
@@ -264,7 +287,7 @@ process polish_pilon {
   // Tool: pilon. 
   // Polishing step consists in correcting errors in draft assembly with Illumina reads alignment.
 
-  label 'highCPU'
+  label 'pilon'
   storeDir params.result
   debug false
   tag "Polishing of $sample"
@@ -288,7 +311,7 @@ process polish_pilon {
   SAMPLE_POLISHED=\${OUT_DIR}/${sample}_polished
   mkdir -p -m 777 \${OUT_DIR}
 
-  pilon -Xmx${memory}G --genome $draft_assembly --bam $sorted_bam ${params.polish_pilon["list_changes"]} --output \${SAMPLE_POLISHED} &> \${OUT_DIR}/pilon.log
+  java -Xmx${memory}G -jar /pilon/pilon.jar --genome $draft_assembly --bam $sorted_bam ${params.polish_pilon["list_changes"]} --output \${SAMPLE_POLISHED} &> \${OUT_DIR}/pilon.log
   cp \${SAMPLE_POLISHED}.fasta genomes/$sample/${sample}_polished.fasta
   
   echo "Completed Pilon process for sample $sample"
@@ -299,7 +322,7 @@ process qc_quast {
   // Tool: quast. 
   // Assembly QC step consists in checking quality of de novo Illumina assembly.
 
-  label 'highCPU'
+  label 'quast'
   storeDir params.result
   debug false
   tag "Quast QC on $sample"
@@ -327,7 +350,7 @@ process qc_quast {
   OUT_DIR=genomes/$sample/quast
   mkdir -p -m 777 \${OUT_DIR}
 
-  quast -o \${OUT_DIR} $draft_assembly 1> \${OUT_DIR}/quast.log 2> \${OUT_DIR}/quast.err
+  quast.py -o \${OUT_DIR} $draft_assembly 1> \${OUT_DIR}/quast.log 2> \${OUT_DIR}/quast.err
   """
 }
 
@@ -335,7 +358,7 @@ process fixstart_circlator {
   // Tool: circlator. 
   // Circularization step consists in re-aligning contig sequences to origin of replication.
 
-  label 'lowCPU'
+  label 'circlator'
   storeDir params.result
   debug false
   tag "Circlator on $sample"
@@ -366,7 +389,7 @@ process mlst_sequence_typing {
   // Tool: mlst. 
   // Sequence typing consists in writing ST annotation for each isolate by checking the allele version of 7 house-keeping genes.
 
-  label 'lowCPU'
+  label 'mlst'
   storeDir params.result
   debug false
   tag "MLST on $sample"
@@ -396,13 +419,13 @@ process classify_sourmash {
   // Taxon classification consists in describing right taxonomy for each isolate. 
   // Outputs specifically genus and species in this pipeline.
 
-  label 'lowCPU'
+  label 'sourmash'
   storeDir params.result
   debug false
   tag "Sourmash on $sample"
 
   when:
-    params.mlst_sequence_typing.todo == 1
+    params.classify_sourmash.todo == 1
 
   input:
     tuple val(sample), path(final_assembly)
@@ -429,7 +452,7 @@ process amr_typer_amrfinder {
   // AMR genes typing consists in listing AMR genes present in the genome + some other genes of interest like biocide, stress response or virulence genes. 
   // Behave differently depending on genus and species given by Sourmash.
 
-  label 'lowCPU'
+  label 'amrfinder'
   storeDir params.result
   debug false
   tag "AMRFinder on $sample"
@@ -464,41 +487,40 @@ process amr_typer_amrfinder {
   """
 }
 
-process annotate_prokka {
-  // Tool: prokka. 
+process annotate_bakta {
+  // Tool: bakta. 
   // Genome annotation consists in locating genes on the genome and giving their function 
 
-  label 'prokka'
+  label 'bakta'
   storeDir params.result
   debug false
-  tag "Prokka on $sample"  
+  tag "Bakta on $sample"  
 
   when:
-    params.annotate_prokka.todo == 1
+    params.annotate_bakta.todo == 1
 
   input:
     tuple val(sample), path(final_assembly), path(taxonomy_file)
 
   output:
     tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
-    path("genomes/$sample/prokka/${sample}.err")
-    path("genomes/$sample/prokka/${sample}.gff")
-    path("genomes/$sample/prokka/${sample}.log")
+    path("genomes/$sample/bakta/bakta.err")
+    path("genomes/$sample/bakta/${sample}.gff3")
+    path("genomes/$sample/bakta/${sample}.tsv")
+    path("genomes/$sample/bakta/${sample}.png")
+    path("genomes/$sample/bakta/${sample}.log")
+    path("genomes/$sample/bakta/bakta.log")
 
   script:
   """
-  OUT_DIR=genomes/$sample/prokka
+  OUT_DIR=genomes/$sample/bakta
   mkdir -p -m 777 \${OUT_DIR}
 
   # Extract genus and species names if available
   GENUS=\$(cut -d',' -f8 $taxonomy_file | tail -n 1)
   SPECIES=\$(cut -d',' -f9 $taxonomy_file | tail -n 1)
   
-  source ~/miniconda3/etc/profile.d/conda.sh
-  conda activate prokka
-  prokka $final_assembly --force ${params.annotate_prokka["genes"]} –-cpus $task.cpus --outdir \${OUT_DIR} ${params.annotate_prokka["mode"]} \
-      --prefix $sample –-usegenus –-genus \$GENUS –-species \$SPECIES &> \${OUT_DIR}/prokka.log
-  conda deactivate
+  bakta --force --prefix $sample --threads $task.cpus --output \${OUT_DIR} --db ${params.annotate_bakta["db"]} $final_assembly 1> \${OUT_DIR}/bakta.log 2> \${OUT_DIR}/bakta.err
   """
 }
 
@@ -506,7 +528,7 @@ process mge_mob_recon {
   // Tool: Mob_recon. 
   // MGE Analysis consists in finding and annotating plasmids, transposons and other mobile genetic elements encountered in the genome. 
 
-  label 'lowCPU'
+  label 'mob_recon'
   storeDir params.result
   debug false
   tag "Mob_Recon on $sample" 
@@ -530,42 +552,11 @@ process mge_mob_recon {
   OUT_DIR=genomes/$sample/mob_recon
   mkdir -p -m 777 \${OUT_DIR}
   
-  source ~/miniconda3/etc/profile.d/conda.sh
-  conda activate mob_suite2
   mob_recon -n $task.cpus --force --infile $final_assembly --outdir \${OUT_DIR} 1> mob_recon.log 2> mob_recon.err
   mv mob_recon.log \${OUT_DIR}
   mv mob_recon.err \${OUT_DIR}
-  conda deactivate
   """
 }
-
-process cleaning {
-  // Tool: Unix command
-  // Remove temporary files (for example BAM files). 
-
-  label 'lowCPU'
-  storeDir params.result
-  debug false
-  tag "Cleaning on $sample" 
-
-  when:
-    params.cleaning.todo == 1
-
-  input:
-    tuple val(sample), path(contig_report)
-
-  output:
-    path("genome/$sample/cleaning_is_done.txt")
-
-  script:
-  """
-  rm ${params.result}/genomes/${sample}/polish/${sample}.sorted.bam
-  rm ${params.result}/genomes/${sample}/polish/${sample}.sorted.bam.bai
-  touch ${params.result}/genomes/$sample/cleaning_is_done.txt
-
-  """
-}
-
 
 
 
