@@ -33,6 +33,7 @@ process merger_preparation {
 }
 
 process annotate_prokka {
+  //DEPRECATED, has been replaced by process annotate_bakta()
   // Tool: prokka. 
   // Genome annotation consists in locating genes on the genome and giving their function 
 
