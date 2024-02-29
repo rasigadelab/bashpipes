@@ -1,0 +1,82 @@
+{
+    "version" : "1.0.0",
+    
+    "result" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/16.Singularity/Pipeline_launch2",
+    "workflow" : "bacteria_denovo",
+    "hybrid_assembly" : true,
+    "fastp" : true,
+    "trimming" : true,
+    "nano_filtering" : true,
+    "nanoplot" : true,
+    "assembler" : "flye",
+    "map" : true,
+    "polish" : true,
+    "circularization" : true,
+    "mlst" : true, 
+    "sourmash" : true,
+    "amr_typer" : true,
+    "annotate" : true,
+    "mge" : true,
+    
+    "quality_fastp" : {
+        "todo" : 1
+    },
+
+    "trim_trimmomatic" : {
+        "todo" : 1,
+        "adapter" : "/mnt/c/Users/admin/Documents/Bactopia_git/bashpipes/Resistrack/src/db/trimmomatic/NexteraPE-PE.fa"
+    },
+
+    "stats_nanoplot" : {
+        "todo" : 1
+    },
+
+    "filter_filtlong" : {
+        "todo" : 1,
+        "min_read_length" : "5000",
+        "keep_percent" : "80"
+    },
+
+    "assembly_flye" : {
+        "todo" : 1,
+        "ont_type" : "--nano-raw"
+    },
+     
+    "map_bowtie2" : {
+        "todo" : 1
+    },
+       
+    "polish_pilon" : {
+        "todo" : 1,
+        "list_changes" : "--changes"
+    },
+    
+    "fixstart_circlator" : {
+        "todo" : 1
+    },
+    
+    "mlst_sequence_typing" : {
+        "todo" : 1
+    },
+
+    "classify_sourmash" : {
+        "todo" : 1,
+        "scale" : "1000",
+        "k" : "21",
+        "db" : "/home/jpr/common_db/sourmash_db/gtdb-rs207.genomic.k21.lca.json.gz"
+    },
+        
+    "amr_typer_amrfinder" : {
+        "todo" : 1
+    },
+        
+    "annotate_bakta" : {
+        "todo" : 1,
+        "db" : "/home/jpr/common_db/bakta_db/db"
+    },
+       
+    "mge_mob_recon" : {
+        "todo" : 1
+    }
+    
+}
