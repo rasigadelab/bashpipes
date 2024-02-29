@@ -1,0 +1,68 @@
+{
+    "version" : "1.0.0",
+    
+    "result" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/16.Singularity/Pipeline_launch",
+    "workflow" : "bacteria_denovo",
+    "hybrid_assembly" : false,
+    "fastp" : true,
+    "trimming" : true,
+    "assembler" : "spades",
+    "quast" : true,
+    "circularization" : true,
+    "mlst" : true, 
+    "sourmash" : true,
+    "amr_typer" : true,
+    "annotate" : true,
+    "mge" : true,
+
+    "quality_fastp" : {
+        "todo" : 1
+    },
+
+    "trim_trimmomatic" : {
+        "todo" : 1,
+        "adapter" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/16.Singularity/db/trimmomatic/NexteraPE-PE.fa"
+    },
+    
+    "assembly_spades" : {
+        "todo" : 1,
+        "sample_type" : "--isolate"
+    },
+
+    "filter_contigs_bbmap" : {
+        "todo" : 1
+    },
+    
+    "qc_quast" : {
+        "todo" : 1
+    },
+    
+    "fixstart_circlator" : {
+        "todo" : 1
+    },
+    
+    "mlst_sequence_typing" : {
+        "todo" : 1
+    },
+
+    "classify_sourmash" : {
+        "todo" : 1,
+        "scale" : "1000",
+        "k" : "21",
+        "db" : "/home/jpr/common_db/sourmash_db/gtdb-rs207.genomic.k21.lca.json.gz"
+    },
+        
+    "amr_typer_amrfinder" : {
+        "todo" : 1
+    },
+        
+    "annotate_bakta" : {
+        "todo" : 1,
+        "db" : "/home/jpr/common_db/bakta_db/db"
+    },
+       
+    "mge_mob_recon" : {
+        "todo" : 1
+    }
+    
+}
