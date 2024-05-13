@@ -9,33 +9,26 @@
 rm(list = ls())
 library(data.table)
 library(readxl)
-# library(stringr)
 library(ape)
 library(phytools)
-# library(ggtree)
-# library(treeio)
-# if (!require("BiocManager", quietly = TRUE))
-#   install.packages("BiocManager")
-# 
-# BiocManager::install("gtable")
 
 ## GLOBAL PARAMETERS ##
 file_extension="newick"
 out_prefix="GTR_tree"
 replicon="Cluster 11 B. cereus"
-metadata_file="~/Projets/5.Suivi/Metadata_eq_rasigade.xlsx"
+metadata_file="metadata.xlsx"
 cluster_id=11
 mlst_species="bcereus"
 
 ## PROGRAM ##
 cat("Searching tree file.\n")
 {
-  setwd(sprintf("~/Projets/2.Coding_projects/3.R/1.Automated_reports/phylogeny/cluster_%d/%s/phylogenetic_tree/clonalframeml", cluster_id, mlst_species))
+  setwd(sprintf("phylogeny/cluster_%d/%s/phylogenetic_tree/clonalframeml", cluster_id, mlst_species))
   treefiles <- dir(pattern = sprintf("%s$", file_extension), recursive = TRUE, full.names = TRUE)
-  # Lecture de l'arbre
+  # Reading tree
   # t <- read.nexus(treefiles)
   t <- read.tree(treefiles)
-  #Set root to midpoint
+  # Set root to midpoint
   t <- midpoint.root(t)
 }
 
@@ -63,11 +56,6 @@ cat("Output tree file and color clonal samples.")
   plot.phylo(t, type = "phylogram", main = replicon,
              align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 2, plot = FALSE)
   pp <- get("last_plot.phylo", envir = .PlotPhyloEnv)
-  colorClonal("023157153601-01", "023140769901-02", "lightsalmon")
-  # colorClonal("023157323401-01", "023140769901-02", "lightgoldenrod1")
-  # colorClonal("023157319701-01", "023157319701-01", "lightgoldenrod1")
-  # colorClonal("022203893701-02", "022203893701-02", "lightblue")
-  # colorClonal("022191621001-02", "022191621001-02", "lightblue")
   par(new = TRUE)
   plot.phylo(t, type = "phylogram", main = replicon,
              align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 2)
@@ -81,7 +69,7 @@ cat("Output tree file and color clonal samples.")
 
 # cat("To display circular plots...\n")
 # {
-#    jpeg(file = "~/Projets/2.Coding_projects/3.R/11.Summarize_replicon/circular_plots.jpeg", 2000, 2000, quality = 98, pointsize = 48)
+#    jpeg(file = "circular_plots.jpeg", 2000, 2000, quality = 98, pointsize = 48)
 #    layout(matrix(1:1, 1))
 #    plot(t, "f", FALSE, cex = 0.5)
 #    dev.off()
