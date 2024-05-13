@@ -14,6 +14,9 @@ All pipelines are running with Nextflow and Singularity containers. More details
 
 ## Epitrack pipeline
 
+![diagramme_epitrack](https://github.com/rasigadelab/bashpipes/assets/120658937/d8d638e7-da21-4144-b3ce-1c248822fd40)
+
+
 ## Resistrack pipeline
 
 ## Phylogeny pipeline
