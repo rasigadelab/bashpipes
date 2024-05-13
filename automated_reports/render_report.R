@@ -12,7 +12,7 @@ scanning <- FALSE
 reporting <- FALSE
 clustering <- FALSE
 
-## PRELIMINARY STEPS [SEE PARAMETERS BELOW ] ##
+## PRELIMINARY STEPS ##
 cat("Scanning annotation results + clustering samples. [OPTIONAL]\n")
 {
   setwd("../Script_Tests")
@@ -33,15 +33,15 @@ cat("Scanning annotation results + clustering samples. [OPTIONAL]\n")
 
 
 ## PARAMETERS ##
-cluster <- "65"
-studied_species <- "ecloacae"
-env <- "" # could be either an IPP number (like 10805618) or "" if there is no environmental samples
+cluster <- ""
+studied_species <- ""
+env <- "" # could be either an IPP number or "" if there is no environmental sample
 outdir <- paste0("../Epitrack_clusters/Epitrack_cluster_", cluster)
 today_date <- Sys.Date()
-path_scan <-  paste0("../Script_Tests/", today_date, "_annotation_scan.Rdata")
-path_reports <- paste0("../Script_Tests/", today_date, "_Epitrack_annotation_report.Rdata")
-path_clone <- paste0("../Script_Tests/", today_date, "_clone_reports.Rdata")
-path_qc <- "~/Projets/2.Coding_Projects/3.R/3.Sequencing_QC/2023-12-20"
+path_scan <-  paste0(today_date, "_annotation_scan.Rdata")
+path_reports <- paste0(today_date, "_Epitrack_annotation_report.Rdata")
+path_clone <- paste0(today_date, "_clone_reports.Rdata")
+path_qc <- ""
 ## WHAT PART SHOULD BE RUN ##
 global_report <- TRUE
 clonal_report <- TRUE
@@ -71,13 +71,6 @@ cat("Render global cluster report, including multi-species. [FOR INTERNAL USE]\n
 cat("Rendering clustering report, per replicon and per species.\n")
 {
   if(clonal_report==TRUE){
-    # Step2- Rendering replicon report for each species
-    # Step2A- What species in cluster 
-    # load(path_reports)
-    # species_cluster <- reports[cluster_id == cluster]$mlst_species
-    # species_cluster <- names(which(table(species_cluster) > 2)) # only keep species for which there are min. 3 samples, otherwise no clustering
-    # samples_cluster <- reports[cluster_id == cluster]$glims
-    # rm(reports)
     for(sp in studied_species){
       out <- paste0(outdir, "/cluster_", cluster, "_", sp, "_chromosome.pdf")
       rmarkdown::render(
