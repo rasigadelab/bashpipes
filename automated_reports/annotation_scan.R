@@ -52,27 +52,6 @@ cat(sprintf("  Genome directory contains %i files in %i isolates.\n", length(fna
 
 # Gather amrfinder and mob_recon informations then combine in data tables
 
-# QUAST reports
-# cat("Scanning QUAST reports.\n")
-# {
-#   quast_fnames <- fnames[grepl("transposed_report.tsv", fnames)]
-#   quast_inames <- str_match(quast_fnames, "^\\./(?<isolate>[^/]+)")[, "isolate"]
-#   stopifnot(length(quast_fnames) == length(quast_inames))
-#   stopifnot(length(quast_fnames) != 0)
-#   names(quast_fnames) <- quast_inames
-#   cat(sprintf("  Found %i isolates with a QUAST report.\n", length(quast_inames)))
-#   
-#   quast_reports <- list()
-#   for(iname in quast_inames) {
-#     quast_reports[[ iname ]] <- fread( quast_fnames[iname] )[ , Assembly := iname]
-#   }
-#   quast_reports <- rbindlist(quast_reports)#[, key := paste(sample_id, contig_id, sep = "_")]
-#   setnames(quast_reports, "Assembly", "genome")
-#   
-#   rm(quast_fnames, quast_inames, iname)
-# }
-# cat("  Finished scanning QUAST reports.\n")
-
 # MOB-SUITE Contig_reports
 cat("Scanning MOB_SUITE reports.\n")
 {
