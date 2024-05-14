@@ -32,7 +32,7 @@ today <- Sys.Date()
 sample_data <- paste0(today, "_annotation_scan.Rdata")
 rm(today)
 # Specify metadata file
-metadata_file <- "~/Projets/5.Suivi/Metadata_eq_rasigade.xlsx"
+metadata_file <- "metadata.xlsx"
 # Specify project name : "Epitrack" or "Resistrack"
 project <- "Epitrack"
 # Specify output directory path
@@ -71,24 +71,8 @@ cat("Rebuild tables with Epitrack format.\n")
   rm(raw_table_names, tbname, item, sourmash_reports, mlst_reports, mge_reports, metadata, contig_reports, amrfinder_reports, combined_amr_report)
 }
 
-# Set a proper "genome" key in each df
-
-# Now this is handled in annotation_scan.R [Aurélie - 12/07/2023]
-# For each annotation output data, an appropriate genome column is added
-# See 'date'_annotation_report.xlsx 
-
-
-# QUAST DEPRECATED, replaced with FASTQC 
-# QUAST != FASTQC
-# Fastqc enables to analyze quality of raw fastq reads
-# Quast enables to analyze quality of assembly (contigs...)
-# raw$quast_reports$genome
-
 ###############################
-#* Gather data for each isolate as a JSON-like list
-#* 
-#* 
-#* 
+# Gather data for each isolate as a JSON-like list
 
 cat("Gathering data for each isolate as JSON_like list.\n")
 {
