@@ -6,7 +6,7 @@ def printHelp() {
 
   Description:
     Nextflow pipeline for de novo assembly of Nanopore/Illumina reads. 
-    Specific to microbial isolates.
+    Specific to bacterial isolates.
     Included one workflow, producing Nanopore/Illumina hybrid assembly,
     with Flye assembling Nanopore reads and Pilon correcting with Illumina reads.
 
