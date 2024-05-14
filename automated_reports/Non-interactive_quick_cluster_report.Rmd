@@ -54,7 +54,7 @@ usePackage <- function(p) {
     install.packages(p, dep = TRUE)
   require(p, character.only = TRUE)
 }
-libraries <- c("lubridate", "data.table", "stringr", "knitr", "ggplot2", "dplyr", "scales", "tidyr", "kableExtra", "ggpubr", "RColorBrewer")
+libraries <- c("lubridate", "data.table", "stringr", "knitr", "ggplot2", "dplyr", "scales", "tidyr", "kableExtra", "ggpubr", "RColorBrewer", "tidyverse")
 for (lib in libraries){usePackage(lib)}
 
 
@@ -69,7 +69,14 @@ if(params$species=="chromosome"){
 }
 # In case of ecloacae, include cronobacter !
 if(params$species=="ecloacae"){
+  # Also include cronobacter
   reports <- reports[mlst_species == species | mlst_species == "cronobacter",]
+} else if(params$species=="ecoli"){
+  # Also include ecoli_achtman_4
+  reports <- reports[mlst_species == species | mlst_species == "ecoli_achtman_4",]
+} else if(params$species=="kpneumoniae"){
+  # Also include klebsiella
+  reports <- reports[mlst_species == species | mlst_species == "klebsiella",]
 } else {
   reports <- reports[mlst_species == species,]
 }
@@ -128,15 +135,19 @@ if(months_period < 6){
   last_month <- as.Date("2024-01-01")
 }
 
-if(params$species == "chromosome" & params$cluster_id == 3){
+if(params$cluster_id == 3){
   species_in_title <- "S. marcescens"
+} else if(params$cluster_id %in% c(96, 113, 121, 127)){
+  species_in_title <- "S. capitis"
 } else if(params$species == "cfreundii" & params$cluster_id == 39) {
   species_in_title <- "C. freundii/braakii/youngae"
-} else if(params$species == "chromosome" & params$cluster_id == 50){
+} else if(params$species == "ecloacae" & params$cluster_id == 39) {
+  species_in_title <- "E. cloacae/hormaechei"
+} else if(params$cluster_id == 50){
   species_in_title <- "A. faecalis"
-} else if(params$species == "chromosome" & params$cluster_id == 48){
+} else if(params$cluster_id == 48){
   species_in_title <- "B. fragilis"
-} else if(params$cluster_id == 60){
+} else if(params$cluster_id %in% c(60, 115)){
   species_in_title <- "A. ursingii"
 } else if(params$cluster_id == 40){
   species_in_title <- "P. mirabilis"
@@ -146,6 +157,12 @@ if(params$species == "chromosome" & params$cluster_id == 3){
   species_in_title <- "A. nosocomialis"
 } else if(params$cluster_id == 46){
   species_in_title <- "A. baumannii"
+} else if(params$cluster_id == 73){
+  species_in_title <- "S. saprophyticus"
+} else if(params$cluster_id == 75){
+  species_in_title <- "S. sonnei"
+} else if(params$cluster_id == 111){
+  species_in_title <- "M. catharralis"
 } else {
   species_in_title <- gsub("^([A-Z])", "\\1. ", str_to_title(params$species))
 }
@@ -156,23 +173,17 @@ out <- reports %>%
   mutate(month = floor_date(sampling_date, "month")) %>%
   mutate(patients=ifelse(ipp==params$env_samples, "environnement", "patient")) %>%
   select(-ipp)
+ggplot_title <- bquote(atop("Histogramme des dates de prélèvement", 
+                            "de l'espèce"~italic(.(species_in_title))))
 # Plotting as a barplot of month categories
 g <- ggplot(data=out, aes(x=month, fill = patients)) +
    geom_bar(stat="count", aes(text = paste('Nombre: ', after_stat(count))), width = 20) +
-   ggtitle(paste("Histogramme des dates de prélèvement \nde l'espèce", species_in_title)) +
+   ggtitle(ggplot_title) +
    labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Type de prélèvement") +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
                limits = c(first_month, last_month)) +
   scale_y_continuous(n.breaks = 5) +
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
-
-# if(length(out$genome) < 10){
-#   g <- g +
-#     scale_y_continuous(n.breaks = length(out$genome))
-# } else {
-#   g <- g +
-#     scale_y_continuous(n.breaks = 10)
-# }
 
 g
 
@@ -192,20 +203,24 @@ Deux isolats sont clonaux s'ils sont distants de moins **de `r nb_snps` SNPs**. 
 
 ## Bilan par clone identifié
 
-```{r clone, out.height="250pt"}
+```{r clone, out.height="500pt"}
 out <- reports %>%
-  mutate(ipp=ifelse(ipp==params$env_samples, "environnement", ipp))
+  mutate(ipp=ifelse(ipp==params$env_samples, "environnement", ipp)) %>%
+  mutate(text_on_bar=ifelse(ipp=="environnement", "environnement", ""))
 
 # Color editing
 cbPalette <- colorRampPalette(brewer.pal(9, "Set1"))
 
 # Barplot of number of samples per clone
 g <- ggplot(data=out, aes(x=as.factor(eval(as.name(clust_dist))), fill = ipp)) +
-      geom_bar(stat="count", aes(text = paste0("Nombre: ", after_stat(count)))) +
+      geom_bar(stat="count")+
+      stat_count(geom = "text", colour = "white", size = 3.5, angle = 0,
+                 aes(label = ipp),position=position_stack(vjust=0.5)) +
       ggtitle(str_replace(clust_dist, "clust_dist_", "Clustering Distance ")) +
       labs(x = "Clusters", y = "Nombre d'échantillons", fill = "Identifiant Patient (IPP)") +
-      scale_y_continuous(n.breaks = 3)+
-      scale_fill_manual(values=cbPalette(length(unique(reports$ipp))))
+      scale_y_continuous(n.breaks = 5)+
+      scale_fill_manual(values=cbPalette(length(unique(reports$ipp))))+
+      guides(fill=guide_legend(ncol=2))
 
 g
 
@@ -272,7 +287,9 @@ tab <- reports %>%
   mutate(type_prlvt=ifelse(type_prlvt=="SELLE", "Selle", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="SUPE", "Suppuration prélevée par écouvillon", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="SUPP", "Suppuration profonde", type_prlvt)) %>%
-  mutate(type_prlvt=ifelse(type_prlvt=="HEMOA", "Hémoculture Flacon A", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(str_to_upper(type_prlvt)=="BMR-BHR", "Dépistage rectal", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="RECHSP", "Prélèvement environnemental", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="Surv selles néonat", "Surveillance selles néonatologie", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(is.na(type_prlvt), "", type_prlvt))
 
 if(!(params$env_samples=="")){
@@ -474,7 +491,6 @@ rm(amr_report, combined_amr_report, list_arg, out, c, clones, samples, d)
 # }
 # rm(out.height)
 ```
-
 ```{r cleaning}
 rm(global_theme, params, reports, species, nb_snps, clust_dist, samples_clustered)
 ```
