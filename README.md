@@ -19,7 +19,7 @@ First, quality of short reads are assessed using fastp (https://github.com/OpenG
 
 ![diagramme_epitrack](https://github.com/rasigadelab/bashpipes/assets/120658937/53c2ba66-5a22-4447-b2d3-d7abd37cb177)
 
-Genomes are annonated to retrieve the taxonomy of the sample using Sourmash (https://github.com/sourmash-bio/sourmash, version 4.8.5). Genomes are typed with classical Multi-Locus Sequence Typing (MLST - https://github.com/tseemann/mlst, version 2.23.0). Anti-microbial genes (ARGs) are detected with NCBI AMRfinder+ (https://github.com/ncbi/amr, version 3.12.8). Global genome annotations are computed with Bakta (https://github.com/oschwengers/bakta, version 1.9.2). Finally, contigs corresponding to plasmids are identified using Mob-Recon of the Mob-Suite (https://github.com/phac-nml/mob-suite, version 3.1.8). 
+Genomes are annonated to retrieve the taxonomy of the sample using Sourmash (https://github.com/sourmash-bio/sourmash, version 4.8.5). Genomes are typed with classical Multi-Locus Sequence Typing (MLST - https://github.com/tseemann/mlst, version 2.23.0). Anti-microbial resistance genes (ARGs) are detected with NCBI AMRfinder+ (https://github.com/ncbi/amr, version 3.12.8). Global genome annotations are computed with Bakta (https://github.com/oschwengers/bakta, version 1.9.2). Finally, contigs corresponding to plasmids are identified using Mob-Recon of the Mob-Suite (https://github.com/phac-nml/mob-suite, version 3.1.8). 
 
 ## Resistrack pipeline
 
