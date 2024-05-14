@@ -4,10 +4,10 @@ subtitle: "Prélèvement `r params$sample_glims`"
 author: "Equipe PHE3ID"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 params:
-  sample_glims: "022094144201-02"
+  sample_glims: ""
   illumina_only: TRUE
-  path_to_reports: "../Script_Tests/2023-12-14_Epitrack_annotation_report.Rdata"
-  path_to_scan: "../Script_Tests/2023-12-14_annotation_scan.Rdata"
+  path_to_reports: "2023-12-14_Epitrack_annotation_report.Rdata"
+  path_to_scan: "2023-12-14_annotation_scan.Rdata"
   path_to_qc: "./data"
 output:
   pdf_document:
