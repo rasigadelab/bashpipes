@@ -7,7 +7,7 @@
 #* Annotate a subcluster for each sample
 
 #TODO
-#How do we set the cut to define a clone ? [currently : arbitrary 10SNPs]
+#How do we set the cut to define a clone ? [currently : arbitrary 15 SNPs]
 
 rm(list = objects())
 
@@ -21,12 +21,11 @@ output_dir <- getwd()
 phylogeny_dir <- "../phylogeny"
 # Specifying output file of annotation_report_2.R
 today <- Sys.Date()
-#today <- as.Date("2023-10-10")
 annotations <- paste0(today, "_Epitrack_annotation_report.Rdata")
 rm(today)
-#Specifying at which distance groups from clustering must be built
+# Specifying at which distance groups from clustering must be built (in terms of SNPs)
 chosen_distances <- c(5, 15, 50, 100)
-#Specifying which mode has to be used : "snps" or "mldist"
+# Specifying which mode has to be used : "snps" or "mldist"
 mode <- "snps"
 
 cat(sprintf("Loading %s", annotations))
@@ -42,7 +41,7 @@ cat(sprintf("Entering phylogeny directory: %s\n", phylogeny_dir))
 
 # Analyze clusters
 fnames <- dir(recursive = TRUE, full.names = TRUE)
-clusters <- unique(str_match(fnames, "cluster_\\d+/\\w+")) # c("cluster_1/paeruginosa")
+clusters <- unique(str_match(fnames, "cluster_\\d+/\\w+")) # example: c("cluster_1/paeruginosa")
 
 cat(sprintf("  Phylogeny directory contains %i files in %i clusters.\n", length(fnames), length(clusters)))
 
@@ -74,7 +73,6 @@ cat("Scanning MLDIST file from IQtree output or SNP matrix computed from Snippy 
         mldist_reports[[ cluster ]][[ minicl ]] <- mldist_reports[[ cluster ]][[ minicl ]][1:(total_items-1),1:(total_items-1)]
       }
     }
-  
   }
   rm(mldist_fnames, mldist_clusters, cluster, minicl, total_items)
 }
@@ -168,20 +166,16 @@ cat("Executing clustering.\n")
         # Merge results in a dataframe combining all distances of clustering
         distances_df <- merge(distances_df, tmp, key = "genome")
       }
-      # Merge results for this minicluster with those from other miniclusters 
-      print("Is this rbindlist ok ? [Line 166]")
+      # Merge results for this minicluster with those from other miniclusters
       subclustering_df <- rbind(subclustering_df, distances_df)
-      print("Yep")
     }
     # Appending outliers to clustering results
     for(outlier in outliers_reports[[cluster]]){
-      # Create random number 
+      # Get index of outliers
       out_index <- which(outliers_reports[[cluster]] == outlier)
       outlier_line <- data.table(outlier, paste0("out-", out_index), paste0("out-", out_index), paste0("out-", out_index), paste0("out-", out_index))
       colnames(outlier_line) <- c("genome", paste0("clust_dist_", chosen_distances) )
-      print("Is this rbindlist OK ? [Line 175]")
       subclustering_df <- rbind(subclustering_df, outlier_line)
-      print("Yep")
     }
     # Now let's sort results, to get biggest cluster names 'A' -> smallest cluster 'Z'
     for(dist in chosen_distances){
@@ -198,9 +192,7 @@ cat("Executing clustering.\n")
       }
     }
     clustering[[ cluster ]] <- subclustering_df
-    print("Is this rbindlist OK ? [Line 194]")
     clustering_df <- rbind(clustering_df, subclustering_df)
-    print("Yep")
   }
   rm(cl, groups, sorted, i, cluster, genetic_distances, distances_df, main_cl, subclustering_df,
      tmp, dist, dist_column, index_to_change, mini_cl, minicluster, new_name, num_mini_cl, old_name,
@@ -224,47 +216,3 @@ cat("Cleaning environment.")
 {
   rm(clustering, final_data, chosen_distances, clusters, mode, output_dir, phylogeny_dir)
 }
-
-
-##########################
-#### VERSION MANUELLE ####
-##########################
-# # Steps
-# # 1- Read MLDIST file (Iqtree output)
-# mldist <- fread("data/cluster1/paeruginosa.mldist", skip = 1)
-# setnames(mldist, names(mldist), c("NAME", mldist$V1))
-# 
-# # 2-Exclude outliers [eventually]
-# outliers <- FALSE
-# outliers_index <- which(names(mldist) == "Epi-230")
-# mldist <- mldist[,-1]
-# # 3-Transform genetic distance (substitions/sites) into substitions number
-# iqtree_log <- "data/cluster1/paeruginosa.iqtree"
-# # Read log to extract total number of sites
-# x <- scan(iqtree_log, what="character", sep="\n", quiet = TRUE)
-# sites <- as.list(str_split(str_subset(x, "Input data"), "sequences")[[1]])
-# total_sites <- as.double(gsub("\\D", "", sites[[2]]))
-# 
-# 
-# ####WORK #########
-# if(outliers){
-#   M <- as.dist(mldist[-c(outliers_index), -c(outliers_index)]) * total_sites
-# } else {
-#   M <- as.dist(mldist) * total_sites
-# }
-# # 4-Clustering using single linkage method (to group isolates per pair)
-# # Complete linkage could be a "stringent" way to cluster isolates.
-# # Complete linkage, every sample in the cluster are less than 10 SNPs distant from each other
-# # Single linkage, each sample in the cluster is less than 10 SNPs to at least one other sample
-# # in the cluster (allows samples to evolve between each potential clone)
-# cl <- hclust(M, method = "single")
-# plot(cl)
-# clusters <- cutree(cl, h = 10)
-# # These are the clusters
-# sort(clusters)
-# # Put results in dataframe
-# subclust <- data.table(genome = names(clusters), subclust = clusters)
-# final_data <- merge(subclust, reports, key = "genome")
-# 
-# 
-# rm(iqtree_log, x, sites, total_sites, M, clusters, outliers, outliers_index, cl, mldist, subclust, reports)
