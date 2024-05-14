@@ -25,8 +25,6 @@ annotations <- paste0(today, "_Epitrack_annotation_report.Rdata")
 rm(today)
 # Specifying at which distance groups from clustering must be built (in terms of SNPs)
 chosen_distances <- c(5, 15, 50, 100)
-# Specifying which mode has to be used : "snps" or "mldist"
-mode <- "snps"
 
 cat(sprintf("Loading %s", annotations))
 {
@@ -48,13 +46,8 @@ cat(sprintf("  Phylogeny directory contains %i files in %i clusters.\n", length(
 # Clustering
 cat("Scanning MLDIST file from IQtree output or SNP matrix computed from Snippy output.\n")
 {
-  if(mode == "snps"){
-    mldist_fnames <- fnames[grepl("snp_matrix.tsv", fnames)]
-    mldist_fnames <- mldist_fnames[grepl("snippy", mldist_fnames)]
-  } else if(mode == "mldist"){
-    mldist_fnames <- fnames[grepl("mldist", fnames)]
-    mldist_fnames <- mldist_fnames[grepl("iqtree_after_snippy", mldist_fnames)]
-  }
+  mldist_fnames <- fnames[grepl("snp_matrix.tsv", fnames)]
+  mldist_fnames <- mldist_fnames[grepl("snippy", mldist_fnames)]
   mldist_clusters <- str_match(mldist_fnames, "cluster_\\d+/\\w+/minicluster_\\d+")
   stopifnot(length(mldist_fnames) == length(mldist_clusters))
   names(mldist_fnames) <- mldist_clusters
@@ -77,28 +70,6 @@ cat("Scanning MLDIST file from IQtree output or SNP matrix computed from Snippy 
   rm(mldist_fnames, mldist_clusters, cluster, minicl, total_items)
 }
 
-cat("Scanning IQTREE file from IQtree output.\n")
-{
-  if(mode == "mldist"){
-    iqtree_fnames <- fnames[grepl(".iqtree$", fnames)]
-    iqtree_fnames <- iqtree_fnames[grepl("iqtree_after_snippy", iqtree_fnames)]
-    iqtree_clusters <- str_match(iqtree_fnames, "cluster_\\d+/\\w+")
-    stopifnot(length(iqtree_fnames) == length(iqtree_clusters))
-    names(iqtree_fnames) <- iqtree_clusters
-    cat(sprintf("  Found %i clusters with an IQTREE report.\n", length(iqtree_clusters)))
-    
-    iqtree_reports <- list()
-    for(cluster in clusters) {
-      x <- scan(iqtree_fnames[cluster], what="character", sep="\n", quiet = TRUE)
-      sites <- as.list(str_split(str_subset(x, "Input data"), "sequences")[[1]])
-      total_sites <- as.double(gsub("\\D", "", sites[[2]]))
-      
-      iqtree_reports[[ cluster ]] <- total_sites
-    }
-    rm(x, sites, total_sites, cluster, iqtree_clusters, iqtree_fnames) 
-  }
-}
-
 cat("Transform genetic distance (substitions/sites) into substitions number.\n")
 {
   genetic_distances <- list()
@@ -108,16 +79,12 @@ cat("Transform genetic distance (substitions/sites) into substitions number.\n")
     genetic_distances[[ cluster ]] <- list()
     for(minicluster in names(main_cl)) {
       mini_cl <- main_cl[[ minicluster ]]
-      if(mode == "snps"){
-        genetic_distances[[ cluster ]][[ minicluster ]] <- as.dist(mini_cl)
-        # Add number of SNPs if it's cluster with only 2 samples
-        if ((length(names(main_cl))==1) & (length(names(mini_cl)) == 2)) {
-          mini_snps_df <- data.table(genome = names(mini_cl))
-          mini_snps_df$nb_snps <- genetic_distances[[ cluster ]][[ minicluster ]]
-          snps_df <- rbind.data.frame(snps_df, mini_snps_df)
-        }
-      } else if(mode == "mldist"){
-        genetic_distances[[ cluster ]] <- as.dist(mldist_reports[[ cluster ]]) * iqtree_reports[[ cluster ]]
+      genetic_distances[[ cluster ]][[ minicluster ]] <- as.dist(mini_cl)
+      # Add number of SNPs if it's cluster with only 2 samples
+      if ((length(names(main_cl))==1) & (length(names(mini_cl)) == 2)) {
+        mini_snps_df <- data.table(genome = names(mini_cl))
+        mini_snps_df$nb_snps <- genetic_distances[[ cluster ]][[ minicluster ]]
+        snps_df <- rbind.data.frame(snps_df, mini_snps_df)
       }
     }
   }
@@ -214,5 +181,5 @@ cat("Merging results with metadata table.\n")
 
 cat("Cleaning environment.")
 {
-  rm(clustering, final_data, chosen_distances, clusters, mode, output_dir, phylogeny_dir)
+  rm(clustering, final_data, chosen_distances, clusters, output_dir, phylogeny_dir)
 }
