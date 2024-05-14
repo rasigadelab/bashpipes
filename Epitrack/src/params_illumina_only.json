@@ -1,7 +1,7 @@
 {
     "version" : "1.0.0",
     
-    "result" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/16.Singularity/Pipeline_launch",
+    "result" : "Pipeline_launch/results",
     "workflow" : "bacteria_denovo",
     "hybrid_assembly" : false,
     "fastp" : true,
@@ -21,7 +21,7 @@
 
     "trim_trimmomatic" : {
         "todo" : 1,
-        "adapter" : "/mnt/c/Users/admin/Documents/Projets/4.Pipeline_improvements/16.Singularity/db/trimmomatic/NexteraPE-PE.fa"
+        "adapter" : "db/trimmomatic/NexteraPE-PE.fa"
     },
     
     "assembly_spades" : {
@@ -49,7 +49,7 @@
         "todo" : 1,
         "scale" : "1000",
         "k" : "21",
-        "db" : "/home/jpr/common_db/sourmash_db/gtdb-rs207.genomic.k21.lca.json.gz"
+        "db" : "sourmash_db/gtdb-rs207.genomic.k21.lca.json.gz"
     },
         
     "amr_typer_amrfinder" : {
@@ -58,7 +58,7 @@
         
     "annotate_bakta" : {
         "todo" : 1,
-        "db" : "/home/jpr/common_db/bakta_db/db"
+        "db" : "bakta_db/db"
     },
        
     "mge_mob_recon" : {
