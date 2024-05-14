@@ -60,8 +60,7 @@ cat("Scanning MOB_SUITE reports.\n")
   stopifnot(length(contig_report_fnames) == length(contig_report_inames))
   names(contig_report_fnames) <- contig_report_inames
   cat(sprintf("  Found %i isolates with a MOB_SUITE CONTIG report.\n", length(contig_report_inames)))
-  
-  
+   
   contig_reports <- list()
   for(iname in contig_report_inames) {
     contig_reports[[ iname ]] <- fread( contig_report_fnames[iname] )[ , sample_id := iname]
