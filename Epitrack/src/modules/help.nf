@@ -6,7 +6,7 @@ def printHelp() {
 
   Description:
     Nextflow pipeline for de novo assembly of Illumina reads. 
-    Specific to microbial isolates.
+    Specific for bacterial isolates.
     Included one workflow, producing Illumina-only assembly with SPAdes assembler.
 
   Nextflow arguments:
