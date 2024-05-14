@@ -1,15 +1,15 @@
 ---
 title: "Comparaison d'isolats bactériens par séquençage génomique complet"
-subtitle: "GH Centre, HS Hépato-Gastro-Entérologie (Pavillon L RDC) UF21230, *Enterobacter cloacae* (`r params$replicon`)"
+subtitle: ""
 author: "Equipe PHE3ID"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 params:
-  cluster_id: "65"
-  species: "ecloacae"
+  cluster_id: ""
+  species: ""
   replicon: "Chromosome"
   env_samples: ""
-  path_to_reports: "../Script_Tests/2024-01-25_clone_reports.Rdata"
-  path_to_scan:  "../Script_Tests/2024-01-25_annotation_scan.Rdata"
+  path_to_reports: "2024-01-25_clone_reports.Rdata"
+  path_to_scan:  "2024-01-25_annotation_scan.Rdata"
 output:
   pdf_document:
       toc: true
@@ -39,7 +39,7 @@ header-includes:
 
 \newpage
 
-Ce rapport d'études de cluster étudie les isolats de l'espèce ___E. cloacae___ du HS d'hépato-gastro-entérologie (Pavillon L RDC) du GH Est.
+Ce rapport d'études de cluster étudie les isolats de l'espèce ___ XXX ___ du service YYYY.
 
 ```{r setup, include=FALSE}
 # Some cleaning [no: if cleaning, then we cannot use params data]
