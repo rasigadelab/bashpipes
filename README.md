@@ -32,7 +32,12 @@ Nanopore long reads are then assembled with Flye assembler (https://github.com/f
 
 The same global genomic annotations are made as for Epitrack pipeline. Taxonomy is retrieved with Sourmash. Each genome is typed by MLST. ARGs are detected with AMRFinder+ and genes are annotated with Bakta. Contigs corresponding to plasmids and chromosome are identified with Mob-Recon.
 
+## Phylogeny pipeline [under development]
+
+Samples that are potentially clonal are analyzed together to compare the number of SNPs localized in their chromosomes. Samples are first clustered in small groups of genetically near samples. Groups are created by computing the mash distance (https://github.com/marbl/Mash, version 2.3) between each isolates pair in the cluster and by applying a single-linkage clustering with a cut at a specific threshold (in most cases 0.005). This enables to identify outliers or samples with an assembly of bad quality. For each created subcluster a reference sample is chosen : it is defined as the isolate the nearest from the most of the other samples in the subcluster. 
+
+Reads of reference samples are mapped back to reference genome assemblies with Bowtie2 (https://github.com/BenLangmead/bowtie2, version 2.2.5) and genome assemblies are corrected based on alignments with Pilon (https://github.com/broadinstitute/pilon, version 1.24). Repeat regions are identified on reference sample assembly with RepeatMasker (https://github.com/rmhubley/RepeatMasker, version 4.1.5). Then, SNP calling and core SNPs detection are made on the batch of samples of each subcluster, taking the chosen reference sample as reference genome for SNP calling. This step is computed with Snippy (https://github.com/tseemann/snippy, version 4.6.0) and results in a full SNP alignment of the batch of samples. Clonal samples are defined as samples distant from less than 15 SNPs.
+
+Samples of the main cluster are then analyzed together. SNP calling is made with Snippy on the whole batch of genomes, with the reference sample of the biggest minicluster used as reference genome. SNPs alignment is then processed by Iqtree (https://github.com/iqtree/iqtree2, version 2.2.0.3) to reconstruct phylogeny of the batch of samples. GTR model is used as parameter for tree search. Phylogenetic tree is corrected from recombination with ClonalFrameML (https://github.com/xavierdidelot/clonalframeml, version 1.12). A datation estimation is computed at the end of the pipeline by treetime (https://github.com/neherlab/treetime, version 0.11.1).
 
 
-
-## Phylogeny pipeline
