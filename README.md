@@ -27,6 +27,9 @@ Resistrack pipeline has been developed to build genome assemblies based on Nanop
 Quality of short reads are assessed using fastp (https://github.com/OpenGene/fastp, version 0.23.4) and adapters trimmed with Trimmomatic (https://github.com/usadellab/Trimmomatic, version 0.39). Long reads are filtered with Filtlong (https://github.com/rrwick/Filtlong, version 0.2.1) to keep only the 80% bases with best quality and reads longer than 5kb. Statistics on filtered reads are computed with NanoPlot (https://github.com/wdecoster/NanoPlot, version 1.42.0). 
 Nanopore long reads are then assembled with Flye assembler (https://github.com/fenderglass/Flye, version 2.9.1) to get a first draft assembly. « --meta » option was used to accomodate the assembler to variation of coverage between reads of plasmids (shorter and thus potentially more present in the dataset) and reads of chromosome (longer and thus potentially less present in the dataset). Short Illumina reads are mapped back on Nanopore assembly with Bowtie2 (https://github.com/BenLangmead/bowtie2, version 2.2.5) and the draft assembly is corrected based on short reads with Pilon software (https://github.com/broadinstitute/pilon, version 1.24). Afterwards, contigs are circularised with Circlator (https://github.com/sanger-pathogens/circlator, version 1.5.5).
 
+![nano_pipe](https://github.com/rasigadelab/bashpipes/assets/120658937/c636cc96-b2ab-483c-9461-21762b27ca74)
+
+
 
 
 
