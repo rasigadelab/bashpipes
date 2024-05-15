@@ -2,9 +2,8 @@ import os
 import re
 import argparse
 
-#Welcome to creation of Files_location.tsv file !
-#Note: this is a python script, don't be scared
-#To run it, type in a terminal:
+# Welcome to creation of Files_location.tsv file !
+# To run it, type in a terminal:
 # cd /location/to/script
 # python3 files_location.py -d path/to/data/folder
 
