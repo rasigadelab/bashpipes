@@ -40,4 +40,5 @@ Reads of reference samples are mapped back to reference genome assemblies with B
 
 Samples of the main cluster are then analyzed together. SNP calling is made with Snippy on the whole batch of genomes, with the reference sample of the biggest minicluster used as reference genome. SNPs alignment is then processed by Iqtree (https://github.com/iqtree/iqtree2, version 2.2.0.3) to reconstruct phylogeny of the batch of samples. GTR model is used as parameter for tree search. Phylogenetic tree is corrected from recombination with ClonalFrameML (https://github.com/xavierdidelot/clonalframeml, version 1.12). A datation estimation is computed at the end of the pipeline by treetime (https://github.com/neherlab/treetime, version 0.11.1).
 
+![phylo_pipe](https://github.com/rasigadelab/bashpipes/assets/120658937/7c464a6a-13f0-4945-9aba-44f9a28989f9)
 
