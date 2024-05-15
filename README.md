@@ -9,6 +9,7 @@ Two types of analyses can be led with these pipelines.
 Some features under development...
 *  Phylogenetic analyses: phylogenetic tree based on Maximum-Likelihood reconstruction (IQtree) and core SNP analyses (Snippy).
 *  Automated reports: reports to properly present results of phylogenetic analyses, applied to clonal investigation among a batch of clinical samples.
+*  Resistrack pipeline: Adding a module for Nanopore long read trimming with Porechop.
 
 All pipelines are running with Nextflow and Singularity containers. More details on specifications here after.
 
