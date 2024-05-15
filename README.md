@@ -29,6 +29,7 @@ Nanopore long reads are then assembled with Flye assembler (https://github.com/f
 
 ![nano_pipe](https://github.com/rasigadelab/bashpipes/assets/120658937/c636cc96-b2ab-483c-9461-21762b27ca74)
 
+The same global genomic annotations are made as for Epitrack pipeline. Taxonomy is retrieved with Sourmash. Each genome is typed by MLST. ARGs are detected with AMRFinder+ and genes are annotated with Bakta. Contigs corresponding to plasmids and chromosome are identified with Mob-Recon.
 
 
 
