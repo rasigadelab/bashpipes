@@ -2,9 +2,8 @@ import os
 import re
 import argparse
 
-#Welcome to creation of replicons.tsv file !
-#Note: this is a python script, don't be scared
-#To run it, type in a terminal:
+# Welcome to creation of replicons.tsv file !
+# To run it, type in a terminal:
 # cd /location/to/script
 # python3 find_replicons.py -d path/to/data/folder
 
