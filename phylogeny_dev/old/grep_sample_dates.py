@@ -9,7 +9,7 @@ import argparse
 
 def main(project_dir, output_dir):
     #Step1- Read Metadataeq_rasigade.xlsx
-    excel_file = os.path.join("Metadata_eq_rasigade.xlsx")
+    excel_file = os.path.join("metadata.xlsx")
     #Get column 1 = SAMPLE_ID and column 4 = DATE_PRELEVEMENT
     df = pandas.read_excel(excel_file, usecols = ['SAMPLE_ID', 'DATE_PRELEVEMENT'])
     #Read replicons.tsv
