@@ -1,6 +1,6 @@
 # Bioinformatic pipelines for epidemiological study of clinical bacterial isolates
 
-Common pipelines currently used and developed in PHE3ID team. The team focus on prokaryotic studies in a clinical context of antibiotic resistance emergence and surveillance.
+Pipelines currently used and developed in PHE3ID team. The team focus on prokaryotic studies in a clinical context of antibiotic resistance emergence and surveillance.
 
 Two types of analyses can be led with these pipelines.
 * Epitrack pipeline: _de novo_ assembly of prokaryotic genome using Illumina short-read data, followed by global genome annotations (taxonomy ; ARGs identification ; plasmid identification)
