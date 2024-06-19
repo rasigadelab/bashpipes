@@ -73,10 +73,9 @@ if(length(illumina_samples)!= 0){
   for(s in illumina_samples) {
     fname <- sprintf("./%s/trimmomatic/trimmomatic.err", s)
     x <- scan(fname, what="character", sep="\n", quiet = TRUE)
-    # print(str_extract(x[10], "[0-9]+"))
-    n_reads <- as.double(str_extract(x[10], "[0-9]+"))
+    line_with_n_reads <- grep("Input Read", x)
+    n_reads <- as.double(str_extract(x[line_with_n_reads], "[0-9]+"))
     tmp[[s]] <- data.table(id = s, n_reads)
-    
   }
   reads <- rbindlist(tmp)
   cat("    Scanning SPAdes report to get average assembly coverage.\n")
