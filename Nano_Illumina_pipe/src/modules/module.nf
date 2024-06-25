@@ -406,7 +406,7 @@ process annotate_bakta {
   GENUS=\$(cut -d',' -f8 $taxonomy_file | tail -n 1)
   SPECIES=\$(cut -d',' -f9 $taxonomy_file | tail -n 1)
   
-  bakta --force --prefix $sample --threads $task.cpus --output \${OUT_DIR} --db ${params.annotate_bakta["db"]} $final_assembly 1> \${OUT_DIR}/bakta.log 2> \${OUT_DIR}/bakta.err
+  bakta --force --prefix $sample --threads $task.cpus --output \${OUT_DIR} --keep-contig-headers --db ${params.annotate_bakta["db"]} $final_assembly 1> \${OUT_DIR}/bakta.log 2> \${OUT_DIR}/bakta.err
   """
 }
 
