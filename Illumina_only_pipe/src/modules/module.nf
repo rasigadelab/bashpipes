@@ -92,6 +92,8 @@ process assembly_spades {
     tuple val(sample), path("genomes/$sample/spades/contigs.fasta"), emit : draft_assembly
     path("genomes/$sample/spades/spades_1.log")
     path("genomes/$sample/spades/spades.err")
+    path("genomes/$sample/spades/assembly_graph_with_scaffolds.gfa")
+    path("genomes/$sample/spades/contigs.paths")
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]

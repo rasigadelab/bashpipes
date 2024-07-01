@@ -149,6 +149,7 @@ process assembly_flye {
     // path("genomes/$sample/flye/flye.log")
     // path("genomes/$sample/flye/flye.err")
     // path("genomes/$sample/flye/assembly_info.txt")
+    // path("genomes/$sample/flye/*.gfa")
     // path("genomes/$sample/${sample}_assembly_raw.fasta")
 
   script:
