@@ -55,7 +55,7 @@ process trimming_porechop {
   OUT_DIR=genomes/$sample/porechop
   mkdir -p -m 777 \${OUT_DIR}
 
-  porechop -i $ont_reads -o \${OUT_DIR}/${sample}_ONT_trimmed.fastq.gz
+  porechop -i $ont_reads -o \${OUT_DIR}/${sample}_ONT_trimmed.fastq.gz 1> \${OUT_DIR}/porechop.log 2> \${OUT_DIR}/porechop.err
   """
 }
 
