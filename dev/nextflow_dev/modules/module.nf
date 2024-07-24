@@ -30,6 +30,35 @@ process quality_fastp {
   """
 }
 
+process trimming_porechop {
+  // Tool: porechop
+  // Trimming of ONT FASTQ reads. 
+
+  label 'porechop'
+  storeDir (params.result)
+  debug false
+  tag "Porechop on $sample"
+
+  when:
+    params.trimming_porechop.todo == 1
+
+  input:
+    tuple val(sample), path(ont_reads)
+  
+  output:
+    tuple val(sample), path("genomes/$sample/porechop/${sample}_ONT_trimmed.fastq.gz"), emit : trimmed_ont_reads
+    path("genomes/$sample/porechop/porechop.err")
+    path("genomes/$sample/porechop/porechop.log")
+
+  script:
+  """
+  OUT_DIR=genomes/$sample/porechop
+  mkdir -p -m 777 \${OUT_DIR}
+
+  porechop -i $ont_reads -o \${OUT_DIR}/${sample}_ONT_trimmed.fastq.gz
+  """
+}
+
 process stats_nanoplot{
   
   // Computing statistics on Nanopore FastQ and plotting some plots related.

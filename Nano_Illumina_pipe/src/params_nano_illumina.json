@@ -22,6 +22,10 @@
         "todo" : 1
     },
 
+    "trimming_porechop" : {
+        "todo" : 1
+    },
+
     "trim_trimmomatic" : {
         "todo" : 1,
         "adapter" : "db/trimmomatic/NexteraPE-PE.fa"

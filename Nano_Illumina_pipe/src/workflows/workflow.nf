@@ -5,6 +5,7 @@ nextflow.enable.dsl = 2
 
 // import modules
 include {quality_fastp} from "${params.nfpath}/modules/module.nf"
+include {trimming_porechop} from "${params.nfpath}/modules/module.nf"
 include {trim_trimmomatic} from "${params.nfpath}/modules/module.nf"
 include {filter_filtlong} from "${params.nfpath}/modules/module.nf"
 include {stats_nanoplot} from "${params.nfpath}/modules/module.nf"
@@ -39,6 +40,8 @@ workflow bacteria_denovo {
        }
 
        if ( params.nano_filtering ) {
+            trimming_porechop(ch_ont)
+            trimming_porechop.out.trimmed_ont_reads.set{ ch_ont }
             filter_filtlong(ch_ont)
             filter_filtlong.out.filtered_nanopore.set{ ch_ont }
        }
