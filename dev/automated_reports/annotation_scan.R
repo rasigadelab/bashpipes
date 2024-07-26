@@ -91,6 +91,24 @@ cat("  Finished scanning MOB_SUITE CONTIG reports.\n")
 }
 cat("  Finished scanning MOB_SUITE MGE reports.\n")
 
+# MOB-SUITE mobtyper_reports
+{
+  mobtyper_fnames <- fnames[grepl("mobtyper_results.txt", fnames)]
+  mobtyper_inames <- str_match(mobtyper_fnames, "^\\./(?<isolate>[^/]+)")[, "isolate"]
+  stopifnot(length(mobtyper_fnames) == length(mobtyper_inames))
+  names(mobtyper_fnames) <- mobtyper_inames
+  cat(sprintf("  Found %i isolates with a MOB_SUITE MOBTYPER report.\n", length(mobtyper_inames)))
+  
+  mobtyper_reports <- list()
+  for(iname in mobtyper_inames) {
+    mobtyper_reports[[ iname ]] <- fread( mobtyper_fnames[iname] )[ , sample_id := iname]
+  }
+  mobtyper_reports <- rbindlist(mobtyper_reports)[, key := sample_id]
+  setnames(mobtyper_reports, "sample_id", "genome")
+  
+  rm(mobtyper_fnames, mobtyper_inames, iname)
+}
+
 # MLST reports
 cat("Scanning MLST reports.\n")
 {
@@ -185,7 +203,7 @@ combined_amr_report[ !duplicated(paste(genome, primary_cluster_id)), .N, primary
 
 cat("Saving R data format.\n")
 today_date <- Sys.Date()
-save(mge_reports, amrfinder_reports, sourmash_reports, contig_reports, mlst_reports, combined_amr_report, file = paste0(today_date, "_annotation_scan.Rdata"))
+save(mge_reports, mobtyper_reports, amrfinder_reports, sourmash_reports, contig_reports, mlst_reports, combined_amr_report, file = paste0(today_date, "_annotation_scan.Rdata"))
 
 # Readable Excel output
 # Had a problem with library xlsx
@@ -195,15 +213,15 @@ save(mge_reports, amrfinder_reports, sourmash_reports, contig_reports, mlst_repo
 
 if(excel_output == TRUE) {
   cat("Saving Excel data format. Please be patient...\n")
-  data_to_save <- list(combined_amr_report, mge_reports, amrfinder_reports, sourmash_reports, contig_reports, mlst_reports)
-  sheet_names <- c("amr", "mge", "amrfinder", "sourmash", "contig", "mlst")
+  data_to_save <- list(combined_amr_report, mobtyper_reports, mge_reports, amrfinder_reports, sourmash_reports, contig_reports, mlst_reports)
+  sheet_names <- c("amr", "plasmid", "mge", "amrfinder", "sourmash", "contig", "mlst")
   write.xlsx(data_to_save, file = paste0(today_date, "_annotation_report.xlsx"), sheetName = sheet_names, rowNames = FALSE)
 }
 
 cat("Annotation scan finished. Exiting.\n")
 
 if(clean_env){
-  rm(amrfinder_reports, combined_amr_report, contig_reports, data_to_save, mge_reports, mlst_reports, sourmash_reports, today_date, sheet_names)
+  rm(amrfinder_reports, mobtyper_reports, combined_amr_report, contig_reports, data_to_save, mge_reports, mlst_reports, sourmash_reports, today_date, sheet_names)
 }
 
 rm(clean_env, excel_output, output_dir, dos2unix, runsh, wsl, wslf)
