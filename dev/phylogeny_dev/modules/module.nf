@@ -234,7 +234,7 @@ process core_snps_snippy {
 
   REF_SAMPLE=\$(echo $masked_regions | cut -d '_' -f 2 | cut -d '.' -f 1)
   REF_PATH=${params.result}/phylogeny/$replicon/minicluster_$subgroup/polish/\${REF_SAMPLE}_polished.fasta
-  snippy-multi $input_tab --ref \${REF_PATH} --cpus $task.cpus --force --mincov 30 > \${OUT_DIR}/snippy_commands.sh
+  snippy-multi $input_tab --ref \${REF_PATH} --cpus $task.cpus --force --mincov ${params.core_snps_snippy["mincov"]} > \${OUT_DIR}/snippy_commands.sh
   sed -i -e "s|snippy-core --ref '|snippy-core --prefix \${OUT_DIR}/core --mask $masked_regions --ref '|g" \${OUT_DIR}/snippy_commands.sh
   sh \${OUT_DIR}/snippy_commands.sh 1> \${OUT_DIR}/snippy.log 2> \${OUT_DIR}/snippy.err
   
@@ -342,7 +342,7 @@ process core_snps_snippy_phylogeny {
 
   REF_SAMPLE=\$(echo $masked_regions | cut -d '_' -f 2 | cut -d '.' -f 1)
   REF_PATH=${params.result}/phylogeny/$replicon/phylogenetic_tree/reference/\${REF_SAMPLE}_polished.fasta
-  snippy-multi $input_tab --ref \${REF_PATH} --cpus $task.cpus --force --mincov 30 > \${OUT_DIR}/snippy_commands.sh
+  snippy-multi $input_tab --ref \${REF_PATH} --cpus $task.cpus --force --mincov ${params.core_snps_snippy_phylogeny["mincov"]} > \${OUT_DIR}/snippy_commands.sh
   sed -i -e "s|snippy-core --ref '|snippy-core --prefix \${OUT_DIR}/core --mask $masked_regions --ref '|g" \${OUT_DIR}/snippy_commands.sh
   sh \${OUT_DIR}/snippy_commands.sh 1> \${OUT_DIR}/snippy.log 2> \${OUT_DIR}/snippy.err
   

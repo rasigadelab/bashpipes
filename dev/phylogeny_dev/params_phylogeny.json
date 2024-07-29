@@ -14,7 +14,8 @@
     },
 
     "core_snps_snippy_phylogeny" : {
-        "todo" : 1
+        "todo" : 1,
+        "mincov" : "30"
     },
 
     "snps_tree_iqtree" : {
