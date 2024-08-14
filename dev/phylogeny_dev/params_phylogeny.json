@@ -7,6 +7,7 @@
     "snippy" : true,
     "iqtree" : true,
     "clonalframeml" : true,
+    "gubbins" : true,
     "treetime" : true,
 
     "ref_phylogeny" : {
@@ -29,6 +30,14 @@
 
     "dating_treetime" : {
         "todo" : 1
+    },
+
+    "recombination_analysis_gubbins" : {
+        "todo" : 1
+    },
+
+    "snps_tree_after_gubbins_iqtree" : {
+        "todo" : 1
     }
-    
+        
 }

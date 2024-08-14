@@ -440,6 +440,7 @@ process dating_treetime {
     tuple val(replicon), path(core_snps_aln), path(treefile)
 
   output:
+    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/snippy/clean.full.aln"), path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/${replicon}.labelled_tree.newick"), emit : snippy_aln
     path("phylogeny/$replicon/phylogenetic_tree/treetime/treetime.err")
     path("phylogeny/$replicon/phylogenetic_tree/treetime/treetime.log")
     path("phylogeny/$replicon/phylogenetic_tree/treetime/out/*")
@@ -453,6 +454,83 @@ process dating_treetime {
   conda activate treetime
   treetime --aln $core_snps_aln --tree $treefile --dates $params.result/${replicon}_sampling_list.csv --outdir \${OUT_DIR}/out --plot-tree treetime.png 1> \${OUT_DIR}/treetime.log 2> \${OUT_DIR}/treetime.err
   conda deactivate
+  """
+}
+
+process recombination_analysis_gubbins {
+  // Tool: Gubbins
+  // Run Iqtree based on SNP alignment and predict recombination blocks
+
+  label 'gubbins'
+  storeDir params.result
+  debug false
+  tag "Gubbins for $replicon"  
+
+  when:
+    params.recombination_analysis_gubbins.todo == 1
+  
+  input:
+    tuple val(replicon), path(core_snps_aln), path(treefile)
+
+  output:
+    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/gubbins/clean.recombination_masked.aln"), emit : aln_without_rec
+    path("phylogeny/$replicon/phylogenetic_tree/gubbins/${replicon}.final_tree.tre")
+    path("phylogeny/$replicon/phylogenetic_tree/gubbins/${replicon}.log")
+    path("phylogeny/$replicon/phylogenetic_tree/gubbins/gubbins.err")
+    path("phylogeny/$replicon/phylogenetic_tree/gubbins/gubbins.log")
+    path("phylogeny/$replicon/phylogenetic_tree/gubbins/${replicon}.per_branch_statistics.csv")
+    path("phylogeny/$replicon/phylogenetic_tree/gubbins/${replicon}.recombination_predictions.gff")
+    path("phylogeny/$replicon/phylogenetic_tree/gubbins/*")
+
+  script:
+  """
+  OUT_DIR=phylogeny/$replicon/phylogenetic_tree/gubbins
+  mkdir -p -m 777 \${OUT_DIR}
+
+  run_gubbins.py --tree-builder iqtree --first-tree-builder iqtree-fast --model GTR $core_snps_aln \
+          --threads $task.cpus --filter-percentage 50.0 --prefix \${OUT_DIR}/$replicon 1> \${OUT_DIR}/gubbins.log 2> \${OUT_DIR}/gubbins.err
+  
+  # Masking recombination areas in input alignment
+  mask_gubbins_aln.py --aln $core_snps_aln --gff \${OUT_DIR}/${replicon}.recombination_predictions.gff --out \${OUT_DIR}/clean.recombination_masked.aln
+  """  
+}
+
+
+
+process snps_tree_after_gubbins_iqtree {
+  // Tool: iqtree. 
+  // Tree construction of a specific replicon based on its core snps.
+
+  label 'highCPU'
+  storeDir params.result
+  debug false
+  tag "Iqtree after gubbins on $replicon"  
+
+  when:
+    params.snps_tree_after_gubbins_iqtree.todo == 1
+  
+  input:
+    tuple val(replicon), path(core_snps_aln)
+
+  output:
+    path("phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins/${replicon}.iqtree")
+    path("phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins/iqtree.err")
+    path("phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins/iqtree.log")
+    path("phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins/${replicon}.alninfo")
+    path("phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins/${replicon}.bionj")
+    path("phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins/${replicon}.log")
+    path("phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins/${replicon}.mldist")
+    path("phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins/snp_matrix.recombination_masked.tsv")
+
+  script:
+  """
+  OUT_DIR=phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins
+  mkdir -p -m 777 \${OUT_DIR}
+
+  iqtree -s $core_snps_aln -m GTR --prefix \${OUT_DIR}/$replicon -T $task.cpus -alninfo 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
+  
+  # Displaying SNP matrix without recombination
+  snp-dists $core_snps_aln > \${OUT_DIR}/snp_matrix.recombination_masked.tsv
   """
 }
 

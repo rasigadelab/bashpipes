@@ -19,6 +19,8 @@ include {core_snps_snippy_phylogeny} from "${params.nfpath}/modules/module.nf"
 include {snps_tree_iqtree} from "${params.nfpath}/modules/module.nf" 
 include {rec_removal_clonalframeml} from "${params.nfpath}/modules/module.nf"
 include {dating_treetime} from "${params.nfpath}/modules/module.nf"
+include {recombination_analysis_gubbins} from "${params.nfpath}/modules/module.nf"
+include {snps_tree_after_gubbins_iqtree} from "${params.nfpath}/modules/module.nf"
 
 // workflow script
 workflow bacteria_mash_clustering {
@@ -97,7 +99,16 @@ workflow bacteria_phylogeny {
           //Step4- Phylogenetic dating
           if ( params.treetime ) {
                dating_treetime(ch_treefiles)
+               dating_treetime.out.snippy_aln.set{ ch_treefiles }
           }
+
+          //Step5- Gubbins recombination analysis
+          if( params.gubbins ) {
+               recombination_analysis_gubbins(ch_treefiles)
+               recombination_analysis_gubbins.out.aln_without_rec.set{ ch_treefiles }
+               snps_tree_after_gubbins_iqtree(ch_treefiles)
+          }
+
 
 
 
