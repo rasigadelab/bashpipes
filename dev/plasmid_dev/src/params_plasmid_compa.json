@@ -1,0 +1,37 @@
+{
+    "version" : "1.0.0",
+    
+    "result" : "/mnt/c/Users/admin/Documents/Projets/35.Plasmina/Plasmid_results",
+    "workflow" : "plasmid_compa",
+    "gathering" : true,
+    "mapping" : true,
+    "visual" : true,
+
+    "gather_plasmid_seq" : {
+        "todo" : 1
+    },
+
+    "align_to_reference" : {
+        "todo" : 1,
+        "reference_vim1_incN" : "KF977034",
+        "reference_vim1_incLM" : "KX523902",
+        "reference_vim4_incHI2A" : "CP041734",
+        "reference_oxa48_incLM" : "LR025105",
+        "reference_oxa48_incC" : "CP017987",
+        "reference_oxa48_incLMR" : "KX523901",
+        "reference_oxa48_noInc" : "CP045282",
+        "reference_ndm1_incN" : "CP032203",
+        "reference_ndm1_incFIB" : "LS992176",
+        "reference_ndm1_incHI1A" : "CP026196",
+        "reference_ndm1_incC" : "KR091911",
+        "reference_ndm1_noInc" : "MH917717"
+    },
+    
+    "visualize_circos" : {
+        "todo" : 1
+    },
+
+    "change_circos_config" : {
+        "todo" : 1
+    }
+}
