@@ -21,7 +21,7 @@ workflow plasmid_compa {
             gather_plasmid_seq(ch_plasmids)
             gather_plasmid_seq.out.plasmid_seq.set{ ch_plasmids }
             ch_plasmids.groupTuple(by: [0,1])
-                       .flatMap { key1, key2, values -> values.collate(8).collect { chunk -> [key1, key2, chunk]}}
+                       .flatMap { key1, key2, values -> values.collate(8).indexed().collect { idx, chunk -> [key1, key2, chunk, "Batch${idx + 1}"]}}
                        .set{ ch_plasmids }
        }
 
@@ -33,7 +33,6 @@ workflow plasmid_compa {
 
         // Step2- Circos visualisation
         if ( params.visual ) {
-            //ch_plasmids.view()
             ch_plasmids.flatMap { key1, key2, values -> values.flatten().collect { chunk -> [key1, key2, chunk]}}
                        .groupTuple(by: [0,1])
                        .set{ ch_plasmids }
