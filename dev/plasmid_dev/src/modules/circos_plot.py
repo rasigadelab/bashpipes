@@ -9,7 +9,19 @@ from matplotlib import colormaps # type: ignore
 import numpy as np # type: ignore
 
 
-
+def scale_to_kb(path_to_circos):
+    # Displaying correct scale on graph
+    ticks_conf = open(path_to_circos+"/data/ticks.conf", "r")
+    tmp_conf = open(path_to_circos+"/data/tmp.conf", "w")
+    for line in ticks_conf:
+        if "label_multiplier" in line:
+            tmp_conf.write("label_multiplier = 0.001\n")
+        else:
+            tmp_conf.write(line)
+    ticks_conf.close()
+    tmp_conf.close()
+    os.remove(path_to_circos+"/data/ticks.conf")
+    os.rename(path_to_circos+"/data/tmp.conf", path_to_circos+"/data/ticks.conf")
 
 def scatter_for_mismatches(path_to_circos, track_corresp):
     # Scatterplot on histograms presenting mismatches
@@ -172,6 +184,9 @@ def main(project_dir, output_dir):
     one_color_per_track(project_dir, assembly_epi)
     print("Step six, adding scatterplots to represent mismatches.")
     scatter_for_mismatches(project_dir, assembly_tracks)
+    print("Step seven, adjusting scale on kb.")
+    scale_to_kb(project_dir)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Modifying Circos configuration files')
