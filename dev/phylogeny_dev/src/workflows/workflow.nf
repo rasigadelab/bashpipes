@@ -6,6 +6,7 @@ nextflow.enable.dsl = 2
 // import modules
 include {rename_fasta} from "${params.nfpath}/modules/module.nf"
 include {distance_matrix_mash} from "${params.nfpath}/modules/module.nf"
+include {distance_matrix_analysis} from "${params.nfpath}/modules/module.nf"
 
 include {map_bowtie2} from "${params.nfpath}/modules/module.nf"
 include {polish_pilon} from "${params.nfpath}/modules/module.nf"
@@ -37,6 +38,8 @@ workflow bacteria_mash_clustering {
           //Step1- Compute MASH distance matrix
           if ( params.mash ) {
                distance_matrix_mash(ch_replicons)
+               distance_matrix_mash.out.replicons_ch.set{ ch_replicons }
+               distance_matrix_analysis(ch_replicons)
           }
 }
 

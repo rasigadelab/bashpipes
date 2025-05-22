@@ -29,7 +29,7 @@ process distance_matrix_mash {
   // Tool: mash
   // Producing tsv file with mash distance between samples. 
 
-  label 'highCPU'
+  label 'mash'
   storeDir params.result
   debug false
   tag "Mash distance matrix for $replicon"  
@@ -43,6 +43,33 @@ process distance_matrix_mash {
   output:
     tuple val(replicon), val(samples), emit : replicons_ch
     path("phylogeny/$replicon/mash/mash_dist.tsv")
+
+  script:
+  """
+  OUT_DIR=phylogeny/$replicon/mash
+  mkdir -p -m 777 \${OUT_DIR}
+
+  mash triangle $fasta_files > \${OUT_DIR}/mash_dist.tsv
+  """
+}
+
+process distance_matrix_analysis {
+  // Tool: R
+  // Producing tsv file with cluster of samples based on MASH distance
+
+  label 'r_analysis'
+  storeDir params.result
+  debug false
+  tag "Mash distance clustering for $replicon"  
+
+  when:
+    params.distance_matrix_analysis.todo == 1
+  
+  input:
+    tuple val(replicon), val(samples)
+
+  output:
+    tuple val(replicon), val(samples), emit : replicons_ch
     path("phylogeny/$replicon/mash/mash_analysis.log")
     path("phylogeny/$replicon/mash/mini_clusters.tsv")
     path("phylogeny/$replicon/mash/no_clonal_samples.tsv")
@@ -53,8 +80,7 @@ process distance_matrix_mash {
   OUT_DIR=phylogeny/$replicon/mash
   mkdir -p -m 777 \${OUT_DIR}
 
-  mash triangle $fasta_files > \${OUT_DIR}/mash_dist.tsv
-  Rscript ${params.nfpath}/modules/mash_analysis.R -d \${OUT_DIR} -th ${params.distance_matrix_mash["mash_threshold"]} > \${OUT_DIR}/mash_analysis.log
+  Rscript ${params.nfpath}/modules/mash_analysis.R -d ${params.result}/\${OUT_DIR} -t ${params.distance_matrix_analysis["mash_threshold"]} > \${OUT_DIR}/mash_analysis.log
   """
 }
 
@@ -238,7 +264,7 @@ process core_snps_snippy {
   sed -i -e "s|snippy-core --ref '|snippy-core --prefix \${OUT_DIR}/core --mask $masked_regions --ref '|g" \${OUT_DIR}/snippy_commands.sh
   sh \${OUT_DIR}/snippy_commands.sh 1> \${OUT_DIR}/snippy.log 2> \${OUT_DIR}/snippy.err
   
-  snp-dists \${OUT_DIR}/core.full.aln > \${OUT_DIR}/snp_matrix.tsv
+  snp-dists \${OUT_DIR}/core.aln > \${OUT_DIR}/snp_matrix.tsv
 
   # Remove last lines because it's the reference sequence and we don't want it in phylogeny
   sed -n '/>Reference/q;p' \${OUT_DIR}/core.full.aln > \${OUT_DIR}/core_without_ref.aln

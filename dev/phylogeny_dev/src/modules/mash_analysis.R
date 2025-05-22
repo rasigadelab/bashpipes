@@ -5,14 +5,20 @@ usePackage <- function(p) {
     install.packages(p, dep = TRUE)
   require(p, character.only = TRUE)
 }
-libraries <- c("argparse", "stringr", "data.table", "dplyr")
+libraries <- c("optparse", "stringr", "data.table", "dplyr")
 for (lib in libraries){usePackage(lib)}
 
 # Add input parameters to script
-parser <- ArgumentParser(description='Bacterial Phylogeny - MASH Distance Matrix Analysis', add_help=TRUE)
-parser$add_argument("-d", dest="path_to_mash_dist", required=TRUE, help="Path to the folder containing mash distance matrix", nargs='+')
-parser$add_argument("-th", dest="threshold", required=TRUE, help="Clustering threshold, in terms of mash distance, to divide cluster into subgroups")
-args <- parser$parse_args()
+option_list <- list(
+  make_option(c("-d", "--path_to_mash_dist"), type="character", help="Path to the folder containing mash distance matrix"),
+  make_option(c("-t", "--threshold"), type="double", help="Clustering threshold, in terms of mash distance, to divide cluster into subgroups")
+)
+parser <- OptionParser(option_list = option_list)
+args <- parse_args(parser)
+#parser <- ArgumentParser(description='Bacterial Phylogeny - MASH Distance Matrix Analysis', add_help=TRUE)
+# parser$add_argument(, dest="path_to_mash_dist", required=TRUE, help="", nargs='+')
+# parser$add_argument("-th", dest="threshold", required=TRUE, help=)
+# args <- parser$parse_args()
 
 cat("Moving to directory containing mash matrix.\n")
 setwd(args$path_to_mash_dist)
