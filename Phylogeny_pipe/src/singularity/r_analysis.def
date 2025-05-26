@@ -1,0 +1,10 @@
+Bootstrap: docker
+From: r-base
+
+%post
+Rscript -e 'install.packages(c("optparse", "stringr", "data.table", "dplyr"))'
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2025-05-22

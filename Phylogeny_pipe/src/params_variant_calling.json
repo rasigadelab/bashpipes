@@ -1,0 +1,31 @@
+{
+    "version" : "",
+
+    "result" : "Phylogeny_results",
+    "workflow" : "bacteria_variant_calling",
+    "ref_preparation" : true,
+    "snippy": true,
+
+    "polish_pilon" : {
+        "todo" : 1,
+        "list_changes" : "--changes"
+    },
+
+    "map_bowtie2" : {
+        "todo" : 1
+    },
+
+    "duplicate_masker_repeatmasker" : {
+        "todo" : 1
+    },
+
+    "duplicate_masker_bedops" : {
+        "todo" : 1
+    },
+
+    "core_snps_snippy" : {
+        "todo" : 1,
+        "mincov" : "30"
+    }
+    
+}

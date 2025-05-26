@@ -1,0 +1,43 @@
+{
+    "version" : "",
+
+    "result" : "Phylogeny_results",
+    "workflow" : "bacteria_phylogeny",
+    "ref" : true,
+    "snippy" : true,
+    "iqtree" : true,
+    "clonalframeml" : true,
+    "gubbins" : true,
+    "treetime" : true,
+
+    "ref_phylogeny" : {
+        "todo" : 1
+    },
+
+    "core_snps_snippy_phylogeny" : {
+        "todo" : 1,
+        "mincov" : "30"
+    },
+
+    "snps_tree_iqtree" : {
+        "todo" : 1,
+        "model" : "GTR"
+    },
+
+    "rec_removal_clonalframeml" : {
+        "todo" : 1
+    },
+
+    "dating_treetime" : {
+        "todo" : 1
+    },
+
+    "recombination_analysis_gubbins" : {
+        "todo" : 1
+    },
+
+    "snps_tree_after_gubbins_iqtree" : {
+        "todo" : 1
+    }
+        
+}

@@ -1,0 +1,18 @@
+Bootstrap: docker
+From: quay.io/staphb/iqtree2:2.4.0
+
+%post
+  # Install updates and dependencies
+  apt-get update && apt-get install -y wget unzip git gcc cmake g++ make libz-dev curl
+  cd /opt
+  wget https://github.com/tseemann/snp-dists/archive/refs/tags/v0.8.2.tar.gz
+  tar -xvzf v0.8.2.tar.gz
+  cd snp-dists-0.8.2
+  make
+  make check
+  make install
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2025-05-22
