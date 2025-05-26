@@ -1,0 +1,36 @@
+Bootstrap: docker
+From: staphb/bowtie2:2.5.4
+
+%post
+  # Install updates and dependencies
+  apt-get update && apt-get install -y wget unzip make gcc zlib1g-dev libncurses5-dev libncursesw5-dev \
+  libbz2-dev liblzma-dev curl build-essential python3 git autoconf
+  # Install HTSlib
+  cd /opt
+  wget https://github.com/samtools/htslib/releases/download/1.21/htslib-1.21.tar.bz2
+  tar -vxjf htslib-1.21.tar.bz2
+  cd htslib-1.21
+  autoreconf -i
+  ./configure
+  make
+  make install
+  # Install Samtools
+  cd /opt
+  wget https://github.com/samtools/samtools/releases/download/1.21/samtools-1.21.tar.bz2
+  tar -vxjf samtools-1.21.tar.bz2  
+  cd samtools-1.21
+  autoheader
+  autoconf -Wno-syntax
+  ./configure --prefix=/usr/local
+  make
+  make install
+  # Clean up
+  cd /
+  rm -rf /opt/htslib-1.21 /opt/samtools-1.21
+  apt-get clean
+  rm -rf /var/lib/apt/lists/*
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2025-05-22

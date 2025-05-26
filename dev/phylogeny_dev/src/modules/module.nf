@@ -133,7 +133,7 @@ process polish_pilon {
   // Tool: pilon. 
   // Polishing step consists in correcting errors in draft assembly with Illumina reads alignment.
 
-  label 'highCPU'
+  label 'pilon'
   storeDir params.result
   debug false
   tag "Polishing for $replicon - $subgroup"
@@ -158,7 +158,7 @@ process polish_pilon {
   ASSEMBLY=${params.result}/phylogeny/$replicon/sequences/${ref}.fasta
   SAMPLE_POLISHED=\${OUT_DIR}/${ref}_polished
 
-  pilon -Xmx${memory}G --genome \${ASSEMBLY} --bam $sorted_bam ${params.polish_pilon["list_changes"]} --output \${SAMPLE_POLISHED} &> \${OUT_DIR}/pilon.log
+  java -Xmx${memory}G -jar /pilon/pilon.jar --genome \${ASSEMBLY} --bam $sorted_bam ${params.polish_pilon["list_changes"]} --output \${SAMPLE_POLISHED} &> \${OUT_DIR}/pilon.log
   """
 }
 
@@ -178,7 +178,7 @@ process duplicate_masker_repeatmasker {
     tuple val(samples), val(replicon), val(subgroup), val(ref), path(polished_ref)
 
   output:
-    tuple val(replicon), val(samples), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/masked_${ref}.bed"), emit : replicons_ch
+    tuple val(replicon), val(samples), val(subgroup), val(ref), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/${ref}_polished.fasta.out"), emit : replicons_ch
     path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/repeatmasker.log")
     path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/repeatmasker.err")
     
@@ -187,11 +187,34 @@ process duplicate_masker_repeatmasker {
   OUT_DIR=phylogeny/$replicon/minicluster_$subgroup/repeatmasker
   mkdir -p -m 777 \${OUT_DIR}
 
-  source ~/miniconda3/etc/profile.d/conda.sh
-  conda activate repeatmasker
   RepeatMasker -dir \${OUT_DIR} $polished_ref 1> \${OUT_DIR}/repeatmasker.log 2> \${OUT_DIR}/repeatmasker.err
-  rmsk2bed < \${OUT_DIR}/${ref}_polished.fasta.out | bedops --merge - > \${OUT_DIR}/masked_${ref}.bed
-  conda deactivate
+  """
+}
+
+process duplicate_masker_bedops {
+  // Tool: Bedops
+  // Write duplicated regions of the reference genome into BED file
+
+  label 'bedops'
+  storeDir params.result
+  debug true
+  tag "Rmsk2bed for $replicon - $subgroup"  
+
+  when:
+    params.duplicate_masker_bedops.todo == 1
+  
+  input:
+    tuple val(replicon), val(samples), val(subgroup), val(ref), path(repeat_regions)
+
+  output:
+    tuple val(replicon), val(samples), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/masked_${ref}.bed"), emit : replicons_ch
+    
+  script:
+  """
+  OUT_DIR=phylogeny/$replicon/minicluster_$subgroup/repeatmasker
+  mkdir -p -m 777 \${OUT_DIR}
+
+  rmsk2bed < $repeat_regions | bedops --merge - > \${OUT_DIR}/masked_${ref}.bed #\${OUT_DIR}/${ref}_polished.fasta.out
   """
 }
 
@@ -199,7 +222,7 @@ process create_input_tab {
   // Tool: homemade script. 
   // Creating tsv file 'input.tab' for snippy usage (Sample, Fasta_R1, Fasta_R2)
 
-  label 'lowCPU'
+  label 'python_tab_creation'
   storeDir params.result
   debug false
   tag "Input tab for $replicon - $subgroup"  
@@ -276,7 +299,7 @@ process ref_phylogeny {
   // Choice of reference genome: manually (cf params)
   // Mask duplicated regions of the reference genome
 
-  label 'repeatmasker'
+  label 'lowCPU'
   storeDir params.result
   debug true
   tag "Reference for $replicon"  
@@ -307,7 +330,7 @@ process create_input_tab_phylogeny {
   // Tool: homemade script. 
   // Creating tsv file 'input.tab' for snippy usage (Sample, Fasta_R1, Fasta_R2)
 
-  label 'lowCPU'
+  label 'python_tab_creation'
   storeDir params.result
   debug false
   tag "Input tab for $replicon"  
@@ -387,7 +410,7 @@ process snps_tree_iqtree {
   // Tool: iqtree. 
   // Tree construction of a specific replicon based on its core snps.
 
-  label 'highCPU'
+  label 'iqtree'
   storeDir params.result
   debug false
   tag "Iqtree on $replicon"  
@@ -421,7 +444,7 @@ process rec_removal_clonalframeml {
   // Tool: ClonalFrameML. 
   // Recombination correction on core SNPs tree.
 
-  label 'highCPU'
+  label 'clonalframeml'
   storeDir params.result
   debug false
   tag "ClonalFrameML on $replicon"  
@@ -454,7 +477,7 @@ process dating_treetime {
   // Tool: Treetime. 
   // Phylogenetic dating of a tree.
 
-  label 'highCPU'
+  label 'treetime'
   storeDir params.result
   debug false
   tag "Treetime on $replicon"  
@@ -527,7 +550,7 @@ process snps_tree_after_gubbins_iqtree {
   // Tool: iqtree. 
   // Tree construction of a specific replicon based on its core snps.
 
-  label 'highCPU'
+  label 'iqtree_snp_dist'
   storeDir params.result
   debug false
   tag "Iqtree after gubbins on $replicon"  
@@ -553,7 +576,7 @@ process snps_tree_after_gubbins_iqtree {
   OUT_DIR=phylogeny/$replicon/phylogenetic_tree/iqtree_after_gubbins
   mkdir -p -m 777 \${OUT_DIR}
 
-  iqtree -s $core_snps_aln -m GTR --prefix \${OUT_DIR}/$replicon -T $task.cpus -alninfo 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
+  iqtree2 -s $core_snps_aln -m GTR --prefix \${OUT_DIR}/$replicon -T $task.cpus -alninfo 1> \${OUT_DIR}/iqtree.log 2> \${OUT_DIR}/iqtree.err
   
   # Displaying SNP matrix without recombination
   snp-dists $core_snps_aln > \${OUT_DIR}/snp_matrix.recombination_masked.tsv

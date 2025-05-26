@@ -1,6 +1,5 @@
 import os
 import argparse
-import ast 
 
 # Create input.tab, list of samples to give to snippy.
 

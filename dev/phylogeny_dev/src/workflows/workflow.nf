@@ -11,6 +11,7 @@ include {distance_matrix_analysis} from "${params.nfpath}/modules/module.nf"
 include {map_bowtie2} from "${params.nfpath}/modules/module.nf"
 include {polish_pilon} from "${params.nfpath}/modules/module.nf"
 include {duplicate_masker_repeatmasker} from "${params.nfpath}/modules/module.nf"
+include {duplicate_masker_bedops} from "${params.nfpath}/modules/module.nf"
 include {create_input_tab} from "${params.nfpath}/modules/module.nf"
 include {core_snps_snippy} from "${params.nfpath}/modules/module.nf" 
 
@@ -56,7 +57,9 @@ workflow bacteria_variant_calling {
                polish_pilon(ch_replicons)
                polish_pilon.out.polished_reference.set{ ch_replicons }
                duplicate_masker_repeatmasker(ch_replicons)
-               duplicate_masker_repeatmasker.out.replicons_ch.set{ ch_replicons }
+               duplicate_masker_repeatmasker.out.replicons_ch.set{ ch_replicons }               
+               duplicate_masker_bedops(ch_replicons)
+               duplicate_masker_bedops.out.replicons_ch.set{ ch_replicons }
           }
 
           //Step1- Core SNPs calling
@@ -101,8 +104,8 @@ workflow bacteria_phylogeny {
 
           //Step4- Phylogenetic dating
           if ( params.treetime ) {
-               dating_treetime(ch_treefiles)
-               dating_treetime.out.snippy_aln.set{ ch_treefiles }
+               //dating_treetime(ch_treefiles)
+               //dating_treetime.out.snippy_aln.set{ ch_treefiles }
           }
 
           //Step5- Gubbins recombination analysis

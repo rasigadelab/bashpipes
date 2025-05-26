@@ -1,0 +1,15 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%post
+  apt-get update
+  #Install python3
+  apt-get install -y python3-pip
+  pip3 install argparse
+
+%labels
+  Author Aurelie Fischer
+  Version 1.0
+  Description "Singularity container with RepeatMasker and rmsk2bed tool"
+
+

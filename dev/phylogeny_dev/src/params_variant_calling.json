@@ -1,7 +1,7 @@
 {
     "version" : "",
-    
-    "result" : "Phylogeny_launch",
+
+    "result" : "Phylogeny_results",
     "workflow" : "bacteria_variant_calling",
     "ref_preparation" : true,
     "snippy": true,
@@ -16,6 +16,10 @@
     },
 
     "duplicate_masker_repeatmasker" : {
+        "todo" : 1
+    },
+
+    "duplicate_masker_bedops" : {
         "todo" : 1
     },
 
