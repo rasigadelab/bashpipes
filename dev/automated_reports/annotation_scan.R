@@ -29,10 +29,10 @@ runsh <- function(sh) wsl(sprintf("./%s", sh))
 output_dir <- getwd()
 
 # Where to find the genomes
-genome_dir <- "."
+genome_dir <- "./genomes"
 
 # Include an excel output ? (may be lengthy)
-excel_output <- TRUE
+excel_output <- FALSE
 
 # Do environment cleaning at the end ? 
 clean_env <- TRUE
@@ -52,6 +52,27 @@ cat(sprintf("  Genome directory contains %i files in %i isolates.\n", length(fna
 
 # Gather amrfinder and mob_recon informations then combine in data tables
 
+# QUAST reports
+# cat("Scanning QUAST reports.\n")
+# {
+#   quast_fnames <- fnames[grepl("transposed_report.tsv", fnames)]
+#   quast_inames <- str_match(quast_fnames, "^\\./(?<isolate>[^/]+)")[, "isolate"]
+#   stopifnot(length(quast_fnames) == length(quast_inames))
+#   stopifnot(length(quast_fnames) != 0)
+#   names(quast_fnames) <- quast_inames
+#   cat(sprintf("  Found %i isolates with a QUAST report.\n", length(quast_inames)))
+#   
+#   quast_reports <- list()
+#   for(iname in quast_inames) {
+#     quast_reports[[ iname ]] <- fread( quast_fnames[iname] )[ , Assembly := iname]
+#   }
+#   quast_reports <- rbindlist(quast_reports)#[, key := paste(sample_id, contig_id, sep = "_")]
+#   setnames(quast_reports, "Assembly", "genome")
+#   
+#   rm(quast_fnames, quast_inames, iname)
+# }
+# cat("  Finished scanning QUAST reports.\n")
+
 # MOB-SUITE Contig_reports
 cat("Scanning MOB_SUITE reports.\n")
 {
@@ -60,7 +81,7 @@ cat("Scanning MOB_SUITE reports.\n")
   stopifnot(length(contig_report_fnames) == length(contig_report_inames))
   names(contig_report_fnames) <- contig_report_inames
   cat(sprintf("  Found %i isolates with a MOB_SUITE CONTIG report.\n", length(contig_report_inames)))
-   
+  
   contig_reports <- list()
   for(iname in contig_report_inames) {
     contig_reports[[ iname ]] <- fread( contig_report_fnames[iname] )[ , sample_id := iname]
@@ -108,6 +129,7 @@ cat("  Finished scanning MOB_SUITE MGE reports.\n")
   
   rm(mobtyper_fnames, mobtyper_inames, iname)
 }
+cat("  Finished scanning MOB_SUITE Plasmid reports.\n")
 
 # MLST reports
 cat("Scanning MLST reports.\n")
@@ -150,7 +172,7 @@ cat("Scanning AMRFINDER+ reports.\n")
     amrfinder_reports[[ iname ]] <- fread( amrfinder_report_fnames[iname] )
     amrfinder_reports[[ iname ]] <- cbind(genome = iname, amrfinder_reports[[ iname ]])
   }
-  amrfinder_reports <- rbindlist(amrfinder_reports)[, key := paste(genome, `Contig id`, sep = "_")]
+  amrfinder_reports <- rbindlist(amrfinder_reports, fill = TRUE)[, key := paste(genome, `Contig id`, sep = "_")]
 
   rm(amrfinder_report_fnames, amrfinder_report_inames, iname)
 }
@@ -188,6 +210,30 @@ combined_amr_report <- merge(amrfinder_reports, contig_reports, by = c("key", "g
 combined_amr_report <- merge(combined_amr_report, sourmash_reports, by = "genome", all.x = TRUE)
 combined_amr_report <- merge(combined_amr_report, mlst_reports, by = "genome", all.x = TRUE)
 
+# 2025-07-02
+# Adding a merge especially for amr results and combined amr results
+cat("Merge equivalent columns in AMR annotation results.\n")
+{ 
+  # Protein identifier == Protein id
+  # Gene symbol == Element symbol
+  # Sequence name == Element name
+  # Element type == Type
+  # Element subtype == Subtype
+  
+  amrfinder_reports$`Protein identifier` <- ifelse(!is.na(amrfinder_reports$`Protein identifier`), amrfinder_reports$`Protein identifier`, amrfinder_reports$`Protein id`)
+  amrfinder_reports$`Gene symbol` <- ifelse(!is.na(amrfinder_reports$`Gene symbol`), amrfinder_reports$`Gene symbol`, amrfinder_reports$`Element symbol`)
+  amrfinder_reports$`Sequence name` <- ifelse(!is.na(amrfinder_reports$`Sequence name`), amrfinder_reports$`Sequence name`, amrfinder_reports$`Element name`)
+  amrfinder_reports$`Element type` <- ifelse(!is.na(amrfinder_reports$`Element type`), amrfinder_reports$`Element type`, amrfinder_reports$Type)
+  amrfinder_reports$`Element subtype` <- ifelse(!is.na(amrfinder_reports$`Element subtype`), amrfinder_reports$`Element subtype`, amrfinder_reports$Subtype)
+  
+  combined_amr_report$`Protein identifier` <- ifelse(!is.na(combined_amr_report$`Protein identifier`), combined_amr_report$`Protein identifier`, combined_amr_report$`Protein id`)
+  combined_amr_report$`Gene symbol` <- ifelse(!is.na(combined_amr_report$`Gene symbol`), combined_amr_report$`Gene symbol`, combined_amr_report$`Element symbol`)
+  combined_amr_report$`Sequence name` <- ifelse(!is.na(combined_amr_report$`Sequence name`), combined_amr_report$`Sequence name`, combined_amr_report$`Element name`)
+  combined_amr_report$`Element type` <- ifelse(!is.na(combined_amr_report$`Element type`), combined_amr_report$`Element type`, combined_amr_report$Type)
+  combined_amr_report$`Element subtype` <- ifelse(!is.na(combined_amr_report$`Element subtype`), combined_amr_report$`Element subtype`, combined_amr_report$Subtype)
+  
+}
+
 # Just watching some results
 # Sourmash detected genus
 combined_amr_report[ !duplicated(genome) , .N, genus][ order(-N)]
@@ -213,15 +259,15 @@ save(mge_reports, mobtyper_reports, amrfinder_reports, sourmash_reports, contig_
 
 if(excel_output == TRUE) {
   cat("Saving Excel data format. Please be patient...\n")
-  data_to_save <- list(combined_amr_report, mobtyper_reports, mge_reports, amrfinder_reports, sourmash_reports, contig_reports, mlst_reports)
-  sheet_names <- c("amr", "plasmid", "mge", "amrfinder", "sourmash", "contig", "mlst")
+  data_to_save <- list(combined_amr_report, mge_reports, amrfinder_reports, sourmash_reports, contig_reports, mlst_reports)
+  sheet_names <- c("amr", "mge", "amrfinder", "sourmash", "contig", "mlst")
   write.xlsx(data_to_save, file = paste0(today_date, "_annotation_report.xlsx"), sheetName = sheet_names, rowNames = FALSE)
 }
 
 cat("Annotation scan finished. Exiting.\n")
 
 if(clean_env){
-  rm(amrfinder_reports, mobtyper_reports, combined_amr_report, contig_reports, data_to_save, mge_reports, mlst_reports, sourmash_reports, today_date, sheet_names)
+  rm(amrfinder_reports, combined_amr_report, contig_reports, mobtyper_reports, data_to_save, mge_reports, mlst_reports, sourmash_reports, today_date, sheet_names)
 }
 
 rm(clean_env, excel_output, output_dir, dos2unix, runsh, wsl, wslf)

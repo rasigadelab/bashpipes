@@ -12,6 +12,7 @@ library(data.table)
 library(readxl)
 library(stringr)
 library(lubridate)
+library(dplyr)
 
 # Helper function inspired by "curve()" to apply any expression to
 # genomes in the 'reports' list
@@ -32,7 +33,7 @@ today <- Sys.Date()
 sample_data <- paste0(today, "_annotation_scan.Rdata")
 rm(today)
 # Specify metadata file
-metadata_file <- "metadata.xlsx"
+metadata_file <- "~/Projets/5.Suivi/Metadata_eq_rasigade.xlsx"
 # Specify project name : "Epitrack" or "Resistrack"
 project <- "Epitrack"
 # Specify output directory path
@@ -68,11 +69,44 @@ cat("Rebuild tables with Epitrack format.\n")
     }
   } 
   
-  rm(raw_table_names, tbname, item, sourmash_reports, mlst_reports, mge_reports, metadata, contig_reports, amrfinder_reports, combined_amr_report)
+  rm(raw_table_names, tbname, item, sourmash_reports, mobtyper_reports, mlst_reports, mge_reports, metadata, contig_reports, amrfinder_reports, combined_amr_report)
+}
+
+# Set a proper "genome" key in each df
+
+# Now this is handled in annotation_scan.R [Aurélie - 12/07/2023]
+# For each annotation output data, an appropriate genome column is added
+# See 'date'_annotation_report.xlsx 
+
+# 2025-07-02
+# Adding a merge especially for amr results and combined amr results
+cat("Merge equivalent columns in AMR annotation results.\n")
+{ 
+  # Protein identifier == Protein id
+  # Gene symbol == Element symbol
+  # Sequence name == Element name
+  # Element type == Type
+  # Element subtype == Subtype
+  
+  raw$amrfinder_reports$`Protein identifier` <- ifelse(!is.na(raw$amrfinder_reports$`Protein identifier`), raw$amrfinder_reports$`Protein identifier`, raw$amrfinder_reports$`Protein id`)
+  raw$amrfinder_reports$`Gene symbol` <- ifelse(!is.na(raw$amrfinder_reports$`Gene symbol`), raw$amrfinder_reports$`Gene symbol`, raw$amrfinder_reports$`Element symbol`)
+  raw$amrfinder_reports$`Sequence name` <- ifelse(!is.na(raw$amrfinder_reports$`Sequence name`), raw$amrfinder_reports$`Sequence name`, raw$amrfinder_reports$`Element name`)
+  raw$amrfinder_reports$`Element type` <- ifelse(!is.na(raw$amrfinder_reports$`Element type`), raw$amrfinder_reports$`Element type`, raw$amrfinder_reports$Type)
+  raw$amrfinder_reports$`Element subtype` <- ifelse(!is.na(raw$amrfinder_reports$`Element subtype`), raw$amrfinder_reports$`Element subtype`, raw$amrfinder_reports$Subtype)
+  
+  raw$combined_amr_report$`Protein identifier` <- ifelse(!is.na(raw$combined_amr_report$`Protein identifier`), raw$combined_amr_report$`Protein identifier`, raw$combined_amr_report$`Protein id`)
+  raw$combined_amr_report$`Gene symbol` <- ifelse(!is.na(raw$combined_amr_report$`Gene symbol`), raw$combined_amr_report$`Gene symbol`, raw$combined_amr_report$`Element symbol`)
+  raw$combined_amr_report$`Sequence name` <- ifelse(!is.na(raw$combined_amr_report$`Sequence name`), raw$combined_amr_report$`Sequence name`, raw$combined_amr_report$`Element name`)
+  raw$combined_amr_report$`Element type` <- ifelse(!is.na(raw$combined_amr_report$`Element type`), raw$combined_amr_report$`Element type`, raw$combined_amr_report$Type)
+  raw$combined_amr_report$`Element subtype` <- ifelse(!is.na(raw$combined_amr_report$`Element subtype`), raw$combined_amr_report$`Element subtype`, raw$combined_amr_report$Subtype)
+  
 }
 
 ###############################
-# Gather data for each isolate as a JSON-like list
+#* Gather data for each isolate as a JSON-like list
+#* 
+#* 
+#* 
 
 cat("Gathering data for each isolate as JSON_like list.\n")
 {
@@ -88,11 +122,11 @@ cat("Gathering data for each isolate as JSON_like list.\n")
     
     data.table(
       genome = i,
-      cluster_id = sub$metadata$CLUSTER,
+      cluster_id = sub$metadata$CLUSTER_ID,
       glims = sub$metadata$GLIMS,
       sampling_date = ymd(sub$metadata$DATE_PRELEVEMENT),
-      ipp = sub$metadata$`IPP (identifiant patient)`,
-      type_prlvt = sub$metadata$Type_prelev,
+      ipp = sub$metadata$IPP,
+      type_prlvt = sub$metadata$TYPE_PRELEVEMENT,
       soc_species = sub$metadata$SPECIES,
       sourmash_status = sub$sourmash_reports$status,
       sourmash_genus = sub$sourmash_reports$genus,
