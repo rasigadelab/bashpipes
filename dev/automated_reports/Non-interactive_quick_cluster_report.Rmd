@@ -60,7 +60,16 @@ for (lib in libraries){usePackage(lib)}
 
 # Loading Data
 load(params$path_to_reports)
-reports <- final_data[cluster_id == params$cluster_id]
+if(params$cluster_id==2){
+  reports <- final_data[cluster_id %in% c(2, 161)]
+} else if(params$cluster_id==348){
+  reports <- final_data[cluster_id %in% c(348, 359)]
+} else if(params$cluster_id==316){
+  reports <- final_data[cluster_id %in% c(316, 322)]
+} else {
+  reports <- final_data[cluster_id == params$cluster_id]
+}
+
 # Studied species
 if(params$species=="chromosome"){
   species <- "-"
@@ -81,7 +90,8 @@ if(params$species=="ecloacae"){
   reports <- reports[mlst_species == species,]
 }
 rm(final_data)
-
+reports <- reports %>%
+  filter(genome!="Epi-205" | genome != "Epi-615" | genome != "Epi-2348")
 # Global ggplot theme settings
 global_theme <- theme(plot.title=element_text(size=16, face="plain", hjust = 0.5, vjust=2),
             axis.text.x=element_text(size=9),
