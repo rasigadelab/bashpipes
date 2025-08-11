@@ -1,7 +1,7 @@
 {
     "version" : "",
 
-    "result" : "Phylogeny_results",
+    "result" : "/data/Phylogeny_results",
     "workflow" : "bacteria_mash_clustering",
     "mash" : true,
 
@@ -15,7 +15,7 @@
 
     "distance_matrix_analysis" : {
         "todo" : 1,
-        "mash_threshold" : 0.5
+        "mash_threshold" : 0.005
     }
 
 }
