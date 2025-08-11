@@ -479,6 +479,121 @@ g
 
 rm(first_month, last_month, out, g, earliest, latest, nb_samples, prop_singleton, prop_non_singleton, cbPalette, months_period)
 ```
+
+
+## Distance génétique évaluée
+
+\noindent
+
+```{r dist_snps, results='hide', fig.env='none', fig.align='default'}
+# library(paletteer)
+# library(pheatmap)
+library(gridExtra)
+library(ComplexHeatmap)
+library(circlize)
+library(grid)
+
+path_to_results <- paste0("~/Projets/2.Coding_projects/3.R/1.Automated_reports/phylogeny/",
+                          "cluster_", params$cluster_id, "/",
+                          params$species)
+# Loop on miniclusters
+all_dir_in_path <- list.dirs(path = path_to_results, full.names = FALSE, recursive = FALSE)
+minicl_dir <- all_dir_in_path[grep("minicluster_[0-9]", all_dir_in_path)]
+# Function
+plot_snp_matrix <- function(path_to_res, minicl, all_samples = FALSE){
+  # Input data = matrix of SNPs
+  if(all_samples==FALSE){
+    path_to_snps <- paste0(path_to_res, "/",
+                           minicl, "/",
+                           "snippy/snp_matrix.tsv")
+  } else {
+    path_to_snps <- paste0(path_to_res, 
+                           "/phylogenetic_tree/snippy/snp_matrix.tsv")
+  }
+  
+  # Reading data
+  snps_df <- data.table(read.table(path_to_snps, sep = "\t", header = TRUE, row.names = 1)) %>%
+    select(-Reference) # Removing Reference Colum
+  snps_df <- snps_df %>% filter(!row_number() == (length(snps_df)+1)) # Removing Reference Line
+  # Missing tip
+  # missing_sample <- which(colnames(snps_df)=="Epi.2590")
+  # snps_df <- snps_df[, (missing_sample) := NULL]
+  # snps_df <- snps_df[-missing_sample]
+  # Change rownames into GLIMS
+  colnames(snps_df) <- gsub("\\.", "-", colnames(snps_df))
+  setnames(snps_df, old = colnames(snps_df), new = reports$glims[match(colnames(snps_df),
+                                                                    names(snps_df))])
+
+  rownames(snps_df) <- colnames(snps_df)
+  # Convert dataframe as matrix
+  snps_matrix <- as.matrix(snps_df)
+  colnames(snps_matrix) <- gsub("\\.", "-", colnames(snps_matrix))
+  rownames(snps_matrix) <- colnames(snps_matrix)
+  # Pheatmap lower tri
+  snps_matrix[upper.tri(snps_matrix)] <- NA
+  snps_matrix_display <- snps_matrix
+  snps_matrix_display[is.na(snps_matrix_display)] <- ""
+  diag(snps_matrix_display) <- ""
+  plot_title <- paste0("Matrice de SNPs du ", str_to_title(gsub("\\_", " ", minicl)))
+  # Color function equivalent to breaks: [-1, 0, 15, max+1]
+  col_fun <- colorRamp2(
+    c(0, 15, 16, 1e6),
+    c("red", "red", "#008000", "#008000")
+  )
+  
+  # Create Heatmap
+  ht <- Heatmap(snps_matrix,
+                name = "SNPs",
+                col = col_fun,
+                cluster_rows = FALSE,
+                cluster_columns = FALSE,
+                rect_gp = gpar(col = NA),  # remove cell borders
+                column_names_rot = 45,
+                row_names_side = "left",
+                na_col = "white",
+                cell_fun = function(j, i, x, y, width, height, fill) {
+                  val <- snps_matrix[i, j]
+                  
+                  # Grey background for diagonal
+                  if (i == j) {
+                    grid.rect(x = x, y = y, width = width, height = height,
+                              gp = gpar(fill = "#353839", col = NA))  # grey fill, no border
+                  } else {
+                    # Let ComplexHeatmap fill color normally for non-diagonal cells
+                    grid.rect(x = x, y = y, width = width, height = height,
+                              gp = gpar(fill = fill, col = NA))
+                    
+                    if (!is.na(val)) {
+                      grid.text(label = val, x = x, y = y, gp = gpar(col = "black", fontsize = 8))
+                    }
+                  }
+                },
+                width = unit(10, "cm"),    
+                height = unit(5, "cm"),
+                row_names_gp = gpar(fontsize = 12),
+                column_names_gp = gpar(fontsize = 12),
+                heatmap_legend_param = list(
+                  at = c(0, 15, 20),  # midpoints of green and red zones
+                  labels = c("0", "15", "16+"),
+                  title = "Distance \nen SNPs",
+                  title_gp = gpar(fontsize = 14),   # title style
+                  labels_gp = gpar(fontsize = 12)    
+                )
+  )
+  # Draw with main title and custom size
+  draw(ht,
+       heatmap_legend_side = "right",
+       column_title = plot_title,
+       column_title_gp = gpar(fontsize = 15),
+       padding = unit(c(2, 2, 2, 2), "mm"))
+  #return(ht)
+}
+
+# Let's use the function
+list_of_plots <- sapply(minicl_dir, plot_snp_matrix, path_to_res = path_to_results)
+rm(ht, list_of_plots, gtables, cl_samples, all_dir_in_path, minicl_dir, path_to_results, plot_snp_matrix)
+```
+
 \newpage
 
 ## Classes d'AMR par cluster
