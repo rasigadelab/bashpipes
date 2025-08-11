@@ -149,7 +149,7 @@ if(nb_env_samples != 0){
 }
 rm(nb_env_samples, nb_samples, nb_patients, earliest, latest)
 ```
-```{r dates, out.height="500pt"}
+```{r dates, out.height="300pt"}
 # Computing limits of histogram (earliest and latest months)
 first_month <- floor_date(min(reports$sampling_date), "month") %m-% months(1)
 last_month <- ceiling_date(max(reports$sampling_date), "month")
@@ -158,10 +158,12 @@ if(months_period < 6){
   first_month <- as.Date("2023-01-01")
   last_month <- as.Date("2024-01-01")
 }
-
-if(params$cluster_id == 3){
+# Species in title
+{
+if(params$cluster_id %in% c(3, 395)){
   species_in_title <- "S. marcescens"
-} else if(params$cluster_id %in% c(96, 113, 121, 127)){
+} else if(params$cluster_id %in% c(96, 113, 121, 127, 189, 226, 240, 260, 286, 295, 324, 334, 374,
+                                   361)){
   species_in_title <- "S. capitis"
 } else if(params$species == "cfreundii" & params$cluster_id == 39) {
   species_in_title <- "C. freundii/braakii/youngae"
@@ -173,13 +175,13 @@ if(params$cluster_id == 3){
   species_in_title <- "B. fragilis"
 } else if(params$cluster_id %in% c(60, 115)){
   species_in_title <- "A. ursingii"
-} else if(params$cluster_id == 40){
+} else if(params$cluster_id %in% c(40, 228)){
   species_in_title <- "P. mirabilis"
-} else if(params$cluster_id == 99){
+} else if(params$cluster_id %in% c(99, 122, 173, 335)){
   species_in_title <- "A. xylosidans"
-} else if(params$cluster_id == 87){
+} else if(params$cluster_id %in% c(87, 310)){
   species_in_title <- "A. nosocomialis"
-} else if(params$cluster_id == 46){
+} else if(params$cluster_id %in% c(46, 315)){
   species_in_title <- "A. baumannii"
 } else if(params$cluster_id == 73){
   species_in_title <- "S. saprophyticus"
@@ -187,9 +189,55 @@ if(params$cluster_id == 3){
   species_in_title <- "S. sonnei"
 } else if(params$cluster_id == 111){
   species_in_title <- "M. catharralis"
+} else if(params$cluster_id %in% c(110, 119)){
+  species_in_title <- "S. constellatus"
+} else if(params$cluster_id %in% c(138, 190)){
+  species_in_title <- "T. otitidis"
+} else if(params$cluster_id %in% c(141, 375)){
+  species_in_title <- "H. alvei"
+} else if(params$cluster_id == 147){
+  species_in_title <- "C. braakii"
+} else if(params$cluster_id == 136){
+  species_in_title <- "L. rhamnosus"
+} else if(params$species == "klebsiella") {
+  species_in_title <- "K. pneumoniae"
+} else if(params$cluster_id %in% c("165", "234")) {
+  species_in_title <- "E. asburiae"
+} else if(params$cluster_id == "172") {
+  species_in_title <- "D. acidovorans"
+} else if(params$cluster_id %in% c("174","267")) {
+  species_in_title <- "S. caprae"
+} else if(params$cluster_id == "181") {
+  species_in_title <- "E. cloacae/E. asburiae"
+} else if(params$cluster_id == "285") {
+  species_in_title <- "A. johnsonii"
+} else if(params$cluster_id == "292") {
+  species_in_title <- "P. mirabilis"
+} else if(params$cluster_id == "287") {
+  species_in_title <- "S. simulans"
+} else if(params$cluster_id == "288") {
+  species_in_title <- "S. anginosus"
+} else if(params$cluster_id == "301") {
+  species_in_title <- "M. morganii"
+} else if(params$cluster_id == "306") {
+  species_in_title <- "S. constellatus"
+} else if(params$cluster_id == "348") {
+  species_in_title <- "S. lugdunensis"
+} else if(params$cluster_id == "349") {
+  species_in_title <- "S. pettenkoferi"
+} else if(params$cluster_id == "360") {
+  species_in_title <- "S. lactis/paracarnis"
+} else if(params$cluster_id == "371") {
+  species_in_title <- "R. radiobacter"
+} else if(params$cluster_id == "355") {
+  species_in_title <- "C. striatum"
+} else if(params$cluster_id == "343") {
+  species_in_title <- "P. citronellolis"
 } else {
   species_in_title <- gsub("^([A-Z])", "\\1. ", str_to_title(params$species))
 }
+}
+
 # If there are some environmental samples in the group
 # Break data by month, e.g one bin one month
 out <- reports %>%
@@ -207,7 +255,7 @@ g <- ggplot(data=out, aes(x=month, fill = patients)) +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
                limits = c(first_month, last_month)) +
   scale_y_continuous(n.breaks = 5) +
-  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1, size = 7))
 
 g
 
