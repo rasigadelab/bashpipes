@@ -86,9 +86,7 @@ process resync_bbmap {
     tuple val(sample), path(R1), path(R2), path(R1_UNPAIRED), path(R2_UNPAIRED)
   
   output:
-    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1.trimmed.resync.fastq.gz"), path("genomes/$sample/${sample}_R2.trimmed.resync.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit : illumina_resync
-    path("genomes/$sample/fastp/fastp.json")
-    path("genomes/$sample/fastp/fastp.html")
+    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1.trimmed.resync.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2.trimmed.resync.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit : illumina_resync
     path("genomes/$sample/trimmomatic/resync.err")
     path("genomes/$sample/trimmomatic/resync.log")
 
@@ -97,9 +95,7 @@ process resync_bbmap {
   OUT_DIR=genomes/$sample/trimmomatic
   mkdir -p -m 777 \${OUT_DIR}
 
-  repair.sh in1=$R1 in2=$R2 out1=$\{OUT_DIR}/${sample}_R1.trimmed.resync.fastq.gz \
-   out2=\${OUT_DIR}/${sample}_R2.trimmed.resync.fastq.gz outs=\${OUT_DIR}/singletons.fastq.gz repair ow=t \
-   1> \${OUT_DIR}/resync.log 2> \${OUT_DIR}/resync.err
+  repair.sh in1=$R1 in2=$R2 out1=\${OUT_DIR}/${sample}_R1.trimmed.resync.fastq.gz out2=\${OUT_DIR}/${sample}_R2.trimmed.resync.fastq.gz outs=\${OUT_DIR}/singletons.fastq.gz repair ow=t 1> \${OUT_DIR}/resync.log 2> \${OUT_DIR}/resync.err
   """
 }
 
