@@ -34,6 +34,8 @@ def main(project_dir, output_dir, chr_only):
                 species = f.readline().split('\t')[1]
                 if species == "cronobacter":
                     species = "ecloacae"
+                if species == "ecoli_achtman_4":
+                    species = "ecoli"
         #Step3B- Checking which replicons are in the sample
         for out_file in os.listdir(mob_recon_dir):
             # Option to only analize chromosomes
