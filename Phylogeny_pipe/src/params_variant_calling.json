@@ -1,7 +1,7 @@
 {
     "version" : "",
 
-    "result" : "Phylogeny_results",
+    "result" : "/data/Phylogeny_results",
     "workflow" : "bacteria_variant_calling",
     "ref_preparation" : true,
     "snippy": true,
@@ -25,7 +25,7 @@
 
     "core_snps_snippy" : {
         "todo" : 1,
-        "mincov" : "30"
+        "mincov" : "10"
     }
-    
+
 }
