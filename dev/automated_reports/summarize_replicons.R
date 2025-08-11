@@ -36,8 +36,12 @@ cat("Renaming tips of tree.\n")
 {
   # Rename tips
   metadata <- data.table(read_excel(metadata_file, sheet = 1, col_types = "text"))
-  time_to_change_df <- sapply(t$tip.label, function(x) metadata$GLIMS[metadata$SAMPLE_ID==x])
-  t$tip.label <- time_to_change_df
+  # Dealing with missing tips
+  missing_tips <- setdiff(t$tip.label, metadata[CLUSTER_ID==cluster_id]$SAMPLE_ID)
+  tree_clean <- drop.tip(t, missing_tips)
+  # Change names 
+  time_to_change_df <- sapply(tree_clean$tip.label, function(x) metadata$GLIMS[metadata$SAMPLE_ID==x])
+  tree_clean$tip.label <- time_to_change_df
 }
 
 cat("Output tree file and color clonal samples.")
