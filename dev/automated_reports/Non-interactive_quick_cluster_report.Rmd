@@ -349,8 +349,11 @@ tab <- reports %>%
   mutate(type_prlvt=ifelse(type_prlvt=="ECBU", "Examen cytobactériologique des urines", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="BPO", "Broncho-pulmonaire", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="CATHE", "Cathéter", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMO", "Hémoculture", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="HEMOA", "Hémoculture Flacon A", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMOB", "Hémoculture Flacon B", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="HEMOC", "Hémoculture Flacon C", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMOD", "Hémoculture Flacon D", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="LIQBIO", "Liquide Biologique", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="MUCO", "Mucoviscidose", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="HEMOA", "Hémoculture Flacon A", type_prlvt)) %>%
@@ -360,9 +363,16 @@ tab <- reports %>%
   mutate(type_prlvt=ifelse(type_prlvt=="SUPE", "Suppuration prélevée par écouvillon", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="SUPP", "Suppuration profonde", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(str_to_upper(type_prlvt)=="BMR-BHR", "Dépistage rectal", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="URINE", "Urine", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="OPH", "Ophtalmologie", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="GENIT", "Génital", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="LCR", "Liquide céphalo-rachidien", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="RECHSP", "Prélèvement environnemental", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="Surv selles néonat", "Surveillance selles néonatologie", type_prlvt)) %>%
-  mutate(type_prlvt=ifelse(is.na(type_prlvt), "", type_prlvt))
+  mutate(type_prlvt=ifelse(type_prlvt=="catheter_arteriel", "Cathéter artériel", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="BIOPSIE", "Biopsie", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="LNOBIB", "Liquide non biologique sur flacon B", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(is.na(type_prlvt), "", type_prlvt)) 
 
 if(!(params$env_samples=="")){
   tab <- tab %>%
