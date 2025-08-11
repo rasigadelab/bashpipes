@@ -70,6 +70,39 @@ process trim_trimmomatic {
   """
 }
 
+process resync_bbmap {
+  // Tool: bbmap repair.sh
+  // Resynchronizing R1/R2 reads inside fastq files
+
+  label 'resync'
+  storeDir (params.result)
+  debug false
+  tag "R1/R2 resync on $sample"
+
+  when:
+    params.resync_bbmap.todo == 1
+
+  input:
+    tuple val(sample), path(R1), path(R2), path(R1_UNPAIRED), path(R2_UNPAIRED)
+  
+  output:
+    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1.trimmed.resync.fastq.gz"), path("genomes/$sample/${sample}_R2.trimmed.resync.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit : illumina_resync
+    path("genomes/$sample/fastp/fastp.json")
+    path("genomes/$sample/fastp/fastp.html")
+    path("genomes/$sample/trimmomatic/resync.err")
+    path("genomes/$sample/trimmomatic/resync.log")
+
+  script:
+  """
+  OUT_DIR=genomes/$sample/trimmomatic
+  mkdir -p -m 777 \${OUT_DIR}
+
+  repair.sh in1=$R1 in2=$R2 out1=$\{OUT_DIR}/${sample}_R1.trimmed.resync.fastq.gz \
+   out2=\${OUT_DIR}/${sample}_R2.trimmed.resync.fastq.gz outs=\${OUT_DIR}/singletons.fastq.gz repair ow=t \
+   1> \${OUT_DIR}/resync.log 2> \${OUT_DIR}/resync.err
+  """
+}
+
 process assembly_spades {
 
   // Tool: SPAdes. 
