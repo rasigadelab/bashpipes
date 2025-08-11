@@ -39,16 +39,16 @@ cat(sprintf("Entering phylogeny directory: %s\n", phylogeny_dir))
 
 # Analyze clusters
 fnames <- dir(recursive = TRUE, full.names = TRUE)
-clusters <- unique(str_match(fnames, "cluster_\\d+/\\w+")) # example: c("cluster_1/paeruginosa")
-
+clusters <- unique(str_match(fnames, "cluster_[^/]+/\\w+")) # c("cluster_1/paeruginosa")
+#clusters <- c("cluster_2/ecloacae")
 cat(sprintf("  Phylogeny directory contains %i files in %i clusters.\n", length(fnames), length(clusters)))
 
 # Clustering
 cat("Scanning MLDIST file from IQtree output or SNP matrix computed from Snippy output.\n")
 {
-  mldist_fnames <- fnames[grepl("snp_matrix.tsv", fnames)]
+  mldist_fnames <- fnames[grepl("snippy/snp_matrix.tsv", fnames)]
   mldist_fnames <- mldist_fnames[grepl("snippy", mldist_fnames)]
-  mldist_clusters <- str_match(mldist_fnames, "cluster_\\d+/\\w+/minicluster_\\d+")
+  mldist_clusters <- str_match(mldist_fnames, "cluster_[^/]+/\\w+/minicluster_\\d+")
   stopifnot(length(mldist_fnames) == length(mldist_clusters))
   names(mldist_fnames) <- mldist_clusters
   cat(sprintf("  Found %i clusters with a MLDIST report.\n", length(mldist_clusters)))
@@ -66,6 +66,7 @@ cat("Scanning MLDIST file from IQtree output or SNP matrix computed from Snippy 
         mldist_reports[[ cluster ]][[ minicl ]] <- mldist_reports[[ cluster ]][[ minicl ]][1:(total_items-1),1:(total_items-1)]
       }
     }
+  
   }
   rm(mldist_fnames, mldist_clusters, cluster, minicl, total_items)
 }
@@ -94,11 +95,12 @@ cat("Transform genetic distance (substitions/sites) into substitions number.\n")
 cat("Loading outliers.\n")
 {
   outliers_fnames <- fnames[grepl("no_clonal_samples.tsv", fnames)]
-  outliers_clusters <- str_match(outliers_fnames, "cluster_\\d+/\\w+")
+  outliers_clusters <- str_match(outliers_fnames, "cluster_[^/]+/\\w+")
   names(outliers_fnames) <- outliers_clusters
   cat(sprintf("  Found %i clusters with outliers detected.\n", length(outliers_clusters)))
   outliers_reports <- list()
   for(cluster in clusters) {
+    print(cluster)
     outliers_reports[[ cluster ]] <- list()
     outlier_data <- read.table(outliers_fnames[cluster], sep = "\t", header = TRUE)
     outliers_reports[[ cluster ]] <- outlier_data$sample_names
@@ -134,15 +136,19 @@ cat("Executing clustering.\n")
         distances_df <- merge(distances_df, tmp, key = "genome")
       }
       # Merge results for this minicluster with those from other miniclusters
+      print("Is this rbindlist ok ? [Line 166]")
       subclustering_df <- rbind(subclustering_df, distances_df)
+      print("Yep")
     }
     # Appending outliers to clustering results
     for(outlier in outliers_reports[[cluster]]){
-      # Get index of outliers
+      # Create random number 
       out_index <- which(outliers_reports[[cluster]] == outlier)
       outlier_line <- data.table(outlier, paste0("out-", out_index), paste0("out-", out_index), paste0("out-", out_index), paste0("out-", out_index))
       colnames(outlier_line) <- c("genome", paste0("clust_dist_", chosen_distances) )
+      print("Is this rbindlist OK ? [Line 175]")
       subclustering_df <- rbind(subclustering_df, outlier_line)
+      print("Yep")
     }
     # Now let's sort results, to get biggest cluster names 'A' -> smallest cluster 'Z'
     for(dist in chosen_distances){
@@ -159,7 +165,9 @@ cat("Executing clustering.\n")
       }
     }
     clustering[[ cluster ]] <- subclustering_df
+    print("Is this rbindlist OK ? [Line 194]")
     clustering_df <- rbind(clustering_df, subclustering_df)
+    print("Yep")
   }
   rm(cl, groups, sorted, i, cluster, genetic_distances, distances_df, main_cl, subclustering_df,
      tmp, dist, dist_column, index_to_change, mini_cl, minicluster, new_name, num_mini_cl, old_name,
