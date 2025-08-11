@@ -425,7 +425,7 @@ N.B: Un singleton correspond à un isolat qui n'appartient à aucun cluster, il 
 
 ## Temporalité des clones
 
-```{r prlvt, out.height="500pt"}
+```{r prlvt, out.height="300pt"}
 # Computing limits of histogram (earliest and latest months)
 first_month <- floor_date(min(reports$sampling_date), "month") %m-% months(1)
 last_month <- ceiling_date(max(reports$sampling_date), "month")
@@ -452,9 +452,9 @@ if("singletons" %in% out[[clust_dist]]){
   labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Cluster") +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
                limits = c(first_month, last_month)) +
-  scale_y_continuous(n.breaks = 5) +
+  scale_y_continuous(n.breaks = 10) +
   scale_fill_manual(values=cbPalette) +
-  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1, size=7))
 } else {
   g <- ggplot(data=out, aes(x=month, fill = as.factor(eval(as.name(clust_dist))))) +
   geom_bar(colour = "black", aes(text = paste0("Nombre: ", after_stat(count))), width = 20) +
@@ -462,9 +462,9 @@ if("singletons" %in% out[[clust_dist]]){
   labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Cluster") +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
                limits = c(first_month, last_month)) +
-  scale_y_continuous(n.breaks = 5) +
+  scale_y_continuous(n.breaks = 10) +
   scale_fill_manual(values=cbPalette[-1]) +
-  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1, size=7))
 }
 
 # if(length(out$genome) < 10){
