@@ -6,8 +6,8 @@ rm .n*
 # rm report-*
 # rm trace-*
 
-dos2unix src/workflows/workflow.nf
-dos2unix src/modules/*.nf
-dos2unix src/main.nf
-dos2unix src/nextflow.config
-dos2unix ./launch_pipeline.sh
+dos2unix --allow-chown src/workflows/workflow.nf
+dos2unix --allow-chown src/modules/*.nf
+dos2unix --allow-chown src/main.nf
+dos2unix --allow-chown src/nextflow.config
+dos2unix --allow-chown ./launch_pipeline.sh
