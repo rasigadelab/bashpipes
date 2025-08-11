@@ -6,6 +6,7 @@ nextflow.enable.dsl = 2
 // import modules
 include {quality_fastp} from "${params.nfpath}/modules/module.nf"
 include {trim_trimmomatic} from "${params.nfpath}/modules/module.nf"
+include {resync_bbmap} from "${params.nfpath}/modules/module.nf"
 include {assembly_spades} from "${params.nfpath}/modules/module.nf"
 include {filter_contigs_bbmap} from "${params.nfpath}/modules/module.nf"
 include {qc_quast} from "${params.nfpath}/modules/module.nf"
@@ -34,6 +35,8 @@ workflow bacteria_denovo {
        if ( params.trimming ) {
             trim_trimmomatic(ch_illumina)
             trim_trimmomatic.out.illumina_trimmed.set{ ch_illumina }
+            resync_bbmap(ch_illumina)
+            resync_bbmap.out.illumina_resync.set{ ch_illumina }
        }
 
         //StepA- De novo assembly
