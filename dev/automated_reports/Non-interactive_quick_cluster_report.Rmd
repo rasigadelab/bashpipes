@@ -275,7 +275,7 @@ Deux isolats sont clonaux s'ils sont distants de moins **de `r nb_snps` SNPs**. 
 
 ## Bilan par clone identifié
 
-```{r clone, out.height="500pt"}
+```{r clone, out.height="300pt"}
 out <- reports %>%
   mutate(ipp=ifelse(ipp==params$env_samples, "environnement", ipp)) %>%
   mutate(text_on_bar=ifelse(ipp=="environnement", "environnement", ""))
@@ -286,7 +286,7 @@ cbPalette <- colorRampPalette(brewer.pal(9, "Set1"))
 # Barplot of number of samples per clone
 g <- ggplot(data=out, aes(x=as.factor(eval(as.name(clust_dist))), fill = ipp)) +
       geom_bar(stat="count")+
-      stat_count(geom = "text", colour = "white", size = 3.5, angle = 0,
+      stat_count(geom = "text", colour = "white", size = 3, angle = 0,
                  aes(label = ipp),position=position_stack(vjust=0.5)) +
       ggtitle(str_replace(clust_dist, "clust_dist_", "Clustering Distance ")) +
       labs(x = "Clusters", y = "Nombre d'échantillons", fill = "Identifiant Patient (IPP)") +
