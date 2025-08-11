@@ -126,11 +126,25 @@ if(!(params$env_samples=="")){
 ```
 
 ```{r general_desc, results='asis'}
-if(nb_env_samples != 0){
-  cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients," patients et ",nb_env_samples," prélèvements d'environnement, prélevés du ", earliest," au ",latest,".")
-
+if(nb_patients==1){
+  nb_patients <- paste(nb_patients, " patient")
 } else {
-  cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients," patients, prélevés du ", earliest," au ",latest,".")
+  nb_patients <- paste(nb_patients, "patients")
+}
+
+if(nb_env_samples != 0){
+  if(earliest==latest){
+    cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients," et ",nb_env_samples," prélèvements d'environnement, prélevés le ", earliest, ".")
+  } else {
+    cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients," et ",nb_env_samples," prélèvements d'environnement, prélevés du ", earliest," au ",latest,".")
+  }
+} else {
+  if(earliest==latest){
+      cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients,", prélevé(s) le ", earliest, ".")
+  } else {
+      cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients,", prélevé(s) du ", earliest," au ",latest,".")
+  }
+
 
 }
 rm(nb_env_samples, nb_samples, nb_patients, earliest, latest)
