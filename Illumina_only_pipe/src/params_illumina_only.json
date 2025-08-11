@@ -21,7 +21,7 @@
 
     "trim_trimmomatic" : {
         "todo" : 1,
-        "adapter" : "db/trimmomatic/NexteraPE-PE.fa"
+        "adapter" : "/data/databases/trimmomatic_db/NexteraPE-PE.fa"
     },
     
     "assembly_spades" : {
@@ -49,7 +49,7 @@
         "todo" : 1,
         "scale" : "1000",
         "k" : "21",
-        "db" : "sourmash_db/gtdb-rs207.genomic.k21.lca.json.gz"
+        "db" : "/data/databases/sourmash_db/gtdb-rs207.genomic.k21.lca.json.gz"
     },
         
     "amr_typer_amrfinder" : {
@@ -58,7 +58,7 @@
         
     "annotate_bakta" : {
         "todo" : 1,
-        "db" : "bakta_db/db"
+        "db" : "/data/databases/bakta_db/db"
     },
        
     "mge_mob_recon" : {
