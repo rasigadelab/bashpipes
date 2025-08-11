@@ -623,7 +623,7 @@ rm(g, amr_list)
 ```{r new_amr}
 # Loading Data with AMRFinder report [GLOBALLY]
 load(params$path_to_scan)
-rm(amrfinder_reports, contig_reports, mge_reports, mlst_reports, quast_reports, sourmash_reports)
+#rm(amrfinder_reports, contig_reports, mge_reports, mlst_reports, quast_reports, sourmash_reports)
 ```
 
 ```{r amr_class_clone, results='asis'}
@@ -688,6 +688,7 @@ rm(amr_report, combined_amr_report, list_arg, out, c, clones, samples, d)
 # }
 # rm(out.height)
 ```
+
 ```{r cleaning}
 rm(global_theme, params, reports, species, nb_snps, clust_dist, samples_clustered)
 ```
