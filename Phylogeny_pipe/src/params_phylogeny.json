@@ -1,7 +1,7 @@
 {
     "version" : "",
 
-    "result" : "Phylogeny_results",
+    "result" : "/data/Phylogeny_results",
     "workflow" : "bacteria_phylogeny",
     "ref" : true,
     "snippy" : true,
@@ -16,7 +16,7 @@
 
     "core_snps_snippy_phylogeny" : {
         "todo" : 1,
-        "mincov" : "30"
+        "mincov" : "10"
     },
 
     "snps_tree_iqtree" : {
