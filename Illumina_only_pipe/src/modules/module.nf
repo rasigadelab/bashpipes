@@ -350,8 +350,11 @@ process annotate_bakta {
   # Extract genus and species names if available
   GENUS=\$(cut -d',' -f8 $taxonomy_file | tail -n 1)
   SPECIES=\$(cut -d',' -f9 $taxonomy_file | tail -n 1)
+  TMP_DIR=\${OUT_DIR}/tmp
+  mkdir -p -m 777 \${TMP_DIR}
   
-  bakta --force --prefix $sample --threads $task.cpus --output \${OUT_DIR} --keep-contig-headers --db ${params.annotate_bakta["db"]} $final_assembly 1> \${OUT_DIR}/bakta.log 2> \${OUT_DIR}/bakta.err
+  export TMPDIR=\${TMP_DIR}
+  bakta --force --prefix $sample --threads $task.cpus --output \${OUT_DIR} --skip-trna --keep-contig-headers --skip-crispr --db ${params.annotate_bakta["db"]} --tmp-dir \$TMP_DIR $final_assembly 1> \${OUT_DIR}/bakta.log 2> \${OUT_DIR}/bakta.err
   """
 }
 
@@ -373,7 +376,6 @@ process mge_mob_recon {
   output:
     tuple val(sample), path("genomes/$sample/mob_recon/contig_report.txt"), emit : samples_list
     path("genomes/$sample/mob_recon/*.fasta")
-    path("genomes/$sample/mob_recon/mge.report.txt")
     path("genomes/$sample/mob_recon/*.txt")
     path("genomes/$sample/mob_recon/mob_recon.log")
     path("genomes/$sample/mob_recon/mob_recon.err")
