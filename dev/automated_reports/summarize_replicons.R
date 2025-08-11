@@ -48,20 +48,20 @@ cat("Output tree file and color clonal samples.")
 {
   # Function to color clonal samples together
   colorClonal <- function(id1, id2, coloring){
-    bottom <- which(t$tip.label == id1)
-    top <- which(t$tip.label == id2)
-    return(rect(pp$xx[bottom] - 0.01, pp$yy[bottom] - 0.05, pp$xx[bottom] + 0.02, pp$yy[top] + 0.05,
+    bottom <- which(tree_clean$tip.label == id1)
+    top <- which(tree_clean$tip.label == id2)
+    return(rect(pp$xx[bottom] - 0.01, pp$yy[bottom] - 0.3, pp$xx[bottom] + 0.02, pp$yy[top] + 0.3,
          col = coloring, border = NA))
     
   }
   # Get tree in JPEG file
   jpeg(file = sprintf("%s.jpeg", out_prefix), 2000, 3000, quality = 98, pointsize = 48)
   layout(matrix(1:1, 1))
-  plot.phylo(t, type = "phylogram", main = replicon,
+  plot.phylo(tree_clean, type = "phylogram", main = replicon,
              align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 2, plot = FALSE)
   pp <- get("last_plot.phylo", envir = .PlotPhyloEnv)
   par(new = TRUE)
-  plot.phylo(t, type = "phylogram", main = replicon,
+  plot.phylo(tree_clean, type = "phylogram", main = replicon,
              align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 2)
   axisPhylo(lwd = 5, cex.axis = 1)
   mtext("Substitutions/site", side = 1, line = 3, cex = 1)
