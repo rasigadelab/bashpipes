@@ -12,7 +12,7 @@ scanning <- FALSE
 reporting <- FALSE
 clustering <- FALSE
 
-## PRELIMINARY STEPS ##
+## PRELIMINARY STEPS [SEE PARAMETERS BELOW ] ##
 cat("Scanning annotation results + clustering samples. [OPTIONAL]\n")
 {
   setwd("../Script_Tests")

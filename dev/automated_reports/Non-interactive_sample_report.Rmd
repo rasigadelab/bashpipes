@@ -126,7 +126,8 @@ if(params$illumina_only==TRUE){
   assembly_qc <- assembly_qc[assembly_qc$id == sample_id]
   
   assembly_qc <- assembly_qc %>%
-                  select(-QC_illumina_pass, -QC_nano_pass) %>%
+                  select(-QC_illumina_pass, -QC_nano_pass, -nano_mean_read_length, 
+                         -nano_median_read_length, -N50, -N90) %>%
                   mutate(nano_reads = formatC(nano_reads, format="f", big.mark=" ", 
                                            digits=0),
                          nano_bases = formatC(nano_bases, format="f", big.mark=" ", 
@@ -292,7 +293,7 @@ rm(amr_class)
 Pour ne se concentrer que sur la résistance aux béta-lactames, les gènes de résistance impactent ces catégories de béta-lactames : `r beta_lactam`.
 
 ```{r cleaning}
-rm(beta_lactam, sample_id, params, global_theme, reports)
+rm(beta_lactam, sample_id, params, global_theme, reports, mobtyper_reports)
 ```
 
 

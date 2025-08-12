@@ -60,7 +60,16 @@ for (lib in libraries){usePackage(lib)}
 
 # Loading Data
 load(params$path_to_reports)
-reports <- final_data[cluster_id == params$cluster_id]
+if(params$cluster_id==2){
+  reports <- final_data[cluster_id %in% c(2, 161)]
+} else if(params$cluster_id==348){
+  reports <- final_data[cluster_id %in% c(348, 359)]
+} else if(params$cluster_id==316){
+  reports <- final_data[cluster_id %in% c(316, 322)]
+} else {
+  reports <- final_data[cluster_id == params$cluster_id]
+}
+
 # Studied species
 if(params$species=="chromosome"){
   species <- "-"
@@ -81,7 +90,8 @@ if(params$species=="ecloacae"){
   reports <- reports[mlst_species == species,]
 }
 rm(final_data)
-
+reports <- reports %>%
+  filter(genome!="Epi-205" | genome != "Epi-615" | genome != "Epi-2348")
 # Global ggplot theme settings
 global_theme <- theme(plot.title=element_text(size=16, face="plain", hjust = 0.5, vjust=2),
             axis.text.x=element_text(size=9),
@@ -116,16 +126,30 @@ if(!(params$env_samples=="")){
 ```
 
 ```{r general_desc, results='asis'}
-if(nb_env_samples != 0){
-  cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients," patients et ",nb_env_samples," prélèvements d'environnement, prélevés du ", earliest," au ",latest,".")
-
+if(nb_patients==1){
+  nb_patients <- paste(nb_patients, " patient")
 } else {
-  cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients," patients, prélevés du ", earliest," au ",latest,".")
+  nb_patients <- paste(nb_patients, "patients")
+}
+
+if(nb_env_samples != 0){
+  if(earliest==latest){
+    cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients," et ",nb_env_samples," prélèvements d'environnement, prélevés le ", earliest, ".")
+  } else {
+    cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients," et ",nb_env_samples," prélèvements d'environnement, prélevés du ", earliest," au ",latest,".")
+  }
+} else {
+  if(earliest==latest){
+      cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients,", prélevé(s) le ", earliest, ".")
+  } else {
+      cat("Groupe de ",nb_samples," isolats suspects chez ",nb_patients,", prélevé(s) du ", earliest," au ",latest,".")
+  }
+
 
 }
 rm(nb_env_samples, nb_samples, nb_patients, earliest, latest)
 ```
-```{r dates, out.height="500pt"}
+```{r dates, out.height="300pt"}
 # Computing limits of histogram (earliest and latest months)
 first_month <- floor_date(min(reports$sampling_date), "month") %m-% months(1)
 last_month <- ceiling_date(max(reports$sampling_date), "month")
@@ -134,10 +158,12 @@ if(months_period < 6){
   first_month <- as.Date("2023-01-01")
   last_month <- as.Date("2024-01-01")
 }
-
-if(params$cluster_id == 3){
+# Species in title
+{
+if(params$cluster_id %in% c(3, 395)){
   species_in_title <- "S. marcescens"
-} else if(params$cluster_id %in% c(96, 113, 121, 127)){
+} else if(params$cluster_id %in% c(96, 113, 121, 127, 189, 226, 240, 260, 286, 295, 324, 334, 374,
+                                   361)){
   species_in_title <- "S. capitis"
 } else if(params$species == "cfreundii" & params$cluster_id == 39) {
   species_in_title <- "C. freundii/braakii/youngae"
@@ -149,13 +175,13 @@ if(params$cluster_id == 3){
   species_in_title <- "B. fragilis"
 } else if(params$cluster_id %in% c(60, 115)){
   species_in_title <- "A. ursingii"
-} else if(params$cluster_id == 40){
+} else if(params$cluster_id %in% c(40, 228)){
   species_in_title <- "P. mirabilis"
-} else if(params$cluster_id == 99){
+} else if(params$cluster_id %in% c(99, 122, 173, 335)){
   species_in_title <- "A. xylosidans"
-} else if(params$cluster_id == 87){
+} else if(params$cluster_id %in% c(87, 310)){
   species_in_title <- "A. nosocomialis"
-} else if(params$cluster_id == 46){
+} else if(params$cluster_id %in% c(46, 315)){
   species_in_title <- "A. baumannii"
 } else if(params$cluster_id == 73){
   species_in_title <- "S. saprophyticus"
@@ -163,9 +189,55 @@ if(params$cluster_id == 3){
   species_in_title <- "S. sonnei"
 } else if(params$cluster_id == 111){
   species_in_title <- "M. catharralis"
+} else if(params$cluster_id %in% c(110, 119)){
+  species_in_title <- "S. constellatus"
+} else if(params$cluster_id %in% c(138, 190)){
+  species_in_title <- "T. otitidis"
+} else if(params$cluster_id %in% c(141, 375)){
+  species_in_title <- "H. alvei"
+} else if(params$cluster_id == 147){
+  species_in_title <- "C. braakii"
+} else if(params$cluster_id == 136){
+  species_in_title <- "L. rhamnosus"
+} else if(params$species == "klebsiella") {
+  species_in_title <- "K. pneumoniae"
+} else if(params$cluster_id %in% c("165", "234")) {
+  species_in_title <- "E. asburiae"
+} else if(params$cluster_id == "172") {
+  species_in_title <- "D. acidovorans"
+} else if(params$cluster_id %in% c("174","267")) {
+  species_in_title <- "S. caprae"
+} else if(params$cluster_id == "181") {
+  species_in_title <- "E. cloacae/E. asburiae"
+} else if(params$cluster_id == "285") {
+  species_in_title <- "A. johnsonii"
+} else if(params$cluster_id == "292") {
+  species_in_title <- "P. mirabilis"
+} else if(params$cluster_id == "287") {
+  species_in_title <- "S. simulans"
+} else if(params$cluster_id == "288") {
+  species_in_title <- "S. anginosus"
+} else if(params$cluster_id == "301") {
+  species_in_title <- "M. morganii"
+} else if(params$cluster_id == "306") {
+  species_in_title <- "S. constellatus"
+} else if(params$cluster_id == "348") {
+  species_in_title <- "S. lugdunensis"
+} else if(params$cluster_id == "349") {
+  species_in_title <- "S. pettenkoferi"
+} else if(params$cluster_id == "360") {
+  species_in_title <- "S. lactis/paracarnis"
+} else if(params$cluster_id == "371") {
+  species_in_title <- "R. radiobacter"
+} else if(params$cluster_id == "355") {
+  species_in_title <- "C. striatum"
+} else if(params$cluster_id == "343") {
+  species_in_title <- "P. citronellolis"
 } else {
   species_in_title <- gsub("^([A-Z])", "\\1. ", str_to_title(params$species))
 }
+}
+
 # If there are some environmental samples in the group
 # Break data by month, e.g one bin one month
 out <- reports %>%
@@ -183,7 +255,7 @@ g <- ggplot(data=out, aes(x=month, fill = patients)) +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
                limits = c(first_month, last_month)) +
   scale_y_continuous(n.breaks = 5) +
-  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1, size = 7))
 
 g
 
@@ -203,7 +275,7 @@ Deux isolats sont clonaux s'ils sont distants de moins **de `r nb_snps` SNPs**. 
 
 ## Bilan par clone identifié
 
-```{r clone, out.height="500pt"}
+```{r clone, out.height="300pt"}
 out <- reports %>%
   mutate(ipp=ifelse(ipp==params$env_samples, "environnement", ipp)) %>%
   mutate(text_on_bar=ifelse(ipp=="environnement", "environnement", ""))
@@ -214,7 +286,7 @@ cbPalette <- colorRampPalette(brewer.pal(9, "Set1"))
 # Barplot of number of samples per clone
 g <- ggplot(data=out, aes(x=as.factor(eval(as.name(clust_dist))), fill = ipp)) +
       geom_bar(stat="count")+
-      stat_count(geom = "text", colour = "white", size = 3.5, angle = 0,
+      stat_count(geom = "text", colour = "white", size = 3, angle = 0,
                  aes(label = ipp),position=position_stack(vjust=0.5)) +
       ggtitle(str_replace(clust_dist, "clust_dist_", "Clustering Distance ")) +
       labs(x = "Clusters", y = "Nombre d'échantillons", fill = "Identifiant Patient (IPP)") +
@@ -277,8 +349,11 @@ tab <- reports %>%
   mutate(type_prlvt=ifelse(type_prlvt=="ECBU", "Examen cytobactériologique des urines", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="BPO", "Broncho-pulmonaire", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="CATHE", "Cathéter", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMO", "Hémoculture", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="HEMOA", "Hémoculture Flacon A", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMOB", "Hémoculture Flacon B", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="HEMOC", "Hémoculture Flacon C", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="HEMOD", "Hémoculture Flacon D", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="LIQBIO", "Liquide Biologique", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="MUCO", "Mucoviscidose", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="HEMOA", "Hémoculture Flacon A", type_prlvt)) %>%
@@ -288,9 +363,16 @@ tab <- reports %>%
   mutate(type_prlvt=ifelse(type_prlvt=="SUPE", "Suppuration prélevée par écouvillon", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="SUPP", "Suppuration profonde", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(str_to_upper(type_prlvt)=="BMR-BHR", "Dépistage rectal", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="URINE", "Urine", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="OPH", "Ophtalmologie", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="GENIT", "Génital", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="LCR", "Liquide céphalo-rachidien", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="RECHSP", "Prélèvement environnemental", type_prlvt)) %>%
   mutate(type_prlvt=ifelse(type_prlvt=="Surv selles néonat", "Surveillance selles néonatologie", type_prlvt)) %>%
-  mutate(type_prlvt=ifelse(is.na(type_prlvt), "", type_prlvt))
+  mutate(type_prlvt=ifelse(type_prlvt=="catheter_arteriel", "Cathéter artériel", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="BIOPSIE", "Biopsie", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(type_prlvt=="LNOBIB", "Liquide non biologique sur flacon B", type_prlvt)) %>%
+  mutate(type_prlvt=ifelse(is.na(type_prlvt), "", type_prlvt)) 
 
 if(!(params$env_samples=="")){
   tab <- tab %>%
@@ -343,7 +425,7 @@ N.B: Un singleton correspond à un isolat qui n'appartient à aucun cluster, il 
 
 ## Temporalité des clones
 
-```{r prlvt, out.height="500pt"}
+```{r prlvt, out.height="300pt"}
 # Computing limits of histogram (earliest and latest months)
 first_month <- floor_date(min(reports$sampling_date), "month") %m-% months(1)
 last_month <- ceiling_date(max(reports$sampling_date), "month")
@@ -370,9 +452,9 @@ if("singletons" %in% out[[clust_dist]]){
   labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Cluster") +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
                limits = c(first_month, last_month)) +
-  scale_y_continuous(n.breaks = 5) +
+  scale_y_continuous(n.breaks = 10) +
   scale_fill_manual(values=cbPalette) +
-  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1, size=7))
 } else {
   g <- ggplot(data=out, aes(x=month, fill = as.factor(eval(as.name(clust_dist))))) +
   geom_bar(colour = "black", aes(text = paste0("Nombre: ", after_stat(count))), width = 20) +
@@ -380,9 +462,9 @@ if("singletons" %in% out[[clust_dist]]){
   labs(x = "Date de prélèvement par mois", y = "Nombre d'échantillons", fill = "Cluster") +
   scale_x_date(date_breaks = "month", date_labels = "%m/%Y", date_minor_breaks = "month", 
                limits = c(first_month, last_month)) +
-  scale_y_continuous(n.breaks = 5) +
+  scale_y_continuous(n.breaks = 10) +
   scale_fill_manual(values=cbPalette[-1]) +
-  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1))
+  theme(axis.text.x=element_text(angle=45, vjust = 1, hjust = 1, size=7))
 }
 
 # if(length(out$genome) < 10){
@@ -397,6 +479,121 @@ g
 
 rm(first_month, last_month, out, g, earliest, latest, nb_samples, prop_singleton, prop_non_singleton, cbPalette, months_period)
 ```
+
+
+## Distance génétique évaluée
+
+\noindent
+
+```{r dist_snps, results='hide', fig.env='none', fig.align='default'}
+# library(paletteer)
+# library(pheatmap)
+library(gridExtra)
+library(ComplexHeatmap)
+library(circlize)
+library(grid)
+
+path_to_results <- paste0("~/Projets/2.Coding_projects/3.R/1.Automated_reports/phylogeny/",
+                          "cluster_", params$cluster_id, "/",
+                          params$species)
+# Loop on miniclusters
+all_dir_in_path <- list.dirs(path = path_to_results, full.names = FALSE, recursive = FALSE)
+minicl_dir <- all_dir_in_path[grep("minicluster_[0-9]", all_dir_in_path)]
+# Function
+plot_snp_matrix <- function(path_to_res, minicl, all_samples = FALSE){
+  # Input data = matrix of SNPs
+  if(all_samples==FALSE){
+    path_to_snps <- paste0(path_to_res, "/",
+                           minicl, "/",
+                           "snippy/snp_matrix.tsv")
+  } else {
+    path_to_snps <- paste0(path_to_res, 
+                           "/phylogenetic_tree/snippy/snp_matrix.tsv")
+  }
+  
+  # Reading data
+  snps_df <- data.table(read.table(path_to_snps, sep = "\t", header = TRUE, row.names = 1)) %>%
+    select(-Reference) # Removing Reference Colum
+  snps_df <- snps_df %>% filter(!row_number() == (length(snps_df)+1)) # Removing Reference Line
+  # Missing tip
+  # missing_sample <- which(colnames(snps_df)=="Epi.2590")
+  # snps_df <- snps_df[, (missing_sample) := NULL]
+  # snps_df <- snps_df[-missing_sample]
+  # Change rownames into GLIMS
+  colnames(snps_df) <- gsub("\\.", "-", colnames(snps_df))
+  setnames(snps_df, old = colnames(snps_df), new = reports$glims[match(colnames(snps_df),
+                                                                    names(snps_df))])
+
+  rownames(snps_df) <- colnames(snps_df)
+  # Convert dataframe as matrix
+  snps_matrix <- as.matrix(snps_df)
+  colnames(snps_matrix) <- gsub("\\.", "-", colnames(snps_matrix))
+  rownames(snps_matrix) <- colnames(snps_matrix)
+  # Pheatmap lower tri
+  snps_matrix[upper.tri(snps_matrix)] <- NA
+  snps_matrix_display <- snps_matrix
+  snps_matrix_display[is.na(snps_matrix_display)] <- ""
+  diag(snps_matrix_display) <- ""
+  plot_title <- paste0("Matrice de SNPs du ", str_to_title(gsub("\\_", " ", minicl)))
+  # Color function equivalent to breaks: [-1, 0, 15, max+1]
+  col_fun <- colorRamp2(
+    c(0, 15, 16, 1e6),
+    c("red", "red", "#008000", "#008000")
+  )
+  
+  # Create Heatmap
+  ht <- Heatmap(snps_matrix,
+                name = "SNPs",
+                col = col_fun,
+                cluster_rows = FALSE,
+                cluster_columns = FALSE,
+                rect_gp = gpar(col = NA),  # remove cell borders
+                column_names_rot = 45,
+                row_names_side = "left",
+                na_col = "white",
+                cell_fun = function(j, i, x, y, width, height, fill) {
+                  val <- snps_matrix[i, j]
+                  
+                  # Grey background for diagonal
+                  if (i == j) {
+                    grid.rect(x = x, y = y, width = width, height = height,
+                              gp = gpar(fill = "#353839", col = NA))  # grey fill, no border
+                  } else {
+                    # Let ComplexHeatmap fill color normally for non-diagonal cells
+                    grid.rect(x = x, y = y, width = width, height = height,
+                              gp = gpar(fill = fill, col = NA))
+                    
+                    if (!is.na(val)) {
+                      grid.text(label = val, x = x, y = y, gp = gpar(col = "black", fontsize = 8))
+                    }
+                  }
+                },
+                width = unit(10, "cm"),    
+                height = unit(5, "cm"),
+                row_names_gp = gpar(fontsize = 12),
+                column_names_gp = gpar(fontsize = 12),
+                heatmap_legend_param = list(
+                  at = c(0, 15, 20),  # midpoints of green and red zones
+                  labels = c("0", "15", "16+"),
+                  title = "Distance \nen SNPs",
+                  title_gp = gpar(fontsize = 14),   # title style
+                  labels_gp = gpar(fontsize = 12)    
+                )
+  )
+  # Draw with main title and custom size
+  draw(ht,
+       heatmap_legend_side = "right",
+       column_title = plot_title,
+       column_title_gp = gpar(fontsize = 15),
+       padding = unit(c(2, 2, 2, 2), "mm"))
+  #return(ht)
+}
+
+# Let's use the function
+list_of_plots <- sapply(minicl_dir, plot_snp_matrix, path_to_res = path_to_results)
+rm(ht, list_of_plots, gtables, cl_samples, all_dir_in_path, minicl_dir, path_to_results, plot_snp_matrix)
+```
+
 \newpage
 
 ## Classes d'AMR par cluster
@@ -426,7 +623,7 @@ rm(g, amr_list)
 ```{r new_amr}
 # Loading Data with AMRFinder report [GLOBALLY]
 load(params$path_to_scan)
-rm(amrfinder_reports, contig_reports, mge_reports, mlst_reports, quast_reports, sourmash_reports)
+#rm(amrfinder_reports, contig_reports, mge_reports, mlst_reports, quast_reports, sourmash_reports)
 ```
 
 ```{r amr_class_clone, results='asis'}
@@ -491,6 +688,7 @@ rm(amr_report, combined_amr_report, list_arg, out, c, clones, samples, d)
 # }
 # rm(out.height)
 ```
+
 ```{r cleaning}
 rm(global_theme, params, reports, species, nb_snps, clust_dist, samples_clustered)
 ```

@@ -194,15 +194,15 @@ for(s in species){
   samples <- reports[mlst_species == s]$genome
   cat("## Espèce ", s," (", length(samples)," échantillon(s)) \n\n")
   # Get AMR report of those genomes
-  amr_report <- combined_amr_report[`Element type` == "AMR" & genome %in% samples]
+  amr_report <- combined_amr_report[`Type` == "AMR" & genome %in% samples]
   cat("### ARGs chromosomiques \n\n")
   # Loading only chromosomal ARGs
   chr_arg <- amr_report[molecule_type == "chromosome"]
   # Arranging AMR results
   out <- chr_arg %>%
-        select(genome, `Gene symbol`, `Sequence name`, Class, Subclass) %>%
+        select(genome, `Element symbol`, `Element name`, Class, Subclass) %>%
         distinct() %>%
-        group_by(`Gene symbol`, `Sequence name`, Class, Subclass) %>%
+        group_by(`Element symbol`, `Element name`, Class, Subclass) %>%
         mutate(Class = str_to_title(Class), Subclass = str_to_title(Subclass)) %>%
         summarise(Pourcentage=round(n()*100/length(samples), digits = 2)) %>%
         arrange(-Pourcentage) %>%
@@ -221,9 +221,9 @@ for(s in species){
   plasmid_arg <- amr_report[molecule_type == "plasmid"]
   # Arranging AMR results
   out <- plasmid_arg %>%
-        select(genome, `Gene symbol`, `Sequence name`, Class, Subclass) %>%
+        select(genome, `Element symbol`, `Element name`, Class, Subclass) %>%
         distinct() %>%
-        group_by(`Gene symbol`, `Sequence name`, Class, Subclass) %>%
+        group_by(`Element symbol`, `Element name`, Class, Subclass) %>%
         mutate(Class = str_to_title(Class), Subclass = str_to_title(Subclass)) %>%
         summarise(Pourcentage=round(n()*100/length(samples), digits = 2)) %>%
         arrange(-Pourcentage) %>%
