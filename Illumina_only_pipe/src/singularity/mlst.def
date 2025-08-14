@@ -1,0 +1,22 @@
+Bootstrap: docker
+From: quay.io/staphb/mlst:2.23.0-2025-02-01
+
+%post
+  # Go into the scripts folder (you need to have write access! type -a mlst)
+  # type -a mlst
+  # cat /etc/os-release
+  cd /mlst-2.23.0/scripts
+  
+  # Save the old database folder
+  mv /mlst-2.23.0/db/pubmlst /mlst-2.23.0/db/pubmlst.old
+
+  # Run the downloader script (you need 'wget' installed)
+  /mlst-2.23.0/scripts/mlst-download_pub_mlst -d /mlst-2.23.0/db/pubmlst
+
+  # Regenerate the BLAST database
+  /mlst-2.23.0/scripts/mlst-make_blast_db
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2025-05-22
