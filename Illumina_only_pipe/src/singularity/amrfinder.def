@@ -1,0 +1,11 @@
+Bootstrap: docker
+From: quay.io/biocontainers/ncbi-amrfinderplus:4.0.23--hf69ffd2_0
+
+%post
+  # Install new database
+  amrfinder --update
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2025-05-22
