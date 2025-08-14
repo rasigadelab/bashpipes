@@ -1,0 +1,11 @@
+Bootstrap: docker
+From: quay.io/staphb/mob-suite:3.1.9
+
+%post
+  # Install up-to-date database
+  mob_init
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2025-05-22
