@@ -242,7 +242,7 @@ process fixstart_circlator {
   OUT_DIR=genomes/$sample/circlator
   mkdir -p -m 777 \${OUT_DIR}
 
-  circlator fixstart $denovo_assembly \${OUT_DIR}/${sample}_realigned
+  circlator fixstart --genes_fa ${params.fixstart_circlator["db"]} $denovo_assembly \${OUT_DIR}/${sample}_realigned
   cp \${OUT_DIR}/${sample}_realigned.fasta genomes/$sample/${sample}_realigned.fasta
   """
 }
