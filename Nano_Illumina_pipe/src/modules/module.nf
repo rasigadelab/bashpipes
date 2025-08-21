@@ -435,8 +435,11 @@ process annotate_bakta {
   # Extract genus and species names if available
   GENUS=\$(cut -d',' -f8 $taxonomy_file | tail -n 1)
   SPECIES=\$(cut -d',' -f9 $taxonomy_file | tail -n 1)
+  TMP_DIR=\${OUT_DIR}/tmp
+  mkdir -p -m 777 \${TMP_DIR}
   
-  bakta --debug --verbose --force --skip-crispr --prefix $sample --threads $task.cpus --output \${OUT_DIR} --keep-contig-headers --db ${params.annotate_bakta["db"]} $final_assembly 1> \${OUT_DIR}/bakta.log 2> \${OUT_DIR}/bakta.err
+  export TMPDIR=\${TMP_DIR}
+  bakta --force --prefix $sample --threads $task.cpus --output \${OUT_DIR} --skip-trna --keep-contig-headers --skip-crispr --db ${params.annotate_bakta["db"]} --tmp-dir \$TMP_DIR $final_assembly 1> \${OUT_DIR}/bakta.log 2> \${OUT_DIR}/bakta.err
   """
 }
 
