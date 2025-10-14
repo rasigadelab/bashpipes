@@ -26,6 +26,14 @@
     "core_snps_snippy" : {
         "todo" : 1,
         "mincov" : "10"
+    },
+
+    "vc_recombination_analysis_gubbins" : {
+        "todo" : 1
+    },
+
+    "vc_final_snp_matrix" : {
+        "todo" : 1
     }
 
 }
