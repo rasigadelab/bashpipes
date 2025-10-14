@@ -265,6 +265,7 @@ process core_snps_snippy {
     tuple val(replicon), val(subgroup), path(masked_regions), path(input_tab)
 
   output:
+    tuple val(replicon), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/snippy/clean.full.aln"), emit : clean_core_snps
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/*/snps.aligned.fa")
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/*/snps.log")
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/*/snps.subs.vcf")
@@ -275,6 +276,8 @@ process core_snps_snippy {
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/snippy.err")
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/snp_matrix.tsv")
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/core_without_ref.aln")
+    path("phylogeny/$replicon/minicluster_$subgroup/snippy/clean.full.withref.aln")
+    path("phylogeny/$replicon/minicluster_$subgroup/snippy/core.ref.fa")
 
   script:
   """
@@ -291,7 +294,100 @@ process core_snps_snippy {
 
   # Remove last lines because it's the reference sequence and we don't want it in phylogeny
   sed -n '/>Reference/q;p' \${OUT_DIR}/core.full.aln > \${OUT_DIR}/core_without_ref.aln
+
+  # Clean SNP alignment with Snippy command (remove weird characters)
+  snippy-clean_full_aln \${OUT_DIR}/core_without_ref.aln > \${OUT_DIR}/clean.full.aln
+  snippy-clean_full_aln \${OUT_DIR}/core.full.aln > \${OUT_DIR}/clean.full.withref.aln
   """
+}
+
+process vc_recombination_analysis_gubbins {
+  // Tool: Gubbins
+  // Run Iqtree based on SNP alignment and predict recombination blocks
+
+  label 'gubbins'
+  storeDir params.result
+  debug false
+  tag "Gubbins for $replicon - $subgroup"  
+
+  when:
+    params.vc_recombination_analysis_gubbins.todo == 1
+  
+  input:
+    tuple val(replicon), val(subgroup), path(core_snps_aln)
+
+  output:
+    tuple val(replicon), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/gubbins/${replicon}_core_masked.strict_core_after_masking.fasta"), emit : aln_without_rec
+    path("phylogeny/$replicon/minicluster_$subgroup/gubbins/${replicon}.final_tree.tre")
+    path("phylogeny/$replicon/minicluster_$subgroup/gubbins/${replicon}.log")
+    path("phylogeny/$replicon/minicluster_$subgroup/gubbins/gubbins.err")
+    path("phylogeny/$replicon/minicluster_$subgroup/gubbins/gubbins.log")
+    path("phylogeny/$replicon/minicluster_$subgroup/gubbins/${replicon}.per_branch_statistics.csv")
+    path("phylogeny/$replicon/minicluster_$subgroup/gubbins/${replicon}.recombination_predictions.gff")
+    path("phylogeny/$replicon/minicluster_$subgroup/gubbins/*")
+    path("phylogeny/$replicon/minicluster_$subgroup/gubbins/clean.recombination_masked.aln")
+
+  script:
+  """
+  OUT_DIR=phylogeny/$replicon/minicluster_$subgroup/gubbins
+  mkdir -p -m 777 \${OUT_DIR}
+
+  # Count number of samples analyzed
+  NB_SAMPLES=\$(grep -o ">" $core_snps_aln | wc -l)
+  # If only 2 samples
+  if [ \$NB_SAMPLES = 2 ]
+  then
+    run_gubbins.py --pairwise $core_snps_aln --threads $task.cpus --filter-percentage 50.0 \
+                   --prefix \${OUT_DIR}/$replicon 1> \${OUT_DIR}/gubbins.log 2> \${OUT_DIR}/gubbins.err
+  else
+    run_gubbins.py --tree-builder iqtree --first-tree-builder iqtree-fast --model GTR --model-fitter raxml $core_snps_aln \
+                  --threads $task.cpus --filter-percentage 50.0 --prefix \${OUT_DIR}/$replicon 1> \${OUT_DIR}/gubbins.log 2> \${OUT_DIR}/gubbins.err
+  fi
+  # Masking recombination areas in input alignment
+  mask_gubbins_aln.py --aln $core_snps_aln --gff \${OUT_DIR}/${replicon}.recombination_predictions.gff --out \${OUT_DIR}/clean.recombination_masked.aln
+  
+  # Filter only core SNPs
+  SNIPPY_DIR=$params.result/phylogeny/$replicon/minicluster_$subgroup/snippy
+  REFERENCE="\${SNIPPY_DIR}/core.ref.fa"
+  CLEAN_WITH_REF="\${SNIPPY_DIR}/clean.full.withref.aln"
+  SNIPPY_CORE_VCF="\${SNIPPY_DIR}/core.vcf"
+  GUBBINS_MASKED_ALN="\${OUT_DIR}/clean.recombination_masked.aln"
+  OUT_PREFIX="\${OUT_DIR}/${replicon}_core_masked"
+
+  python3 ${params.nfpath}/modules/extract_core_snps_after_gubbins.py \
+          --reference \$REFERENCE \
+          --clean_with_ref \$CLEAN_WITH_REF \
+          --snippy_core_vcf \$SNIPPY_CORE_VCF \
+          --gubbins_masked_aln \$GUBBINS_MASKED_ALN \
+          --out_prefix \$OUT_PREFIX
+  """  
+}
+
+process vc_final_snp_matrix {
+  // Tool: snp-dists
+  // Output SNP matrix based on alignment file without recombination
+
+  label 'snp_dists'
+  storeDir params.result
+  debug false
+  tag "SNP matrix for $replicon - $subgroup"  
+
+  when:
+    params.vc_final_snp_matrix.todo == 1
+  
+  input:
+    tuple val(replicon), val(subgroup), path(core_snps_aln)
+
+  output:
+    path("phylogeny/$replicon/minicluster_$subgroup/gubbins/core_snp_matrix.tsv")
+
+  script:
+  """
+  OUT_DIR=phylogeny/$replicon/minicluster_$subgroup/gubbins
+  mkdir -p -m 777 \${OUT_DIR}
+
+  snp-dists $core_snps_aln > \${OUT_DIR}/core_snp_matrix.tsv
+  """  
 }
 
 process ref_phylogeny {
