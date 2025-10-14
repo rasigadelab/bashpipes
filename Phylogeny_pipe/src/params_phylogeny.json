@@ -34,10 +34,6 @@
 
     "recombination_analysis_gubbins" : {
         "todo" : 1
-    },
-
-    "snps_tree_after_gubbins_iqtree" : {
-        "todo" : 1
     }
         
 }
