@@ -14,6 +14,8 @@ include {duplicate_masker_repeatmasker} from "${params.nfpath}/modules/module.nf
 include {duplicate_masker_bedops} from "${params.nfpath}/modules/module.nf"
 include {create_input_tab} from "${params.nfpath}/modules/module.nf"
 include {core_snps_snippy} from "${params.nfpath}/modules/module.nf" 
+include {vc_recombination_analysis_gubbins} from "${params.nfpath}/modules/module.nf"
+include {vc_final_snp_matrix} from "${params.nfpath}/modules/module.nf"
 
 include {ref_phylogeny} from "${params.nfpath}/modules/module.nf" 
 include {create_input_tab_phylogeny} from "${params.nfpath}/modules/module.nf" 
@@ -67,6 +69,10 @@ workflow bacteria_variant_calling {
                create_input_tab(ch_replicons)
                create_input_tab.out.input_tab.set{ ch_input_tab }
                core_snps_snippy(ch_input_tab)
+               core_snps_snippy.out.clean_core_snps.set{ ch_core_snps }
+               vc_recombination_analysis_gubbins(ch_core_snps)
+               vc_recombination_analysis_gubbins.out.aln_without_rec.set{ ch_core_snps }
+               vc_final_snp_matrix(ch_core_snps)
           }
 }
 
