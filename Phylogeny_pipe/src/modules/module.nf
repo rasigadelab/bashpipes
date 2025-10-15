@@ -187,7 +187,7 @@ process duplicate_masker_repeatmasker {
   OUT_DIR=phylogeny/$replicon/minicluster_$subgroup/repeatmasker
   mkdir -p -m 777 \${OUT_DIR}
 
-  RepeatMasker -dir \${OUT_DIR} $polished_ref 1> \${OUT_DIR}/repeatmasker.log 2> \${OUT_DIR}/repeatmasker.err
+  RepeatMasker -dir \${OUT_DIR} -species bacteria $polished_ref 1> \${OUT_DIR}/repeatmasker.log 2> \${OUT_DIR}/repeatmasker.err
   """
 }
 
