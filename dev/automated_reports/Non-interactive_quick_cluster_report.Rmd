@@ -37,6 +37,18 @@ header-includes:
 - \posttitle{\end{center}}
 ---
 
+<!--
+*******************************************************************
+Title: Non-interactive_quick_cluster_report.Rmd
+Description: Report at species level, comparing isolates with SNP calling and MLST annotation.
+Authors: Aurélie Fischer
+Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+License: GNU Affero General Public License v3.0 (AGPL-3.0)
+SPDX-License-Identifier: AGPL-3.0-only
+Copyright (C) 2026 Aurélie Fischer
+*******************************************************************
+-->
+
 \newpage
 
 Ce rapport d'études de cluster étudie les isolats de l'espèce ___ XXX ___ du service YYYY.

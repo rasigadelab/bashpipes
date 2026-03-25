@@ -42,6 +42,18 @@ htmltools::img(src = "pictures/logo_hcl.svg",
                style = 'position:absolute; top:0; right:1%; padding:10px; max-width:10%')
 ```
 
+<!--
+*******************************************************************
+Title: Non-interactive_sample_report.Rmd
+Description: Report at sample level, identifying ST, sequencing QC and resistome of the isolate.
+Authors: Aurélie Fischer
+Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+License: GNU Affero General Public License v3.0 (AGPL-3.0)
+SPDX-License-Identifier: AGPL-3.0-only
+Copyright (C) 2026 Aurélie Fischer
+*******************************************************************
+-->
+
 \newpage 
 
 ```{r setup, include=FALSE}

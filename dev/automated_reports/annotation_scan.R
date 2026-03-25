@@ -1,9 +1,11 @@
 #*******************************************************************
-#*GENOME ANNOTATION SCAN
-#*V0.2 2023-08-02
-#*
-#* Scans annotation files to feed the annotation database
-#* 
+# Title: annotation_scan.R
+# Description: Scans annotation files to feed the annotation database
+# Authors: Jean-Philippe Rasigade, Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Jean-Philippe Rasigade, Aurélie Fischer
 
 rm(list = objects())
 

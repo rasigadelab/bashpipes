@@ -1,4 +1,12 @@
-#######################################
+#*******************************************************************
+# Title: render_report.R
+# Description: Outputs phylogenetic tree as a PNG picture.
+# Authors: Jean-Philippe Rasigade, Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Jean-Philippe Rasigade, Aurélie Fischer
+
 # REPLICON TREE VISUALISATION
 
 # Input: NEWICK file created either by ClonalFrameML (.newick) or by IQtree (.treefile)

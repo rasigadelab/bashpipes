@@ -28,6 +28,19 @@ header-includes:
   \includegraphics[width=1in,height=1in]{pictures/logo_hcl.png}\LARGE\\}
 - \posttitle{\end{center}}
 ---
+
+<!--
+*******************************************************************
+Title: Non-interactive_detailed_cluster_report.Rmd
+Description: Report at cluster level, indicating species, STs and antimicrobial genes globally present.
+Authors: Aurélie Fischer
+Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+License: GNU Affero General Public License v3.0 (AGPL-3.0)
+SPDX-License-Identifier: AGPL-3.0-only
+Copyright (C) 2026 Aurélie Fischer
+*******************************************************************
+-->
+
 Ce rapport d'analyses fait état des investigations génomiques réalisées sur un groupe de souches signalé comme cluster soit par un service d'hygiène des HCL, soit par le logiciel Epitrack destiné à détecter de potentielles épidémies dans les services hospitaliers.
 
 Après séquençage du génome de chaque souche bactérienne du cluster, le génome est réassemblé puis annoté notamment dans le but de :

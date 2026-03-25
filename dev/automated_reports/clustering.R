@@ -1,10 +1,11 @@
 #*******************************************************************
-#*GENOME CLUSTERING ANALYSIS
-#*V0.1 2023-08-16
-#*
-#* Clustering based on SNP data
-#* 
-#* Annotate a subcluster for each sample
+# Title: clustering.R
+# Description: Clustering based on SNP data.
+# Author: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Aurélie Fischer
 
 #TODO
 #How do we set the cut to define a clone ? [currently : arbitrary 15 SNPs]

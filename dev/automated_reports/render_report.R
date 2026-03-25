@@ -1,9 +1,12 @@
-####################
-#### RENDERING #####
-####################
-## v.1.0
-## 22.08.2023
-##
+#*******************************************************************
+# Title: render_report.R
+# Description: Render PDF reports for a cluster/specie based on Rmarkdown scripts.
+# Authors: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Aurélie Fischer
+
 rm(list = ls())
 library(data.table)
 
