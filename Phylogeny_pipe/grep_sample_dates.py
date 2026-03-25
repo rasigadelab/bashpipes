@@ -1,9 +1,21 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Title: grep_sample_dates.py
+# Description: Reads metadata file and outputs sampling dates list for every analyzed replicon.
+# Author: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Copyright (C) 2026 Aurélie Fischer
+
 import pandas
 import os
 import argparse
 
-#GOAL : Creation of a TXT file containing Epi-1       \t 2023-02-04
-#                                         Sample_name \t Sampling_date
+# GOAL : Creation of a TXT file containing Epi-1       \t 2023-02-04
+#                                          Sample_name \t Sampling_date
 
 ## FUNCTIONS ##
 

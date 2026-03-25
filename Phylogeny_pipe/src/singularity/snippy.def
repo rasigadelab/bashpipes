@@ -13,6 +13,9 @@ From: staphb/snippy:4.6.0-SC2
   make install
 
 %labels
-    Version 1.0
-    Author chuafischer
-    Date 2025-05-22
+    org.opencontainers.image.title "snippy + snp-dists container"
+    org.opencontainers.image.description "Container for phylogeny analysis (Snippy, snp-dists)"
+    org.opencontainers.image.authors "Aurélie Fischer (PHE3ID, CIRI, Hospices Civils de Lyon)"
+    org.opencontainers.image.version "1.0.0"
+    org.opencontainers.image.licenses "AGPL-3.0-only + bundled tool licenses"
+    org.opencontainers.image.source "https://github.com/rasigadelab/bashpipes"

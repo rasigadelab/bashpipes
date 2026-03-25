@@ -5,6 +5,9 @@ From: r-base
 Rscript -e 'install.packages(c("optparse", "stringr", "data.table", "dplyr"))'
 
 %labels
-    Version 1.0
-    Author chuafischer
-    Date 2025-05-22
+    org.opencontainers.image.title "R container"
+    org.opencontainers.image.description "Container for phylogeny analysis (R base)"
+    org.opencontainers.image.authors "Aurélie Fischer (PHE3ID, CIRI, Hospices Civils de Lyon)"
+    org.opencontainers.image.version "1.0.0"
+    org.opencontainers.image.licenses "AGPL-3.0-only + bundled tool licenses"
+    org.opencontainers.image.source "https://github.com/rasigadelab/bashpipes"

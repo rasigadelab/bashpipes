@@ -1,3 +1,15 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Title: snippy_multi_list.py
+# Description: Lists samples to be given to Snippy and outputs a file called "input.tab".
+# Author: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Copyright (C) 2026 Aurélie Fischer
+
 import os
 import argparse
 

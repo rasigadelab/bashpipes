@@ -1,8 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Title: find_replicons.py
+# Description: Outputs a list of each analyzed sample, replicon and path to DNA sequence (FASTA file).
+# Author: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Copyright (C) 2026 Aurélie Fischer
+
 import os
 import re
 import argparse
 
-# Welcome to creation of replicons.tsv file !
+# Creation of replicons.tsv file
 # To run it, type in a terminal:
 # cd /location/to/script
 # python3 find_replicons.py -d path/to/data/folder

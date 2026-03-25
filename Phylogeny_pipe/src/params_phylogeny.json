@@ -1,5 +1,10 @@
 {
-    "version" : "",
+    "_meta": {
+        "author": "Aurélie Fischer",
+        "lab": "PHE3ID, CIRI, Hospices civils de Lyon",
+        "license": "AGPL-3.0-only",
+        "description": "Configuration for phylogeny pipeline"
+    },
 
     "result" : "/data/Phylogeny_results",
     "workflow" : "bacteria_phylogeny",

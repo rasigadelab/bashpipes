@@ -1,4 +1,27 @@
-#!/home/afischer/tools/nextflow
+/*
+ * Bacteria Phylogeny Pipeline
+ * 
+ * Description:
+ *   Nextflow pipeline for bacterial phylogenetic analysis.
+ *
+ * Author:
+ *   Aurélie Fischer (PHE3ID, CIRI, Hospices civils de Lyon)
+ *
+ * Repository:
+ *   https://github.com/rasigadelab/bashpipes
+ *
+ * License:
+ *   GNU Affero General Public License v3.0 (AGPL-3.0)
+ *   SPDX-License-Identifier: AGPL-3.0-only
+ *
+ * Usage A) MASH clustering
+ *   nextflow -C nextflow.config run main.nf -params-file params_mash.json -with-trace -with-report --prefix run_1 -profile standard
+ * Usage B) Variant calling 
+ *   nextflow -C nextflow.config run main.nf -params-file params_variant_calling.json -with-trace -with-report --prefix run_1 -profile standard
+ * Usage C) Phylogeny pipeline
+ *   nextflow -C nextflow.config run main.nf -params-file params_phylogeny.json -with-trace -with-report --prefix run_1 -profile standard
+ *
+ */
 
 // enable dsl2
 nextflow.enable.dsl = 2

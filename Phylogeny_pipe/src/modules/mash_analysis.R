@@ -1,3 +1,11 @@
+# Title: mash_analysis.R
+# Description: Clustering of genomes using MASH distance.
+# Author: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Aurélie Fischer
+
 rm(list = ls())
 
 usePackage <- function(p) {

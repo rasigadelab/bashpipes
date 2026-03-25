@@ -1,23 +1,39 @@
+/*
+ * Help utilities for Bacteria Phylogeny Pipeline
+ *
+ * Description:
+ *   Defines functions to display usage and CLI help messages.
+ *
+ * License:
+ *   AGPL-3.0-only
+ */
+
 def printHelp() {
 
   log.info"""
-  Usage:
-    nextflow run main.nf -profile (standard) [workflow-options]
+  ${workflow.manifest.name ?: 'Pipeline'}
+  
+  Usage A) MASH clustering
+    nextflow -C nextflow.config run main.nf -params-file params_mash.json -profile <profile> [options]
+  Usage B) Variant calling 
+    nextflow -C nextflow.config run main.nf -params-file params_variant_calling.json -profile <profile> [options]
+  Usage C) Phylogeny pipeline
+    nextflow -C nextflow.config run main.nf -params-file params_phylogeny.json -profile <profile> [options]
 
   Description:
-    Nextflow pipeline for phylogeny of Nanopore/Illumina reads. 
-    Specific to prokaryotes.
+    ${workflow.manifest.description ?: 'Phylogeny pipeline for prokaryotic reads'}
 
-  Nextflow arguments:
-    
+  Required arguments:
+    -params-file        Path to parameters configuration
+    -C                  Path to nextflow configuration file
 
-  Mandatory workflow arguments:
+  Optional arguments:
+    --help         Display this help message
+    --nfpath       Path to pipeline resources
 
-
-  Variant workflow options:
-    Mandatory:
-
-    Optional:
+  Profiles:
+    standard       Default execution
+    developer      Run with low resources consumption (CPU-RAM)
 
   """.stripIndent()
 }

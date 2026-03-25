@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-From Snippy core VCF + cleaned alignment (with reference row kept) + Gubbins-masked alignment,
-produce SNP-only MSAs:
-  1) intersect_snps.fasta : Snippy core SNPs that survived cleaning (may include Ns after masking)
-  2) strict_core_after_masking.fasta : only columns where all samples are A/C/G/T after masking
-"""
+#
+# Title: extract_core_snps_after_gubbins.py
+# Description: Produces SNP-only Multi-Sequence Alignments (MSAs) based on Snippy core VCF, cleaned alignment and Gubbins masked alignment.
+# Author: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Copyright (C) 2026 Aurélie Fischer
+
+
+# From Snippy core VCF + cleaned alignment (with reference row kept) + Gubbins-masked alignment,
+# produce SNP-only MSAs:
+#   1) intersect_snps.fasta : Snippy core SNPs that survived cleaning (may include Ns after masking)
+#   2) strict_core_after_masking.fasta : only columns where all samples are A/C/G/T after masking
 
 import sys, argparse, gzip
 from collections import OrderedDict
