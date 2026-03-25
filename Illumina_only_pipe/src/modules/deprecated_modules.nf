@@ -1,3 +1,13 @@
+/*
+ * Deprecated processes for Bacteria Illumina Assembly/Annotation Pipeline
+ *
+ * Description:
+ *   Defines functions no more used in current pipeline release.
+ *
+ * License:
+ *   AGPL-3.0-only
+ */
+
 process create_files_location {
   //DEPRECATED, launched before nextflow pipeline
   //Worklflow command to build a channel from CSV : 

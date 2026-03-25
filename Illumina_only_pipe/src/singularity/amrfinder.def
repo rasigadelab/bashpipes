@@ -6,6 +6,9 @@ From: quay.io/biocontainers/ncbi-amrfinderplus:4.0.23--hf69ffd2_0
   amrfinder --update
 
 %labels
-    Version 1.0
-    Author chuafischer
-    Date 2025-05-22
+    org.opencontainers.image.title "NCBI amrfinderplus container"
+    org.opencontainers.image.description "Container for genome annotation (amrfinderplus)"
+    org.opencontainers.image.authors "Aurélie Fischer (PHE3ID, CIRI, Hospices Civils de Lyon)"
+    org.opencontainers.image.version "1.0.0"
+    org.opencontainers.image.licenses "AGPL-3.0-only + bundled tool licenses"
+    org.opencontainers.image.source "https://github.com/rasigadelab/bashpipes"

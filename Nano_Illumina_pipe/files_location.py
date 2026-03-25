@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Title: files_location.py
-# Description: Outputs a list containing names, type of read and path to FASTQ files for each sample analyzed.
+# Description: Outputs a list containing name, type of read and path to FASTQ files for each sample analyzed.
 # Author: Aurélie Fischer
 # Research team: PHE3ID, CIRI, Hospices Civils de Lyon
 # License: GNU Affero General Public License v3.0 (AGPL-3.0)

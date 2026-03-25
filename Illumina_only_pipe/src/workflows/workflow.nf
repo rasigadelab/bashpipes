@@ -1,4 +1,15 @@
-#!/home/afischer/tools/nextflow
+/*
+ * Workflow: Illumina Assembly/Annotation pipeline orchestration
+ *
+ * Description:
+ *   Defines main workflow logic and channel connections.
+ *
+ * Author:
+ *   Aurélie Fischer (PHE3ID, CIRI, Hospices civils de Lyon)
+ *
+ * License:
+ *   AGPL-3.0-only
+ */
 
 // enable dsl2
 nextflow.enable.dsl = 2
