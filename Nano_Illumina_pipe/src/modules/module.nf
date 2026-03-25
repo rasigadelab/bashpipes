@@ -1,3 +1,18 @@
+/*
+ * Module collection: Bacteria Nano-Illumina Assembly/Annotation Pipeline
+ *
+ * Description:
+ *   Collection of Nextflow processes and reusable module definitions
+ *   used by the main workflow.
+ *
+ * Author:
+ *   Aurélie Fischer (PHE3ID, CIRI, Hospices Civils de Lyon)
+ *
+ * License:
+ *   GNU Affero General Public License v3.0
+ *   SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 process quality_fastp {
   // Tool: fastp
   // Quality control on FASTQ reads. 

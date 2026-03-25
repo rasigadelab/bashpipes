@@ -1,3 +1,13 @@
+/*
+ * Feature processes for Bacteria Nano-Illumina Assembly/Annotation Pipeline
+ *
+ * Description:
+ *   Defines functions to create one sample for each analyzed genomes and copy input FASTQ in genome directory.
+ *
+ * License:
+ *   AGPL-3.0-only
+ */
+
 process make_sample_dir{
 
   // Creating genomes folder, containing one folder per sample.

@@ -1,25 +1,36 @@
+/*
+ * Help utilities for Bacteria Nano-Illumina Assembly/Annotation Pipeline
+ *
+ * Description:
+ *   Defines functions to display usage and CLI help messages.
+ *
+ * License:
+ *   AGPL-3.0-only
+ */
+
 def printHelp() {
 
   log.info"""
-  Usage:
-    nextflow run main.nf -profile (standard) [workflow-options]
+  ${workflow.manifest.name ?: 'Pipeline'}
+  
+  Usage
+    nextflow -C nextflow.config run main.nf -params-file params_nano_illumina.json -profile <profile> [options]
+
 
   Description:
-    Nextflow pipeline for de novo assembly of Nanopore/Illumina reads. 
-    Specific to bacterial isolates.
-    Included one workflow, producing Nanopore/Illumina hybrid assembly,
-    with Flye assembling Nanopore reads and Pilon correcting with Illumina reads.
+    ${workflow.manifest.description ?: 'Nano-Illumina assembly/annotation pipeline for prokaryotic reads'}
 
-  Nextflow arguments:
-    
+  Required arguments:
+    -params-file        Path to parameters configuration
+    -C                  Path to nextflow configuration file
 
-  Mandatory workflow arguments:
+  Optional arguments:
+    --help         Display this help message
+    --nfpath       Path to pipeline resources
 
-
-  Variant workflow options:
-    Mandatory:
-
-    Optional:
+  Profiles:
+    standard       Default execution
+    developer      Run with low resources consumption (CPU-RAM)
 
   """.stripIndent()
 }

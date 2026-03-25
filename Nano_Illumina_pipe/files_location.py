@@ -1,9 +1,21 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Title: files_location.py
+# Description: Outputs a list containing names, type of read and path to FASTQ files for each sample analyzed.
+# Author: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Copyright (C) 2026 Aurélie Fischer
+
 import os
 import re
 import argparse
 
-#Welcome to creation of Files_location.tsv file !
-#To run it, type in a terminal:
+# Welcome to creation of Files_location.tsv file !
+# To run it, type in a terminal:
 # cd /location/to/script
 # python3 files_location.py -d path/to/data/folder
 
