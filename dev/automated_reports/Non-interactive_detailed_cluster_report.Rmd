@@ -298,5 +298,5 @@ g
 rm(g, amr_list)
 ```
 ```{r cleaning}
-rm(global_theme, params, reports)
+rm(global_theme, params, reports, mobtyper_reports)
 ```
