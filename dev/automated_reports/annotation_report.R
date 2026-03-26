@@ -15,19 +15,6 @@ library(stringr)
 library(lubridate)
 library(dplyr)
 
-# Helper function inspired by "curve()" to apply any expression to
-# genomes in the 'reports' list
-
-#' @title List apply by object
-#' @param lst a list of objects with identical structure
-#' @param expr an arbitrary expression to be applied to each element
-#' @export
-oapply <- function(lst, expr) {
-  sexpr <- substitute(expr)
-  
-  sapply(lst, function(x) eval(sexpr, envir = x, enclos = parent.frame()))
-}
-
 # Parameters
 # Specify output from annotation_scan.R
 today <- Sys.Date()
@@ -113,14 +100,16 @@ cat("Gathering data for each isolate as JSON_like list.\n")
 {
   studied_genomes <- sort(intersect(raw$metadata$genome, raw$amrfinder_reports$genome))
   reports <- rbindlist(sapply(studied_genomes, function(i) {
+    # Get all sub-data.tables associated to studied genome
     sub <- lapply(raw, function(tb) tb[genome == i])
-    
-    # How many resistance genes on chromosome ?
-    
+    # Get amrfinder data.table    
     amrf <- sub$amrfinder_reports
+    # Get contigs data.table
     ctg <- sub$contig_reports 
+    # Merge amrfinder and contig into 1 big data.table
     amrf <- merge(amrf, ctg, by.x = "Contig id", by.y = "contig_id", all.x = TRUE, sort = FALSE)
     
+    # Create "reports" data.table, filled by genome info parsed from all available data.tables
     data.table(
       genome = i,
       cluster_id = sub$metadata$CLUSTER_ID,
@@ -155,5 +144,5 @@ cat("Saving to output file.\n")
 }
 
 # Some cleaning
-rm(reports, output_dir, project, today_date, oapply)
+rm(reports, output_dir, project, today_date)
 
