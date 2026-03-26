@@ -1,5 +1,14 @@
-#!/usr/bin/python3
-# coding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Title: circos_plot.py
+# Description: Outputs an annotated circular plot of aligned plasmid sequences.
+# Author: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Copyright (C) 2026 Aurélie Fischer
 
 import re
 import os

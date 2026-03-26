@@ -1,4 +1,22 @@
-#!/home/afischer/tools/nextflow
+/*
+ * Bacteria Plasmid Comparison Pipeline
+ * 
+ * Description:
+ *   Nextflow pipeline for bacteria plasmid comparisons.
+ *
+ * Author:
+ *   Aurélie Fischer (PHE3ID, CIRI, Hospices civils de Lyon)
+ *
+ * Repository:
+ *   https://github.com/rasigadelab/bashpipes
+ *
+ * License:
+ *   GNU Affero General Public License v3.0 (AGPL-3.0)
+ *   SPDX-License-Identifier: AGPL-3.0-only
+ *
+ * Usage 
+ *   nextflow -C nextflow.config run main.nf -params-file params_plasmid_compa.json -with-trace -with-report --prefix run_plasmid -profile standard
+ */
 
 // enable dsl2
 nextflow.enable.dsl = 2

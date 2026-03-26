@@ -1,3 +1,11 @@
+# Title: preparation.R
+# Description: Prepares a CSV file listing all FASTA file of plasmids carrying an ARG (either blaOXA-48, any blaNDM or any blaVIM) inside a cluster.
+# Author: Aurélie Fischer
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Aurélie Fischer
+
 rm(list = ls())
 
 library(data.table)

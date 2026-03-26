@@ -1,3 +1,18 @@
+/*
+ * Module collection: Bacteria Plasmid Comparison Pipeline
+ *
+ * Description:
+ *   Collection of Nextflow processes and reusable module definitions
+ *   used by the main workflow.
+ *
+ * Author:
+ *   Aurélie Fischer (PHE3ID, CIRI, Hospices Civils de Lyon)
+ *
+ * License:
+ *   GNU Affero General Public License v3.0
+ *   SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 process gather_plasmid_seq {
   // Tool: bash
   // Gathering of plasmid sequences. 

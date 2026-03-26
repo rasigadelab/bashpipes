@@ -1,5 +1,10 @@
 {
-    "version" : "1.0.0",
+    "_meta": {
+        "author": "Aurélie Fischer",
+        "lab": "PHE3ID, CIRI, Hospices civils de Lyon",
+        "license": "AGPL-3.0-only",
+        "description": "Configuration for plasmid comparison pipeline"
+    },
 
     "result" : "Plasmid_results",
     "workflow" : "plasmid_compa",
