@@ -1,4 +1,12 @@
-# Illumina de novo assembly
+#!/bin/bash
+#
+# Title: spades.sh
+# Description: Launches SPAdes (assembler), QUAST (QC report) and Circlator (genome circularization) on polished genome assembly.
+# Author: Jean-Philippe Rasigade
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
 
 # SPADES ASSEMBLER
 

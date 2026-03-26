@@ -1,4 +1,12 @@
-# Pilon-polished Nanopore de novo assembly
+#!/bin/bash
+#
+# Title: flyepilon.sh
+# Description: Launches pilon-polished Nanopore de novo assembly, using Illumina and Nanopore reads.
+# Author: Jean-Philippe Rasigade
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
 
 # FLYE ASSEMBLER
 

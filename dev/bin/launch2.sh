@@ -1,4 +1,13 @@
 #!/bin/bash
+#
+# Title: launch2.sh
+# Description: Bash pipeline launcher, optimizes process launch to use full computer resources.
+# Author: Jean-Philippe Rasigade
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+
 # https://stackoverflow.com/questions/356100/how-to-wait-in-bash-for-several-subprocesses-to-finish-and-return-exit-code-0
 
 # Launch a certain number of concurrent tasks, monitor the number of running tasks and launch the next one when done

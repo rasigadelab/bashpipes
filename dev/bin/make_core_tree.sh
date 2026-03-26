@@ -1,6 +1,13 @@
 #!/bin/bash
+#
+# Title: mob_recon_gather.sh
+# Description: Launches Prokka annotation, Panaroo (pan-genome analysis) and computes fast Maximum-Likelihood tree (IQtree) from core-genome alignment
+# Author: Jean-Philippe Rasigade
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
 
-# Compute fast ML tree from core-genome alignment
 # prokaa > panaroo > iqtree
 
 cd sequences

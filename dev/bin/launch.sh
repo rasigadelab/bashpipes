@@ -1,4 +1,13 @@
-# Launch parallel tasks on a list of samples
+#!/bin/bash
+#
+# Title: launch2.sh
+# Description: Launches parallel tasks on a list of samples.
+# Author: Jean-Philippe Rasigade
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+
 # Give task name then sample list (in current directory)
 # eg, launch.sh flyepilon sample.txt
 

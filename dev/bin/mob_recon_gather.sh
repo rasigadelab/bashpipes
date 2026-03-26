@@ -1,6 +1,12 @@
 #!/bin/bash
-
-# Gather mob_recon output files into some new directory, mimicking file structure
+#
+# Title: mob_recon_gather.sh
+# Description: Gathers mob_recon output files into some new directory, mimicking file structure.
+# Author: Jean-Philippe Rasigade
+# Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+# License: GNU Affero General Public License v3.0 (AGPL-3.0)
+# SPDX-License-Identifier: AGPL-3.0-only
+#
 
 NEWDIR=$1/sequences
 
