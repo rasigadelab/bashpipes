@@ -1,0 +1,501 @@
+---
+title: "Echantillon `r params$sample_glims`"
+author: "Equipe PHE3ID"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+params:
+  sample_glims: ""
+  illumina_only: TRUE
+  path_to_reports: "data/2026-01-29_Epitrack_annotation_report.Rdata"
+  path_to_scan: "data/2026-01-29_annotation_scan.Rdata"
+  path_to_qc : "qc"
+output: 
+  html_fragment:
+    self_contained: true
+    css: null
+    includes: null
+    keep_md: false
+    df_print: 'kable'
+    number_sections: false
+    toc: false
+    fig_caption: false
+always_allow_html: true
+---
+
+<!--
+*******************************************************************
+Title: sample_report.Rmd
+Description: Report at sample level, identifying ST, sequencing QC and resistome of the isolate. Produces HTML page.
+Authors: Aurélie Fischer
+Research team: PHE3ID, CIRI, Hospices Civils de Lyon
+License: GNU Affero General Public License v3.0 (AGPL-3.0)
+SPDX-License-Identifier: AGPL-3.0-only
+Copyright (C) 2026 Aurélie Fischer
+*******************************************************************
+-->
+
+# `r params$sample_glims`
+
+Ce rapport d'analyses met en lumière les investigations génomiques réalisées sur une souche bactérienne d'intérêt. 
+
+Après séquençage du génome de la souche bactérienne étudiée, le génome est réassemblé puis annoté notamment dans le but de :
+
+-   déterminer la taxonomie de la souche ;
+-   détecter les gènes de résistance présents dans le génome ;
+-   différencier les séquences de plasmides de la séquence du chromosome ;
+-   repérer les éléments génétiques mobiles au sein du génome.
+
+```{r, results='asis', echo = FALSE}
+if(params$illumina_only == TRUE){
+  cat("La souche a été séquencée **en Illumina uniquement**.\n\n")
+} else {
+  cat("La souche a été séquencée **en Nanopore et en Illumina**. Un assemblage Nanopore est tout d'abord réalisé puis il est corrigé à partir des séquences Illumina.\n\n")
+}
+```
+
+```{r setup, include=FALSE}
+# Some cleaning
+# rm(list = ls())
+# Setting R chunks options
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = 'center')
+
+# Loading libraries
+# usePackage <- function(p) {
+#   if (!is.element(p, installed.packages()[,1]))
+#     install.packages(p, dep = TRUE)
+#   require(p, character.only = TRUE)
+# }
+libraries <- c("lubridate", "data.table", "stringr", "knitr", "ggplot2", "plotly", "dplyr", "scales", "tidyr", "DT", "ggiraph", "kableExtra", "htmltools")
+for (lib in libraries){library(lib, character.only = TRUE)}
+
+# Loading Data
+load(params$path_to_reports)
+reports <- reports[glims == params$sample_glims][1]
+sample_id <- reports[glims == params$sample_glims]$genome
+
+# Global ggplot theme settings
+global_theme <- theme(plot.title=element_text(size=16, face="plain", hjust = 0.5, vjust=2),
+            axis.text.x=element_text(size=9),
+            axis.text.y=element_text(size=10),
+            axis.title.x=element_text(size=12, vjust = -1),
+            axis.title.y=element_text(size=12, angle = 90, vjust = 2),
+            legend.title=element_text(size=12),
+            legend.text = element_text(size=9))
+theme_set(global_theme)
+
+# Plotly global config
+global_plotly_config <- function(p) config(p, modeBarButtonsToRemove = c('zoom','pan','select', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian'), 'displaylogo' = FALSE)
+
+rm(lib, libraries)
+
+# Function to display simple html table
+html_table <- function(table, coln, table_id = NULL){
+  
+  # Outputting table
+  table_html <- kable(
+    table,
+    format = "html",
+    col.names = coln,
+    table.attr = ""
+  )
+  
+  # Remove all inline styles of HTML table
+  clean_table_html <- str_remove_all(table_html, " style=\"[^\"]*\"")
+  
+  # Add id to table if specified
+  if (!is.null(table_id)) {
+    clean_table_html <- str_replace(clean_table_html, "<table", paste0("<table id='", table_id, "'"))
+  }
+  
+  # Display table without inline style
+  HTML(clean_table_html)
+}
+
+qc_html_table <- function(table, coln) {
+  # Check correspondance between colnames and table
+  if (length(coln) != ncol(table)) {
+    stop("Le nombre de noms dans 'coln' doit correspondre au nombre de colonnes dans 'table'")
+  }
+  
+  # Add class to cells in function of content
+  table_with_classes <- table %>%
+    mutate(across(everything(), ~ ifelse(. == "CONFORME", 
+                                         "<td class='conf'>CONFORME</td>", 
+                                         ifelse(. == "NON CONFORME", "<td class='no-conf'>NON CONFORME</td>", 
+                                                paste0("<td>",.,"</td>")))))
+  
+  # Produce HTML lines
+  rows_html <- apply(table_with_classes, 1, function(row) {
+    paste("<tr>", paste(row, collapse = ""), "</tr>")
+  })
+  
+  # Build complete HTML table
+  table_html <- paste0(
+    "<table id='qc_table'>",
+    "<thead><tr>",
+    paste0("<th>", coln, "</th>", collapse = ""),
+    "</tr></thead>",
+    "<tbody>",
+    paste(rows_html, collapse = "\n"),
+    "</tbody>",
+    "</table>"
+  )
+  
+  # Return interpretable HTML
+  HTML(table_html)
+}
+```
+
+## Carte d'identité de la souche
+
+```{r infos}
+out <- reports %>%
+        select(glims, sampling_date, soc_species, mlst_species, sequence_type)
+
+html_table(out, c("N° GLIMS", "Date de prélèvement", "Espèce MALDI-ToF", "Espèce MLST", "Sequence Type"), "idcard")
+
+rm(out)
+```
+
+## Qualité du séquençage
+
+Une fois la souche séquencée et son génome réassemblé, il est important de considérer que la qualité de l'assemblage peut affecter les résultats d'annotation donnés par la suite. La qualité de l'assemblage est directement influencée par les potentielles erreurs accumulées lors du séquençage de la souche.
+
+```{r qc}
+# Accessing data
+if(params$illumina_only==TRUE){
+  # ILLUMINA-ONLY ASSEMBLY
+  assembly_qc <- fread(paste0(params$path_to_qc, "/assembly_summary_illumina_only.tsv"))
+  assembly_qc <- assembly_qc[assembly_qc$genome == sample_id]
+  
+  assembly_qc <- assembly_qc %>%
+                  select(-NEW_QC_illumina_pass, -contaminated, -MALDI_species) %>%
+                  mutate(n_reads = formatC(n_reads, format="f", big.mark=" ", 
+                                           digits=0),
+                         N50 = formatC(N50, format="f", big.mark=" ", digits=0),
+                         length_largest = formatC(length_largest, format="f",
+                                                  big.mark=" ",digits=0),
+                         length_assembly = formatC(length_assembly, format="f",
+                                                  big.mark=" ",digits=0))
+  
+  html_table(assembly_qc[,2:10], c("Espèce MLST", "Espèce Sourmash", "N50", 
+                            "Nombre de contigs (>500 bp)", "Longueur du plus grand contig",
+                            "Longueur du génome", "Couverture du plus grand contig",
+                            "Nombre de reads Illumina",
+                            "Couverture moyenne de l'assemblage"), "nb_qc_table")
+
+} else {
+  #NANO-ILLUMINA ASSEMBLY QC
+  assembly_qc <- fread(paste0(params$path_to_qc, "/assembly_summary_nano_illumina.tsv"))
+  assembly_qc <- assembly_qc[assembly_qc$id == sample_id]
+  assembly_qc <- assembly_qc %>%
+                  select(-QC_illumina_pass, -QC_nano_pass, -nano_mean_read_length, 
+                         -nano_median_read_length, -N50, -N90) %>%
+                  mutate(nano_reads = formatC(nano_reads, format="f", big.mark=" ", 
+                                           digits=0),
+                         nano_bases = formatC(nano_bases, format="f", big.mark=" ", 
+                                           digits=0),
+                         illumina_reads = formatC(illumina_reads, format="f", big.mark=" ", 
+                                           digits=0),
+                         pilon_corrections = formatC(pilon_corrections, format="f", big.mark=" ", digits=0),
+                         length_largest = formatC(length_largest, format="f",
+                                                  big.mark=" ",digits=0))
+  # Outputting table
+  html_table(assembly_qc[,2:13], c("Espèce MLST", 
+                         "Nombre de contigs", "Nombre de contigs circulaires", "Longueur du plus grand contig",
+                         "Couverture du plus grand contig", "Nombre de reads Nanopore", "Nombre de bases Nanopore",
+                         "Nombre de reads Illumina", "Taux d'alignement global Illumina/Nanopore", 
+                         "Taux d'alignements uniques Illumina/Nanopore", "Couverture moyenne assemblage final",
+                         "Nombre de corrections de l'assemblage Nanopore"), "nb_qc_table")
+}
+
+```
+
+La qualité du séquençage est évaluée à partir de plusieurs critères, si un critère passe le QC, alors la case qui lui est associé dans le tableau ci-dessus sera colorée en vert. Si ce n'est pas le cas, elle sera colorée en rouge.
+
+```{r qc_table}
+# Accessing data
+if(params$illumina_only==TRUE){
+  # ILLUMINA-ONLY QC DATATABLE
+  # First create a table with tresholds so it's easy to grab the thresholds associated to specific species
+  # Rare genus
+  rare_species <- c("Achromobacter xylosidans", "Achromobacter xylosoxidans/denitrificans", "Alcaligenes faecalis", "Bacillus cereus",
+                    "Bacillus thuringiensis", "Bacteroides fragilis", "Burkholderia multivorans", "Campylobacter jejunii", 
+                    "Corynebacterium striatum", "Delftia acidovorans", "Hafnia alvei", "Kluyvera ascorbata", 
+                    "Lactobacillus casei / paracasei / rhamnosus", "Moraxella catharralis", "Morganella morganii", "Neisseria gonorrhoeae",
+                    "Pasteurella multocida", "Propionibacterium acnes", "Proteus mirabilis", "Proteus penneri", "Proteus vulgaris",
+                    "Pseudocitrobacter faecalis", "Raoultella ornithinolytica", "Raoultella planticola", "Rhizobium radiobacter", 
+                    "Shigella sonnei", "Turicella otitidis", "Providencia rettgeri")
+  
+  criteria_df <- data.table(MALDI_species = rare_species, n_reads = 500000, n_contig = 150, N50 = 100000, N50_high=NA,
+                            length_assembly_low=NA, length_assembly_high=NA)
+  # KLEBSIELLA
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Klebsiella oxytoca", n_reads=500000, n_contig=147, N50=79000, N50_high=NA, length_assembly_low=5500000, length_assembly_high=6900000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Klebsiella pneumoniae", n_reads=500000, n_contig=162, N50=71000, N50_high=NA, length_assembly_low=5000000, length_assembly_high=6300000)) 
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Klebsiella variicola", n_reads=500000, n_contig=109, N50=165000, N50_high=NA, length_assembly_low=6000000, length_assembly_high=6100000)) 
+  # ACINETOBACTER
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Acinetobacter baumannii", n_reads=500000, n_contig=122, N50=60000, N50_high=NA, length_assembly_low=3600000, length_assembly_high=4300000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Acinetobacter johnsonii", n_reads=500000, n_contig=211, N50=34000, N50_high=NA, length_assembly_low=3400000, length_assembly_high=3800000)) 
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Acinetobacter nosocomialis", n_reads=500000, n_contig=40, N50=197000, N50_high=NA, length_assembly_low=4000000, length_assembly_high=4100000)) 
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Acinetobacter ursingii", n_reads=500000, n_contig=146, N50=122000, N50_high=NA, length_assembly_low=3300000, length_assembly_high=4300000))
+  # ESCHERICHIA
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Escherichia fergusonii", n_reads=500000, n_contig=150, N50=100000, N50_high=NA, length_assembly_low=NA, length_assembly_high=NA))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Escherichia hermannii", n_reads=500000, n_contig=150, N50=100000, N50_high=NA, length_assembly_low=NA, length_assembly_high=NA))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Escherichia coli", n_reads=500000, n_contig=245, N50=50000, N50_high=120000, length_assembly_low=4300000, length_assembly_high=5700000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Escherichia coli", n_reads=500000, n_contig=151, N50=120000, N50_high=NA, length_assembly_low=4500000, length_assembly_high=5600000)) 
+    # CITROBACTER
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter amalonaticus", n_reads=500000, n_contig=210, N50=15000, N50_high=NA, length_assembly_low=4900000, length_assembly_high=5500000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter braakii", n_reads=500000, n_contig=188, N50=53000, N50_high=NA, length_assembly_low=4800000, length_assembly_high=6200000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter farmeri", n_reads=500000, n_contig=85, N50=18000, N50_high=NA, length_assembly_low=4800000, length_assembly_high=5800000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter freundii", n_reads=500000, n_contig=183, N50=63000, N50_high=NA, length_assembly_low=5000000, length_assembly_high=6100000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter freundii / braakii", n_reads=500000, n_contig=176, N50=100000, N50_high=NA, length_assembly_low=4700000, length_assembly_high=6200000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter freundii complex", n_reads=500000, n_contig=217, N50=33000, N50_high=NA, length_assembly_low=5000000, length_assembly_high=6100000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter koseri", n_reads=500000, n_contig=58, N50=200000, N50_high=NA, length_assembly_low=4100000, length_assembly_high=5500000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter murliniae", n_reads=500000, n_contig=150, N50=100000, N50_high=NA, length_assembly_low=NA, length_assembly_high=NA))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter sedlakii", n_reads=500000, n_contig=150, N50=100000, N50_high=NA, length_assembly_low=NA, length_assembly_high=NA))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter spp.", n_reads=500000, n_contig=138, N50=90000, N50_high=NA, length_assembly_low=5400000, length_assembly_high=6000000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter youngae", n_reads=500000, n_contig=214, N50=100000, N50_high=NA, length_assembly_low=4600000, length_assembly_high=6300000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Citrobacter koseri-amalonaticus/farmeri", n_reads=500000, n_contig=150, N50=100000, N50_high=NA, length_assembly_low=NA, length_assembly_high=NA))
+    # PSEUDOMONAS
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Pseudomonas aeruginosa", n_reads=500000, n_contig=193, N50=50000, N50_high=NA, length_assembly_low=5600000, length_assembly_high=7600000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Pseudomonas citronellolis", n_reads=500000, n_contig=390, N50=31000, N50_high=NA, length_assembly_low=6600000, length_assembly_high=7500000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Pseudomonas fluorescens", n_reads=500000, n_contig=217, N50=29000, N50_high=NA, length_assembly_low=5500000, length_assembly_high=7100000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Pseudomonas putida", n_reads=500000, n_contig=350, N50=30000, N50_high=NA, length_assembly_low=5000000, length_assembly_high=6900000))
+    # SERRATIA
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Serratia marcescens", n_reads=500000, n_contig=250, N50=50000, N50_high=NA, length_assembly_low=4600000, length_assembly_high=6000000))
+    # ENTEROBACTER
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter aerogenes", n_reads=500000, n_contig=92, N50=67000, N50_high=NA, length_assembly_low=4900000, length_assembly_high=5600000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter asburiae", n_reads=500000, n_contig=131, N50=106000, N50_high=NA, length_assembly_low=4700000, length_assembly_high=5400000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter cloacae", n_reads=500000, n_contig=137, N50=30000, N50_high=NA, length_assembly_low=4500000, length_assembly_high=5500000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter cloacae complex", n_reads=500000, n_contig=140, N50=30000, N50_high=NA, length_assembly_low=4600000, length_assembly_high=5600000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter cloacae ssp. cloacae", n_reads=500000, n_contig=104, N50=116000, N50_high=NA, length_assembly_low=5300000, length_assembly_high=5400000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter cloacae ssp. dissolvens", n_reads=500000, n_contig=70, N50=188000, N50_high=NA, length_assembly_low=5000000, length_assembly_high=5100000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter hormaechei", n_reads=500000, n_contig=67, N50=182000, N50_high=NA, length_assembly_low=4800000, length_assembly_high=5400000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter hormaechei ssp. hoffmannii", n_reads=500000, n_contig=87, N50=116000, N50_high=NA, length_assembly_low=5100000, length_assembly_high=5200000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter kobei", n_reads=500000, n_contig=119, N50=101000, N50_high=NA, length_assembly_low=5100000, length_assembly_high=5300000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterobacter roggenkampii", n_reads=500000, n_contig=94, N50=136000, N50_high=NA, length_assembly_low=5300000, length_assembly_high=5400000))
+    # ENTEROCOCCUS
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterococcus faecalis", n_reads=500000, n_contig=93, N50=100000, N50_high=NA, length_assembly_low=2600000, length_assembly_high=3500000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Enterococcus faecium", n_reads=500000, n_contig=246, N50=25000, N50_high=NA, length_assembly_low=2800000, length_assembly_high=3100000))
+    # HAEMOPHILUS
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Haemophilus influenzae", n_reads=500000, n_contig=53, N50=75000, N50_high=NA, length_assembly_low=1600000, length_assembly_high=2000000))
+    # STAPHYLOCOCCUS
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus aureus", n_reads=500000, n_contig=76, N50=55000, N50_high=NA, length_assembly_low=2500000, length_assembly_high=3000000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus capitis", n_reads=500000, n_contig=53, N50=71000, N50_high=NA, length_assembly_low=2500000, length_assembly_high=2700000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus caprae", n_reads=500000, n_contig=44, N50=100000, N50_high=NA, length_assembly_low=2500000, length_assembly_high=2900000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus epidermidis", n_reads=500000, n_contig=103, N50=51000, N50_high=NA, length_assembly_low=2200000, length_assembly_high=2800000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus haemolyticus", n_reads=500000, n_contig=111, N50=51000, N50_high=NA, length_assembly_low=2400000, length_assembly_high=2600000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus hominis", n_reads=500000, n_contig=81, N50=50000, N50_high=NA, length_assembly_low=2100000, length_assembly_high=2400000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus lugdunensis", n_reads=500000, n_contig=62, N50=100000, N50_high=NA, length_assembly_low=1500000, length_assembly_high=2500000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus pasteuri", n_reads=500000, n_contig=76, N50=55000, N50_high=NA, length_assembly_low=2500000, length_assembly_high=3000000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus pettenkoferi", n_reads=500000, n_contig=77, N50=102000, N50_high=NA, length_assembly_low=2400000, length_assembly_high=2600000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus saprophyticus", n_reads=500000, n_contig=32, N50=151000, N50_high=NA, length_assembly_low=2600000, length_assembly_high=2700000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Staphylococcus simulans", n_reads=500000, n_contig=69, N50=231000, N50_high=NA, length_assembly_low=2600000, length_assembly_high=2800000))
+    # STENOTROPHOMONAS
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Stenotrophomonas maltophilia", n_reads=500000, n_contig=219, N50=25000, N50_high=NA, length_assembly_low=4300000, length_assembly_high=5200000))
+    # STREPTOCOCCUS
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Streptococcus agalactiae", n_reads=500000, n_contig=64, N50=69000, N50_high=NA, length_assembly_low=1800000, length_assembly_high=2200000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Streptococcus anginosus", n_reads=500000, n_contig=57, N50=100000, N50_high=NA, length_assembly_low=1600000, length_assembly_high=2400000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Streptococcus constellatus", n_reads=500000, n_contig=102, N50=30000, N50_high=NA, length_assembly_low=1600000, length_assembly_high=2400000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Streptococcus dysgalactiae", n_reads=500000, n_contig=64, N50=69000, N50_high=NA, length_assembly_low=2000000, length_assembly_high=2200000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Streptococcus pneumoniae", n_reads=500000, n_contig=102, N50=36000, N50_high=NA, length_assembly_low=1800000, length_assembly_high=2200000))
+  criteria_df <- rbind(criteria_df, data.table(MALDI_species="Streptococcus pyogenes", n_reads=500000, n_contig=28, N50=98000, N50_high=NA, length_assembly_low=1600000, length_assembly_high=2000000))
+  
+  tmp_criteria <- criteria_df[MALDI_species==reports$soc_species]
+  # If E. coli => see which N50 tresholds are concerned and stop consider N50 criteria afterwards
+  if(reports$soc_species=="Escherichia coli"){
+    # If N50 < 1st threshold => NON CONFORME
+    crit <- tmp_criteria[1]
+    if(as.numeric(gsub(" ", "", assembly_qc$N50)) < crit$N50){
+        qc_df <- data.frame(n50 = paste0("[0-", formatC(crit$N50, format="f", big.mark=" ", digits=0), "]bp"),
+                          reads_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$n_reads)) >= 500000, "CONFORME",
+                                          "NON CONFORME"),
+                          contig_test = "NON CONFORME",
+                          length_test = "NON CONFORME")
+        qc_html_table(qc_df, c("Valeur de N50",
+                               "Nombre de reads <br/>\u2265 500 000",
+                                "Nombre de contigs",
+                                "Longueur d'assemblage"))
+    } else{
+      # If N50 <= 2nd threshold => take into account case with 1st threshold <= N50 <= 2nd threshold  
+      if(as.numeric(gsub(" ", "", assembly_qc$N50)) <= crit$N50_high){
+        tmp_criteria <- crit
+        n50_th <- paste0("[",formatC(tmp_criteria$N50, format="d", big.mark=" ", digits=0), "-", 
+                                       formatC(tmp_criteria$N50_high, format="d", big.mark=" ", digits=0), "]bp")
+      } else {
+        # If N50 > 2nd threshold  
+        tmp_criteria <- tmp_criteria[2]
+        n50_th <- paste0("\u2265 ", formatC(tmp_criteria$N50, format="d", big.mark=" ", digits=0))
+      }
+      qc_df <- data.frame(n50 = n50_th,
+                          reads_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$n_reads)) >= tmp_criteria$n_reads, "CONFORME",
+                                          "NON CONFORME"),
+                          contig_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$n_contig)) <= tmp_criteria$n_contig, "CONFORME", 
+                                           "NON CONFORME"),
+                          length_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$length_assembly)) >= tmp_criteria$length_assembly_low & 
+                                                 as.numeric(gsub(" ", "", assembly_qc$length_assembly)) <= tmp_criteria$length_assembly_high,
+                                           "CONFORME", "NON CONFORME"))
+      qc_html_table(qc_df, c("Valeur de N50",
+                             paste0("Nombre de reads <br/>\u2265 ", formatC(tmp_criteria$n_reads, format="f", big.mark=" ", digits=0)),
+                             paste0("Nombre de contigs <br/>\u2264 ", tmp_criteria$n_contig),
+                             paste0("Longueur d'assemblage <br/>[", formatC(tmp_criteria$length_assembly_low, format="f", big.mark=" ", 
+                                           digits=0), "-", formatC(tmp_criteria$length_assembly_high, format="f", big.mark=" ", 
+                                           digits=0), "]bp")))
+    }
+  } else {
+    # If there is no criteria on length_assembly (case for rare genus for example)
+    if(is.na(tmp_criteria$length_assembly_high) & is.na(tmp_criteria$length_assembly_low)){
+      qc_df <- data.frame(reads_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$n_reads)) >= tmp_criteria$n_reads, "CONFORME",
+                                          "NON CONFORME"),
+                      contig_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$n_contig)) <= tmp_criteria$n_contig, "CONFORME", 
+                                           "NON CONFORME"),
+                      n50_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$N50)) >= tmp_criteria$N50, "CONFORME", 
+                                        "NON CONFORME"))
+      qc_html_table(qc_df, c(paste0("Nombre de reads <br/>\u2265 ", formatC(tmp_criteria$n_reads, format="f", big.mark=" ", digits=0)),
+                         paste0("Nombre de contigs <br/>\u2264 ", tmp_criteria$n_contig),
+                         paste0("N50 <br/>\u2265 ", formatC(tmp_criteria$N50, format="f", big.mark=" ", digits=0), "bp")))
+      
+    } else {
+      # In most cases
+      qc_df <- data.frame(reads_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$n_reads)) >= tmp_criteria$n_reads, "CONFORME",
+                                          "NON CONFORME"),
+                      contig_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$n_contig)) <= tmp_criteria$n_contig, "CONFORME", 
+                                           "NON CONFORME"),
+                      n50_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$N50)) >= tmp_criteria$N50, "CONFORME", 
+                                        "NON CONFORME"),
+                      length_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$length_assembly)) >= tmp_criteria$length_assembly_low & 
+                                                 as.numeric(gsub(" ", "", assembly_qc$length_assembly)) <= tmp_criteria$length_assembly_high,
+                                           "CONFORME", "NON CONFORME"))
+      qc_html_table(qc_df, c(paste0("Nombre de reads <br/>\u2265 ", formatC(tmp_criteria$n_reads, format="f", big.mark=" ", digits=0)),
+                           paste0("Nombre de contigs <br/>\u2264 ", tmp_criteria$n_contig),
+                           paste0("N50 <br/>\u2265 ", formatC(tmp_criteria$N50, format="f", big.mark=" ", digits=0), "bp"),
+                           paste0("Longueur d'assemblage <br/>[", formatC(tmp_criteria$length_assembly_low, format="f", big.mark=" ", 
+                                             digits=0), "-", formatC(tmp_criteria$length_assembly_high, format="f", big.mark=" ", 
+                                             digits=0), "]bp")))
+    }
+  }
+  
+  
+  
+  
+                
+  
+} else {
+  # NANO-ILLUMINA QC DATATABLE
+  qc_df <- data.frame(contig_test = ifelse(assembly_qc$n_contig <= 20, "CONFORME", "NON CONFORME"),
+                      cov_test = ifelse(assembly_qc$cov_largest >= 20, "CONFORME", "NON CONFORME"),
+                      pilon_cov_test = ifelse(assembly_qc$pilon_coverage >= 30, "CONFORME",
+                                              "NON CONFORME"),
+                      pilon_correc_test = ifelse(as.numeric(gsub(" ", "", assembly_qc$pilon_corrections))
+                                                 >= 100 & 
+                                                   as.numeric(gsub(" ", "", assembly_qc$pilon_corrections))
+                                                 <= 10000, 
+                                                 "CONFORME", "NON CONFORME"))
+  
+  qc_html_table(qc_df, c("Nombre de contigs \u2264 20", "Couverture du plus long contig \u2265 20", 
+                         "Couverture moyenne de l'assemblage \u2265 30", "Nombre de corrections apportées par les séquences Illumina (entre 100 et 10 000)"))
+  
+}
+
+rm(assembly_qc, qc_df, crit, criteria_df, n50_th, rare_species, tmp_criteria)
+```
+
+## Gènes de résistance
+
+### Résistances sur le chromosome
+
+```{r nb_chr_args}
+# Loading Data with AMRFinder report [GLOBALLY]
+load(params$path_to_scan)
+rm(amrfinder_reports, contig_reports, mge_reports, mlst_reports, quast_reports, sourmash_reports)
+combined_amr_report <- combined_amr_report[genome %in% sample_id & `Element type` == "AMR"]
+
+# Loading only chromosome AMR genes
+chr_arg <- combined_amr_report[molecule_type == "chromosome"]
+nb_chr_arg <- nrow(chr_arg)
+
+```
+
+```{r chr_tab, results='asis'}
+# Arranging AMR results
+out <- chr_arg %>%
+        select(`Gene symbol`, `Sequence name`, Class, Subclass) %>%
+        mutate(Class = str_to_title(Class), Subclass = str_to_title(Subclass))
+nb_args <- nrow(out)
+
+if(nb_args==0){
+  cat("Le chromosome de la souche **ne présente aucun gène de résistance** aux antibiotiques.\n\n")
+} else {
+  cat("Le chromosome de la souche **présente", nb_chr_arg, "gènes de résistance** aux antibiotiques. Les gènes répertoriés par AMRFinder sont les suivants :\n\n")
+  # Print table with AMR results
+  d <- html_table(out, c("Nom du gène", "Description", "Classe d'AMR", "Sous-classe d'AMR"), "gene-resistance")
+  cat(d, "\n\n")
+}
+cat("\n\n")
+rm(chr_arg, out, nb_chr_arg)
+```
+
+### Résistance sur le(s) plasmide(s)
+
+```{r plasmid}
+list_plasmids <- unlist(strsplit(reports$plasmid_ID, ","))
+nb_plasmid <- length(list_plasmids)
+```
+
+La souche `r params$sample_glims` est composée de `r nb_plasmid` plasmides. Voyons la composition en gènes de résistance de chacun d'entre eux.
+
+```{r plasmid_arg, results='asis'}
+args_plasmids <- combined_amr_report[molecule_type == "plasmid"]
+
+for(plasmid in list_plasmids){
+  # Get name of plasmid given by Mob-Suite "plasmid id1-id2" (example : AA002-AH539)
+  plasmid_id1 <- sub("-[A-Z]+[0-9]+", "", plasmid) # unlist(strsplit(plasmid, "-", perl=TRUE))[1]
+  plasmid_id2 <- sub("^[^-\r\n]+-", "", plasmid) # unlist(strsplit(plasmid, "-", perl=TRUE))[2]
+  cat("### Plasmid ", plasmid,"\n\n")
+  args <- args_plasmids[primary_cluster_id == plasmid_id1 & secondary_cluster_id == plasmid_id2]
+  nb_args <- nrow(args)
+  if(nb_args==0){
+    cat("Sur le plasmide ", plasmid, "de la souche, **aucun gène de résistance** aux antibiotiques n'a été identifié.")
+  } else{
+    cat("Sur le plasmide ", plasmid, "de la souche sont **présents ", nb_args, " gènes de résistance** aux antibiotiques. Les gènes identifiés par AMRFinder sur ce plasmide sont les suivants :\n\n")
+    # Arranging AMR results
+    out <- args %>%
+            select(`Gene symbol`, `Sequence name`, Class, Subclass) %>%
+            mutate(Class = str_to_title(Class), Subclass = str_to_title(Subclass))
+
+    # Print table with AMR results
+    d <- html_table(out, c("Nom du gène", "Description", "Classe d'AMR", "Sous-classe d'AMR"), "gene-resistance")
+    cat(d, "\n\n")
+
+  }
+  cat("\n\n")
+}
+
+rm(combined_amr_report, out, args, args_plasmids, list_plasmids, nb_args, nb_plasmid, plasmid)
+```
+
+### Classes de résistance 
+
+```{r amr_class}
+amr_class <- unlist(strsplit(reports$amr_classes, ","))
+```
+
+Les classes de résistance présentes dans le génome de la souche sont indiqués ci-dessous.
+
+```{r desc_classes, results='asis'}
+for(category in amr_class){
+  cat("* ", category, "\n")
+}
+```
+
+```{r beta_lactam}
+beta_lactam <- unlist(strsplit(reports$betalactam_classes, ","))
+
+rm(amr_class)
+```
+
+Pour ne se concentrer que sur la résistance aux béta-lactames, les gènes de résistance impactent ces catégories de béta-lactames : `r beta_lactam`.
+
+```{r clean}
+rm(beta_lactam, d, category, plasmid_id1, plasmid_id2, sample_id, global_plotly_config, html_table, qc_html_table, mobtyper_reports,
+   params, reports, global_theme)
+```
