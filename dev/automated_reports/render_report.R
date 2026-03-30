@@ -10,7 +10,7 @@
 rm(list = ls())
 library(data.table)
 
-## WHAT PART SHOULD BE RUN ##
+## WHAT PART OF DATA PREPARATION SHOULD BE RUN ##
 scanning <- FALSE
 reporting <- FALSE
 clustering <- FALSE
@@ -45,10 +45,11 @@ path_scan <-  paste0(today_date, "_annotation_scan.Rdata")
 path_reports <- paste0(today_date, "_Epitrack_annotation_report.Rdata")
 path_clone <- paste0(today_date, "_clone_reports.Rdata")
 path_qc <- ""
-## WHAT PART SHOULD BE RUN ##
-global_report <- TRUE
-clonal_report <- TRUE
-samples_reports <- FALSE
+
+## WHAT PART OF REPORT RENDERING SHOULD BE RUN ##
+global_report <- TRUE # 1 cluster all species
+clonal_report <- TRUE # 1 cluster 1 species
+samples_reports <- FALSE # all isolates reports of cluster
 
 cat("Create output directory if it does not exist.\n")
 {

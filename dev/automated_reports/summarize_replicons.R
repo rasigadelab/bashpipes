@@ -45,8 +45,9 @@ cat("Renaming tips of tree.\n")
   # Rename tips
   metadata <- data.table(read_excel(metadata_file, sheet = 1, col_types = "text"))
   # Dealing with missing tips
-  missing_tips <- setdiff(t$tip.label, metadata[CLUSTER_ID==cluster_id]$SAMPLE_ID)
-  tree_clean <- drop.tip(t, missing_tips)
+  # missing_tips <- setdiff(t$tip.label, metadata[CLUSTER_ID==cluster_id]$SAMPLE_ID)
+  # tree_clean <- drop.tip(t, missing_tips)
+  tree_clean <- t
   # Change names 
   time_to_change_df <- sapply(tree_clean$tip.label, function(x) metadata$GLIMS[metadata$SAMPLE_ID==x])
   tree_clean$tip.label <- time_to_change_df
@@ -66,11 +67,11 @@ cat("Output tree file and color clonal samples.")
   jpeg(file = sprintf("%s.jpeg", out_prefix), 2000, 3000, quality = 98, pointsize = 48)
   layout(matrix(1:1, 1))
   plot.phylo(tree_clean, type = "phylogram", main = replicon,
-             align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 2, plot = FALSE)
+             align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 1.5, plot = FALSE)
   pp <- get("last_plot.phylo", envir = .PlotPhyloEnv)
   par(new = TRUE)
   plot.phylo(tree_clean, type = "phylogram", main = replicon,
-             align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 2)
+             align.tip.label = TRUE, label.offset = 0, direction = "l", edge.width = 2, cex.main = 1.5)
   axisPhylo(lwd = 5, cex.axis = 1)
   mtext("Substitutions/site", side = 1, line = 3, cex = 1)
   # legend(x = 'bottomright', inset=c(0,0), border = "black", cex = 1,
