@@ -9,7 +9,7 @@
 
 ########################
 ## ASSEMBLY QC GLOBAL ##
-##     12-01-2025     ##
+##     06-03-2026     ##
 ########################
 
 # Goal: Script appliable to Nano-Illumina assemblies and Illumina-only assemblies at the same time
@@ -45,7 +45,6 @@ if(length(illumina_samples)!= 0){
   for(s in illumina_samples) {
     fname <- sprintf("./%s/mlst/mlst.tsv", s)
     if(file.exists(fname))
-    #x <- scan(fname, what="character", sep="\n")
     x <- read.table(fname, sep = "\t")
     species <- x[2]
     colnames(species) <- "species"
@@ -81,7 +80,7 @@ if(length(illumina_samples)!= 0){
   }
   assemblies_2 <- rbindlist(tmp)
   cat("    Scanning Trimmomatic report to get number of reads.\n")
-  # Reads infos (nb of reads)
+  # Reads info (nb of reads)
   tmp <- list()
   for(s in illumina_samples) {
     fname <- sprintf("./%s/trimmomatic/trimmomatic.err", s)
@@ -119,8 +118,6 @@ if(length(illumina_samples)!= 0){
   output <- merge(output, reads)
   output <- merge(output, mean_coverage)
   # NB: n_contig = contig >500bp
-  # NEED TO WORK 
-  # HERE 
   metadata <- data.table(read_excel(metadata_file, sheet=1))
   rm(metadata_file)
   
@@ -144,7 +141,7 @@ if(length(illumina_samples)!= 0){
   rare_genus <- c("Achromobacter", "Alcaligenes", "Burkholderia", "Delftia", "Bacillus", "Bacteroides",
                   "Campylobacter", "Corynebacterium", "Turicella", "Hafnia", "Kluyvera", "Proteus",
                   "Raoultella", "Shigella", "Lactobacillus", "Moraxella", "Pasteurella", "Propionibacterium",
-                  "Rhizobium", "Morganella", "Pseudocitrobacter")
+                  "Rhizobium", "Morganella", "Pseudocitrobacter", "Providencia", "Neisseria")
   
   study_df <- study_df %>%
     # KLEBSIELLA
@@ -159,6 +156,7 @@ if(length(illumina_samples)!= 0){
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Acinetobacter nosocomialis" & n_reads>500000 & n_contig<=40 & N50>=197000 & length_assembly>=4000000 & length_assembly<=4100000, TRUE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Acinetobacter ursingii" & n_reads>500000 & n_contig<=146 & N50>=122000 & length_assembly>=3300000 & length_assembly<=4300000, TRUE, NEW_QC_illumina_pass))  %>%
     # ESCHERICHIA
+    mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Escherichia hermannii" & n_reads>500000 , NA, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Escherichia fergusonii" & n_reads>500000 , NA, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Escherichia coli" & n_reads>500000 & N50<50000, FALSE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Escherichia coli" & n_reads>500000 & n_contig<=245 & N50>=50000 & N50<=120000 & length_assembly>=4300000 & length_assembly<=5700000, TRUE, NEW_QC_illumina_pass))  %>%
@@ -207,12 +205,14 @@ if(length(illumina_samples)!= 0){
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Staphylococcus haemolyticus" & n_reads>500000 & n_contig<=111 & N50>=51000 & length_assembly>=2400000 & length_assembly<=2600000, TRUE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Staphylococcus hominis" & n_reads>500000 & n_contig<=81 & N50>=50000 & length_assembly>=2100000 & length_assembly<=2400000, TRUE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Staphylococcus lugdunensis" & n_reads>500000 & n_contig<=62 & N50>=100000 & length_assembly>=1500000 & length_assembly<=2500000, TRUE, NEW_QC_illumina_pass))  %>%
+    mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Staphylococcus pasteuri" & n_reads>500000 & n_contig<=76 & N50>=55000 & length_assembly>=2500000 & length_assembly<=3000000, TRUE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Staphylococcus pettenkoferi" & n_reads>500000 & n_contig<=77 & N50>=102000 & length_assembly>=2400000 & length_assembly<=2600000, TRUE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Staphylococcus saprophyticus" & n_reads>500000 & n_contig<=32 & N50>=151000 & length_assembly>=2600000 & length_assembly<=2700000, TRUE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Staphylococcus simulans" & n_reads>500000 & n_contig<=69 & N50>=231000 & length_assembly>=2600000 & length_assembly<=2800000, TRUE, NEW_QC_illumina_pass))  %>%
     # STENOTROPHOMONAS
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Stenotrophomonas maltophilia" & n_reads>500000 & n_contig<=219 & N50>=25000 & length_assembly>=4300000 & length_assembly<=5200000, TRUE, NEW_QC_illumina_pass))  %>%
     # STREPTOCOCCUS
+    mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Streptococcus agalactiae" & n_reads>500000 & n_contig<=64 & N50>=69000 & length_assembly>=1800000 & length_assembly<=2200000, TRUE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Streptococcus anginosus" & n_reads>500000 & n_contig<=57 & N50>=100000 & length_assembly>=1600000 & length_assembly<=2400000, TRUE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Streptococcus constellatus" & n_reads>500000 & n_contig<=102 & N50>=30000 & length_assembly>=1600000 & length_assembly<=2400000, TRUE, NEW_QC_illumina_pass))  %>%
     mutate(NEW_QC_illumina_pass=ifelse(MALDI_species=="Streptococcus dysgalactiae" & n_reads>500000 & n_contig<=64 & N50>=69000 & length_assembly>=2000000 & length_assembly<=2200000, TRUE, NEW_QC_illumina_pass))  %>%
@@ -221,8 +221,8 @@ if(length(illumina_samples)!= 0){
   
   ###########################################################################################################
   # Add a variable that indicates contamination
-  # On checke d'abord si concordance entre Sourmash et MALDI
-  # Si pas l'info de sourmash, alors on checke la concordance entre MLST et MALDI
+  # We'll check first coherence between Sourmash and MALDI
+  # If no information for Sourmash => check coherence between MLST and MALDI
   list_species <- sort(unique(study_df$MALDI_species))
   study_df <- study_df %>%
     # No MLST No Sourmash
@@ -256,13 +256,13 @@ if(length(illumina_samples)!= 0){
     mutate(contaminated=ifelse(MALDI_species=="Campylobacter jejunii" & sourmash_species %in% c("Campylobacter jejuni"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Campylobacter jejunii" & is.na(sourmash_species) & MLST_species %in% c("campylobacter"), FALSE, contaminated)) %>%
     # CITROBACTER 
-    # normalement devrait se différencier : AMALONATICUS - FARMERI - KOSERI (chacun différent les uns des autres) de la clade FREUNDII COMPLEX [freundii-braakii-youngae-et-cie]
-    # Mais MALDI discrimine mal les espèces des Citrobacter, apparently amalonaticus isok, mais farmeri pas très bien distingué
-    # Après sur les outils génomiques : MLST ne discrimine pas du tout non plus, tout le monde est dans la case cfreundii
-    # Sourmash se débrouille déjà mieux, il distingue pas très bien les C. youngae
+    # Should differentiate : AMALONATICUS - FARMERI - KOSERI (each different from one another) of the clade of FREUNDII COMPLEX [freundii-braakii-youngae-etc]
+    # But MALDI badly discriminates species of Citrobacter, apparently amalonaticus is ok, but farmeri is not well distinguished
+    # MLST does not discriminate at all, every isolate is classified as a cfreundii
+    # Sourmash acts better, the tool distinguishes not very well C. youngae
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter amalonaticus" & sourmash_species %in% c("s__Citrobacter_A amalonaticus", "s__Citrobacter_A telavivensis", "s__Citrobacter freundii"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter amalonaticus" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
-    mutate(contaminated=ifelse(MALDI_species=="Citrobacter braakii" & sourmash_species %in% c("Citrobacter braakii", "Citrobacter freundii", "s__Citrobacter portucalensis", "s__Citrobacter braakii", "s__Citrobacter europaeus", "s__Citrobacter_A farmeri", "s__Citrobacter freundii", "s__Citrobacter murliniae", "Citrobacter sp. MGH103", "Citrobacter sp. A316"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Citrobacter braakii" & sourmash_species %in% c("Citrobacter braakii", "Citrobacter freundii", "s__Citrobacter portucalensis", "s__Citrobacter braakii", "s__Citrobacter europaeus", "s__Citrobacter_A farmeri", "s__Citrobacter freundii", "s__Citrobacter murliniae", "Citrobacter sp. MGH103", "Citrobacter sp. A316", "s__Citrobacter werkmanii"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter braakii" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter farmeri" & sourmash_species %in% c("s__Citrobacter_A farmeri"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter farmeri" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
@@ -289,14 +289,14 @@ if(length(illumina_samples)!= 0){
     # DELFTIA
     mutate(contaminated=ifelse(MALDI_species=="Delftia acidovorans" & sourmash_species %in% c("s__Comamonas tsuruhatensis"), FALSE, contaminated)) %>%
     # ENTEROBACTER
-    # Kind of same problem as for  Citrobacter, species level isn't well discriminated
+    # Kind of same problem as for Citrobacter, species level isn't well discriminated
     # E. aerogenes no problem ; E. asburiae (~)
     # E. cloacae includes almost anything from Enterobacter genus
     # Some E. cloacae (n=16), aren't classified by Sourmash but are classified as cronobacter by MLST => don't know what to think about this. Cronobacter should be a separate clade from Enterobacter samples
-    # AH Il s'en sort quand même bien avec : E. kobei, E. roggenkampii
+    # Good classification of MALDI for : E. kobei, E. roggenkampii
     mutate(contaminated=ifelse(MALDI_species=="Enterobacter aerogenes" & sourmash_species %in% c("Klebsiella aerogenes", "s__Klebsiella aerogenes"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Enterobacter aerogenes" & is.na(sourmash_species) & MLST_species %in% c("kaerogenes"), FALSE, contaminated)) %>%
-    mutate(contaminated=ifelse(MALDI_species=="Enterobacter asburiae" & sourmash_species %in% c("s__Enterobacter asburiae", "s__Enterobacter asburiae_A", "s__Enterobacter asburiae_B", "s__Enterobacter chengduensis", "s__Enterobacter cloacae_M"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Enterobacter asburiae" & sourmash_species %in% c("s__Enterobacter asburiae", "s__Enterobacter asburiae_A", "s__Enterobacter asburiae_B", "s__Enterobacter chengduensis", "s__Enterobacter cloacae_M", "s__Enterobacter nimipressuralis_A"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Enterobacter asburiae" & is.na(sourmash_species) & MLST_species %in% c("ecloacae"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Enterobacter cloacae" & sourmash_species %in% c("Enterobacter asburiae", "Enterobacter cloacae", "Enterobacter ludwigii", "s__Enterobacter asburiae", "s__Enterobacter asburiae_B", "s__Enterobacter bugandensis", "s__Enterobacter cloacae", "s__Enterobacter hormaechei", "s__Enterobacter hormaechei_A", "s__Enterobacter kobei", "s__Enterobacter ludwigii", "s__Enterobacter quasihormaechei", "s__Enterobacter roggenkampii", "s__Enterobacter sichuanensis"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Enterobacter cloacae" & is.na(sourmash_species) & MLST_species %in% c("ecloacae"), FALSE, contaminated)) %>%
@@ -324,8 +324,10 @@ if(length(illumina_samples)!= 0){
     mutate(contaminated=ifelse(MALDI_species=="Escherichia coli" & is.na(sourmash_species) & MLST_species %in% c("ecoli", "ecoli_achtman_4", "escherichia"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Escherichia fergusonii" & sourmash_species %in% c("s__Escherichia fergusonii"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Escherichia fergusonii" & is.na(sourmash_species) & MLST_species %in% c("escherichia"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Escherichia hermannii" & sourmash_species %in% c("s__Atlantibacter subterranea"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Escherichia hermannii" & is.na(sourmash_species) & MLST_species %in% c("salmonella"), FALSE, contaminated)) %>%
     # HAEMOPHILUS
-    mutate(contaminated=ifelse(MALDI_species=="Haemophilus influenzae" & sourmash_species %in% c("Haemophilus influenzae"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Haemophilus influenzae" & sourmash_species %in% c("Haemophilus influenzae", "s__Haemophilus influenzae_D"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Haemophilus influenzae" & is.na(sourmash_species) & MLST_species %in% c("hinfluenzae"), FALSE, contaminated)) %>%
     # HAFNIA
     mutate(contaminated=ifelse(MALDI_species=="Hafnia alvei" & sourmash_species %in% c("Hafnia alvei", "s__Hafnia alvei", "s__Hafnia paralvei", "s__Hafnia proteus"), FALSE, contaminated)) %>%
@@ -355,6 +357,8 @@ if(length(illumina_samples)!= 0){
     mutate(contaminated=ifelse(MALDI_species=="Proteus mirabilis" & sourmash_species %in% c("Proteus mirabilis", "s__Proteus mirabilis"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Proteus penneri" & sourmash_species %in% c("Proteus mirabilis", "s__Proteus sp003144375"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Proteus vulgaris" & sourmash_species %in% c("Proteus vulgaris", "s__Proteus sp003144375"), FALSE, contaminated)) %>%
+    # PROVIDENCIA
+    mutate(contaminated=ifelse(MALDI_species=="Providencia rettgeri" & sourmash_species %in% c("s__Providencia rettgeri_D", "s__Providencia rettgeri"), FALSE, contaminated)) %>%
     # PSEUDOCITROBACTER
     # I kinda miss knowledge on this, and unique sample seems to be contaminated
     mutate(contaminated=ifelse(MALDI_species=="Pseudocitrobacter faecalis" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
@@ -370,7 +374,7 @@ if(length(illumina_samples)!= 0){
     mutate(contaminated=ifelse(MALDI_species=="Pseudomonas putida" & sourmash_species %in% c("s__Pseudomonas_E juntendi", "s__Pseudomonas_E ceruminis", "s__Pseudomonas_E fulva", "s__Pseudomonas_E peradeniyensis"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Pseudomonas putida" & is.na(sourmash_species) & MLST_species %in% c("pputida"), FALSE, contaminated)) %>%
     # RAOULTELLA
-    mutate(contaminated=ifelse(MALDI_species=="Raoultella ornithinolytica" & sourmash_species %in% c("s__Klebsiella planticola"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Raoultella ornithinolytica" & sourmash_species %in% c("s__Klebsiella planticola", "s__Klebsiella ornithinolytica"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Raoultella ornithinolytica" & is.na(sourmash_species) & MLST_species %in% c("koxytoca"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Raoultella planticola" & sourmash_species %in% c("s__Klebsiella planticola"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Raoultella planticola" & is.na(sourmash_species) & MLST_species %in% c("koxytoca"), FALSE, contaminated)) %>%
@@ -380,7 +384,7 @@ if(length(illumina_samples)!= 0){
     # Serratia species are not well discriminated
     mutate(contaminated=ifelse(MALDI_species=="Serratia marcescens" & sourmash_species %in% c("s__Serratia bockelmannii", "s__Serratia marcescens_K", "s__Serratia nevei", "Serratia marcescens", "Serratia sp. HMSC15F11"), FALSE, contaminated)) %>%
     # SHIGELLA
-    # Shigella are close to Escherichia genomically also
+    # Shigella are close to Escherichia genomically 
     mutate(contaminated=ifelse(MALDI_species=="Shigella sonnei" & sourmash_species %in% c("s__Escherichia coli"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Shigella sonnei" & is.na(sourmash_species) & MLST_species %in% c("ecoli_achtman_4"), FALSE, contaminated)) %>%
     # STAPHYLOCOCCUS
@@ -396,13 +400,16 @@ if(length(illumina_samples)!= 0){
     mutate(contaminated=ifelse(MALDI_species=="Staphylococcus hominis" & is.na(sourmash_species) & MLST_species %in% c("shominis"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Staphylococcus lugdunensis" & sourmash_species %in% c("s__Staphylococcus lugdunensis"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Staphylococcus lugdunensis" & is.na(sourmash_species) & MLST_species %in% c("staphlugdunensis"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Staphylococcus pasteuri" & sourmash_species %in% c("s__Staphylococcus pasteuri"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Staphylococcus pettenkoferi" & sourmash_species %in% c("s__Staphylococcus pettenkoferi"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Staphylococcus saprophyticus" & sourmash_species %in% c("s__Staphylococcus saprophyticus"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Staphylococcus simulans" & sourmash_species %in% c("s__Staphylococcus simulans"), FALSE, contaminated)) %>%
     # STENOTROPHOMONAS
-    mutate(contaminated=ifelse(MALDI_species=="Stenotrophomonas maltophilia" & sourmash_species %in% c("s__Stenotrophomonas maltophilia", "s__Stenotrophomonas maltophilia_A", "s__Stenotrophomonas maltophilia_AJ", "s__Stenotrophomonas maltophilia_G", "s__Stenotrophomonas maltophilia_O", "Stenotrophomonas maltophilia"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Stenotrophomonas maltophilia" & sourmash_species %in% c("s__Stenotrophomonas maltophilia", "s__Stenotrophomonas maltophilia_A", "s__Stenotrophomonas maltophilia_AJ", "s__Stenotrophomonas maltophilia_G", "s__Stenotrophomonas maltophilia_O", "Stenotrophomonas maltophilia", "s__Stenotrophomonas hibiscicola"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Stenotrophomonas maltophilia" & is.na(sourmash_species) & MLST_species %in% c("smaltophilia"), FALSE, contaminated)) %>%
     # STREPTOCOCCUS
+    mutate(contaminated=ifelse(MALDI_species=="Streptococcus agalactiae" & sourmash_species %in% c("s__Streptococcus agalactiae"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Streptococcus agalactiae" & is.na(sourmash_species) & MLST_species %in% c("sagalactiae"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Streptococcus anginosus" & sourmash_species %in% c("s__Streptococcus anginosus_C", "s__Streptococcus anginosus"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Streptococcus constellatus" & sourmash_species %in% c("s__Streptococcus constellatus"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Streptococcus dysgalactiae" & sourmash_species %in% c("s__Streptococcus dysgalactiae"), FALSE, contaminated)) %>%
@@ -418,14 +425,16 @@ if(length(illumina_samples)!= 0){
   # Writing to a file
   fwrite(study_df, file = "assembly_summary_illumina_only.tsv", sep = "\t")
   today_date <- Sys.Date()
-  # Strains that pass QC
+  # Strains that pass Illumina QC
   cat(paste(study_df[NEW_QC_illumina_pass == TRUE]$id, collapse = "\n"), file = paste(today_date,"illumina_only_QC_passed.txt"))
   # Strains that fail Illumina QC
   cat(paste(study_df[NEW_QC_illumina_pass == FALSE]$id, collapse = "\n"), file = paste(today_date,"illumina_only_QC_illumina_failed.txt"))
   
   cat("    Some cleaning...\n")
   rm(assemblies, assemblies_2, assemblies_summary, output, reads, sample_species, species, tmp, cov_largest,
-     fname, n_reads, node_1, node_1_val, s, today_date, x, mean_cov, line_splitted, line_of_interest, mean_coverage)
+     fname, n_reads, node_1, node_1_val, s, today_date, x, mean_cov, line_splitted, line_of_interest, mean_coverage,
+     s, node_1_val, node_1, n_reads, mean_cov, line_with_n_reads, sourmash_species, study_df,
+     list_species, rare_genus, metadata)
 }
 }
 
@@ -464,7 +473,6 @@ if(length(nano_illumina_samples) != 0){
   for(s in nano_illumina_samples) {
     fname <- sprintf("./%s/polish/bowtie2.map.log", s)
     x <- scan(fname, what="character", sep="\n", quiet = TRUE)
-    # print(x)
     illumina_reads <- as.double(str_extract(x[1], "^[0-9]+"))
     overall_alignment <- as.double(str_extract(x[15], "^[0-9.]+")) / 100
     # Idiom (?<=foo) is a non-matching group, not returned by extract. Similar to the (?:foo) non-capturing group
