@@ -31,12 +31,15 @@ workflow plasmid_compa {
        if ( params.gathering ) {
             gather_plasmid_seq(ch_plasmids)
             gather_plasmid_seq.out.plasmid_seq.set{ ch_plasmids }
+            // During next steps, work by ARG and by Inc type
+            // Work with a max of 8 samples per batch (Circos limitation, this is to get readable visualisations)
+            // ['ARG1', 'IncF', [chunk1, chunk2, chunk3]]
             ch_plasmids.groupTuple(by: [0,1])
                        .flatMap { key1, key2, values -> values.collate(8).indexed().collect { idx, chunk -> [key1, key2, chunk, "Batch${idx + 1}"]}}
                        .set{ ch_plasmids }
        }
 
-       // Step1- Alignement à la référence
+       // Step1- Mapping to reference
         if ( params.mapping ) {
             align_to_reference(ch_plasmids)
             align_to_reference.out.plasmid_seq.set { ch_plasmids }
@@ -44,6 +47,8 @@ workflow plasmid_compa {
 
         // Step2- Circos visualisation
         if ( params.visual ) {
+            // Group samples again per batch, then per ARG and per Inc
+            // ['ARG1', 'IncF', [chunk1, chunk2, ...]]
             ch_plasmids.flatMap { key1, key2, values -> values.flatten().collect { chunk -> [key1, key2, chunk]}}
                        .groupTuple(by: [0,1])
                        .set{ ch_plasmids }

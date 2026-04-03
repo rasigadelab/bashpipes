@@ -23,11 +23,11 @@ nextflow.enable.dsl = 2
 
 // include functions
 include {printHelp} from "${params.nfpath}/modules/help.nf"
-include {make_sample_dir} from "${params.nfpath}/modules/util.nf"
 
 // import subworkflows
 include {plasmid_compa} from "${params.nfpath}/workflows/workflow.nf"
 
+// Error raising, wait 2000s before printing error and exit Nextflow launcher
 def raiseError ( value ) {
     sleep(2000)
     println(value)

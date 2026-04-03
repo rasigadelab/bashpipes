@@ -175,8 +175,8 @@ process visualize_circos {
 }
 
 process change_circos_config {
-
   // Tool: Python script
+  // Change Circos configuration file, with personalized maps (font, labels, ...)
 
   label 'circos_config'
   storeDir params.result
