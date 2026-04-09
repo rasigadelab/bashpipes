@@ -75,7 +75,7 @@ process trimming_porechop {
 }
 
 process stats_nanoplot{
-  
+  // Tool: NanoPlot
   // Computing statistics on Nanopore FastQ and plotting some plots related.
 
   label 'nanoplot'
@@ -106,7 +106,7 @@ process stats_nanoplot{
 
 process trim_trimmomatic {
   // Tool: trimmomatic
-  // Trimming adapters and filtering reads of bad quality
+  // Trimming adapters and filtering out Illumina reads of bad quality.
 
   label 'trim'
   storeDir (params.result)
@@ -146,7 +146,7 @@ process trim_trimmomatic {
 
 process filter_filtlong {
   // Tool: Filtlong
-  // Filtering of Nanopore reads.  
+  // Filtering out of Nanopore reads with length less than a minimum length and keeping only the best quality reads of dataset.
 
   label 'filtlong'
   storeDir (params.result)

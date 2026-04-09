@@ -47,7 +47,7 @@ process quality_fastp {
 
 process trim_trimmomatic {
   // Tool: trimmomatic
-  // Trimming adapters and filtering reads of bad quality
+  // Trimming adapters and filtering out Illumina reads of bad quality.
 
   label 'trim'
   storeDir (params.result)
@@ -87,7 +87,7 @@ process trim_trimmomatic {
 
 process resync_bbmap {
   // Tool: bbmap repair.sh
-  // Resynchronizing R1/R2 reads inside fastq files
+  // Resynchronizing R1/R2 reads inside fastq files.
 
   label 'resync'
   storeDir (params.result)
@@ -120,7 +120,7 @@ process assembly_spades {
 
   // Tool: SPAdes. 
   // De novo assembler for Illumina short reads.
-  // Filter for only contigs > 500bp
+  // Filter for only contigs > 500bp.
 
   label 'spades'
   storeDir params.result
@@ -160,7 +160,6 @@ process assembly_spades {
 }
 
 process filter_contigs_bbmap {
-
   // Tool: BBmap reformat.sh. 
   // Filter for only contigs > 500bp in final assembly
 

@@ -47,7 +47,7 @@ workflow {
     fastq_ch.groupTuple(by: [0,1]).set{ fastq_ch }
     //Step2- launch process to create a directory for each sample in /genomes folder
     make_sample_dir(fastq_ch)
-    //Step3- create a Channel [sample, ONT/R1/R2_output_file_path]
+    //Step3- create a Channel [sample, sample_ONT/R1/R2_fastq.gz]
     make_sample_dir.out.set{ new_ch }
     //Step3- create a Channel for each type of reads (ONT, R1 or R2)
     illumina_R1 = new_ch.unique().filter{ it[1] =~/.*\_R1.fastq.gz$/ }

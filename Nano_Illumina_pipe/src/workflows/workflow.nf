@@ -15,6 +15,7 @@
 nextflow.enable.dsl = 2
 
 // import modules
+// assembly modules
 include {quality_fastp} from "${params.nfpath}/modules/module.nf"
 include {trimming_porechop} from "${params.nfpath}/modules/module.nf"
 include {trim_trimmomatic} from "${params.nfpath}/modules/module.nf"
@@ -24,7 +25,7 @@ include {assembly_flye} from "${params.nfpath}/modules/module.nf"
 include {map_bowtie2} from "${params.nfpath}/modules/module.nf"
 include {polish_pilon} from "${params.nfpath}/modules/module.nf"
 include {fixstart_circlator} from "${params.nfpath}/modules/module.nf"
-
+// annotation modules
 include {mlst_sequence_typing} from "${params.nfpath}/modules/module.nf"
 include {classify_sourmash} from "${params.nfpath}/modules/module.nf"
 include {amr_typer_amrfinder} from "${params.nfpath}/modules/module.nf"
@@ -45,11 +46,13 @@ workflow bacteria_denovo {
             quality_fastp.out.illumina_reads.set{ ch_illumina }
        }
 
+       // Illumina reads trimming
        if ( params.trimming ) {
             trim_trimmomatic(ch_illumina)
             trim_trimmomatic.out.illumina_trimmed.set{ ch_illumina }
        }
 
+       // Nanopore reads trimming and filtering
        if ( params.nano_filtering ) {
             trimming_porechop(ch_ont)
             trimming_porechop.out.trimmed_ont_reads.set{ ch_ont }
@@ -57,6 +60,7 @@ workflow bacteria_denovo {
             filter_filtlong.out.filtered_nanopore.set{ ch_ont }
        }
 
+       // Nanopore reads quality metrics
        if ( params.nanoplot ) {
             stats_nanoplot(ch_ont)
             stats_nanoplot.out.nanopore_reads.set{ ch_ont }
