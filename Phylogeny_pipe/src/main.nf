@@ -51,13 +51,13 @@ workflow {
     main:
     
     if ( params.workflow == 'bacteria_mash_clustering') {
-        //Step1- create a Channel based on content of replicons.tsv
+        //Step1- Create a Channel based on content of replicons.tsv
         replicons_files = Channel.fromPath(params.result+"/replicons.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
         replicons_ch = replicons_files.map { row -> tuple(row.replicon, row.Sample, row.fasta_file) }
-        //Step2- launch the appropriate workflow
+        //Step2- Launch the appropriate workflow
         bacteria_mash_clustering(replicons_ch)
     } else if ( params.workflow == 'bacteria_variant_calling') {
-        //Step1- create a Channel based on content of replicons.tsv
+        //Step1- Create a Channel based on content of replicons.tsv
         replicons_files = Channel.fromPath(params.result+"/replicons.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
         replicons_ch = replicons_files.map { row -> tuple(row.Sample, row.replicon) }
         //Step2- Create a Channel based on content of mini_clusters.tsv
@@ -68,7 +68,7 @@ workflow {
         //Step4- Launch appropriate workflow
         bacteria_variant_calling(input_ch)
     } else if ( params.workflow == 'bacteria_phylogeny') {
-        //Step1- create a Channel based on content of replicons.tsv
+        //Step1- Create a Channel based on content of replicons.tsv
         replicons_files = Channel.fromPath(params.result+"/replicons.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
         replicons_ch = replicons_files.map { row -> tuple(row.replicon, row.Sample) }
         //Step2- Create a Channel based on content of mini_clusters.tsv
@@ -76,7 +76,7 @@ workflow {
         reference_ch = reference_files.map { row -> tuple(row.replicon, row.reference) }
         //Step3- Gather samples for each replicon
         replicons_ch = replicons_ch.combine(reference_ch, by: 0).groupTuple(by: [0,2])
-        //Step3- launch the appropriate workflow
+        //Step4- Launch the appropriate workflow
         bacteria_phylogeny(replicons_ch)
     
     }

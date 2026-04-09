@@ -8,8 +8,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #
 
+# Launch of Mash clustering pipeline
 NXF_OFFLINE=true NXF_DISABLE_AUTO_UPDATE=true nextflow -C src/nextflow.config run src/main.nf -params-file src/params_mash.json -with-trace -with-report --prefix run_1 -profile standard
-
+# Launch of Variant Calling pipeline
 NXF_OFFLINE=true NXF_DISABLE_AUTO_UPDATE=true nextflow -C src/nextflow.config run src/main.nf -params-file src/params_variant_calling.json -with-trace -with-report --prefix run_1 -profile standard
-
+# Launch of Phylogeny pipeline
 NXF_OFFLINE=true NXF_DISABLE_AUTO_UPDATE=true nextflow -C src/nextflow.config run src/main.nf -params-file src/params_phylogeny.json -with-trace -with-report --prefix run_1 -profile standard

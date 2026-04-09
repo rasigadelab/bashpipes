@@ -17,11 +17,10 @@ import argparse
 
 def main(work_dir, samples_list, out_dir):
     genomes_dir = os.path.join(work_dir, "genomes")
-    #samples_list = ast.literal_eval(samples_list)
-    #Step 1- Check if there is already an output directory
+    # Step 1- Create output directory if it does not exist already
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-    #Step 2- Write input.tab file in output dir [Sample \t R1_path \t R2_path]
+    # Step 2- Write input.tab file in output dir [Sample \t R1_path \t R2_path]
     out_file = open(os.path.join(out_dir, "input.tab"), "w")
     for sample in samples_list:
         sample_dir = os.path.join(out_dir, sample)

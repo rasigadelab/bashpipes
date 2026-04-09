@@ -179,7 +179,7 @@ process polish_pilon {
 
 process duplicate_masker_repeatmasker {
   // Tool: RepeatMasker
-  // Mask duplicated regions of the reference genome
+  // List duplicated regions of the reference genome
 
   label 'repeatmasker'
   storeDir params.result
@@ -610,10 +610,7 @@ process dating_treetime {
   OUT_DIR=phylogeny/$replicon/phylogenetic_tree/treetime
   mkdir -p -m 777 \${OUT_DIR}
   
-  source ~/miniconda3/etc/profile.d/conda.sh
-  conda activate treetime
   treetime --aln $core_snps_aln --tree $treefile --dates $params.result/${replicon}_sampling_list.csv --outdir \${OUT_DIR}/out --plot-tree treetime.png 1> \${OUT_DIR}/treetime.log 2> \${OUT_DIR}/treetime.err
-  conda deactivate
   """
 }
 

@@ -16,19 +16,20 @@ import argparse
 
 # GOAL : Creation of a TXT file containing Epi-1       \t 2023-02-04
 #                                          Sample_name \t Sampling_date
+# Used by Treetime, phylogeny datation
 
 ## FUNCTIONS ##
 
 def main(project_dir, output_dir):
-    #Step1- Read Metadataeq_rasigade.xlsx
+    # Step1- Read metadata excel file
     excel_file = os.path.join("metadata.xlsx")
-    #Get column 1 = SAMPLE_ID and column 4 = DATE_PRELEVEMENT
+    # Step2- Get column 1 = SAMPLE_ID and column 4 = DATE_PRELEVEMENT
     df = pandas.read_excel(excel_file, usecols = ['SAMPLE_ID', 'DATE_PRELEVEMENT'])
-    #Read replicons.tsv
+    # Step3- Read replicons.tsv, listing all analyzed samples
     sample_file = os.path.join(project_dir,"replicons.tsv")
     df2 = pandas.read_csv(sample_file, sep = '\t', usecols = ['Sample', 'replicon'])
     df2 = df2.reset_index()  # make sure indexes pair with number of rows
-    #Create a dictionary {replicon: samples_list}
+    # Step4- Create a dictionary {replicon: samples_list}
     replicon_dict = {}
     for index, row in df2.iterrows():
         rep = row['replicon']
@@ -37,7 +38,7 @@ def main(project_dir, output_dir):
             replicon_dict[rep] = [sample]
         else:
             replicon_dict[rep].append(sample)
-    #Write down to output file
+    # Step5- Write down to output file
     for repl in replicon_dict.keys():
         out_file = open(os.path.join(output_dir,repl+"_sampling_list.csv"), "w")
         out_file.write("strain,date\n")

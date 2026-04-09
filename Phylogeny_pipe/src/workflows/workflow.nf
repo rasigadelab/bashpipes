@@ -15,10 +15,11 @@
 nextflow.enable.dsl = 2
 
 // import modules
+// Mash clustering modules
 include {rename_fasta} from "${params.nfpath}/modules/module.nf"
 include {distance_matrix_mash} from "${params.nfpath}/modules/module.nf"
 include {distance_matrix_analysis} from "${params.nfpath}/modules/module.nf"
-
+// SNP Calling modules
 include {map_bowtie2} from "${params.nfpath}/modules/module.nf"
 include {polish_pilon} from "${params.nfpath}/modules/module.nf"
 include {duplicate_masker_repeatmasker} from "${params.nfpath}/modules/module.nf"
@@ -27,7 +28,7 @@ include {create_input_tab} from "${params.nfpath}/modules/module.nf"
 include {core_snps_snippy} from "${params.nfpath}/modules/module.nf" 
 include {vc_recombination_analysis_gubbins} from "${params.nfpath}/modules/module.nf"
 include {vc_final_snp_matrix} from "${params.nfpath}/modules/module.nf"
-
+// Phylogeny modules
 include {ref_phylogeny} from "${params.nfpath}/modules/module.nf" 
 include {create_input_tab_phylogeny} from "${params.nfpath}/modules/module.nf" 
 include {core_snps_snippy_phylogeny} from "${params.nfpath}/modules/module.nf" 
@@ -36,7 +37,7 @@ include {rec_removal_clonalframeml} from "${params.nfpath}/modules/module.nf"
 include {dating_treetime} from "${params.nfpath}/modules/module.nf"
 include {recombination_analysis_gubbins} from "${params.nfpath}/modules/module.nf"
 
-// workflow script
+// workflow scripts
 workflow bacteria_mash_clustering {
     take:
         ch_replicons
@@ -64,24 +65,32 @@ workflow bacteria_variant_calling {
 
           //Step0- Preparation of reference genome
           if ( params.ref_preparation ) {
+               // Map reference sample reads on reference sample assembly
                map_bowtie2(ch_replicons)
                map_bowtie2.out.sorted_bam_files.set{ ch_replicons }
+               // Polish reference assembly genome
                polish_pilon(ch_replicons)
                polish_pilon.out.polished_reference.set{ ch_replicons }
+               // List repeat regions of reference genome
                duplicate_masker_repeatmasker(ch_replicons)
-               duplicate_masker_repeatmasker.out.replicons_ch.set{ ch_replicons }               
+               duplicate_masker_repeatmasker.out.replicons_ch.set{ ch_replicons }         
+               // Transform into BED format repeat regions list      
                duplicate_masker_bedops(ch_replicons)
                duplicate_masker_bedops.out.replicons_ch.set{ ch_replicons }
           }
 
           //Step1- Core SNPs calling
           if ( params.snippy ) {
+               // Create input file for Snippy
                create_input_tab(ch_replicons)
                create_input_tab.out.input_tab.set{ ch_input_tab }
+               // Snippy SNP Calling
                core_snps_snippy(ch_input_tab)
                core_snps_snippy.out.clean_core_snps.set{ ch_core_snps }
+               // Recombinated sites masking with Gubbins
                vc_recombination_analysis_gubbins(ch_core_snps)
                vc_recombination_analysis_gubbins.out.aln_without_rec.set{ ch_core_snps }
+               // Getting core SNP matrix, without recombinated sites
                vc_final_snp_matrix(ch_core_snps)
           }
 }
@@ -100,8 +109,10 @@ workflow bacteria_phylogeny {
 
           //Step1- Core SNPs calling
           if ( params.snippy ) {
+               // Create input file for Snippy
                create_input_tab_phylogeny(ch_replicons)
                create_input_tab_phylogeny.out.input_tab.set{ ch_input_tab }
+               // Snippy SNP Calling
                core_snps_snippy_phylogeny(ch_input_tab)
                core_snps_snippy_phylogeny.out.core_snps_aln.set{ ch_core_snps }
           }

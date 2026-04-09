@@ -22,25 +22,50 @@ from collections import OrderedDict
 AMBIG = set("Nn?-RYSWKMBDHVryswkmbdhv")
 
 def read_fasta(fn):
+    """
+    Read FASTA file.
+
+    Args:
+        fn (str): FASTA filename.
+
+    Returns:
+        None
+    """
+    # Opening mechanism
     opener = gzip.open if fn.endswith(".gz") else open
     name, seq = None, []
     with opener(fn, "rt") as fh:
         for line in fh:
-            line = line.rstrip("\n\r")
-            if not line: continue
+            line = line.rstrip("\n\r") # Remove any linebreak
+            if not line: continue 
+            # First, get sequence ID
             if line.startswith(">"):
-                if name is not None:
+                if name is not None: 
+                    # Save previous name + sequence
                     yield name, "".join(seq)
                 name = line[1:].split()[0]
                 seq = []
+            # Then, get DNA sequence
             else:
                 seq.append(line)
     if name is not None:
+        # Finish reading by saving last name + sequence
         yield name, "".join(seq)
 
 def build_contig_offsets(ref_fa):
+    """
+    Count cumulative contigs length in contig appearance in FASTA order.
+
+    Args:
+        ref_fa (str): FASTA filename.
+
+    Returns:
+        Ordered dictionary of {contig: (cumulated contig length, contig length)}
+        Total contigs length
+    """
     offsets = OrderedDict()
     total = 0
+    # Get contig name (key) and cumulated contigs length + length of current contig sequence (tuple) in an ordered dict
     for cid, seq in read_fasta(ref_fa):
         offsets[cid] = (total, len(seq))
         total += len(seq)
@@ -49,11 +74,24 @@ def build_contig_offsets(ref_fa):
     return offsets, total
 
 def pick_ref_row(clean_aln, expected_len=None):
-    # choose the sequence with the longest ungapped length as reference
+    """
+    Choose the sequence with the longest ungapped length as reference.
+
+    Args:
+        clean_aln (str): FASTA clean alignment filename.
+        expected_length (int): Expected best ungapped length in bp
+
+    Returns:
+        Best ungapped contig name
+        Best ungapped contig sequence
+    """
     best = (None, "", -1)
     for name, seq in read_fasta(clean_aln):
+        # Get contig length without gaps ("-")
         ung = len(seq.replace("-", ""))
+        # If contig ungapped length is longer than already stored one
         if ung > best[2]:
+            # Then replace best with current contig info
             best = (name, seq, ung)
     if best[0] is None:
         sys.exit("no sequences found in cleaned alignment")

@@ -11,7 +11,6 @@
 # Copyright (C) 2026 Aurélie Fischer
 
 import os
-import re
 import argparse
 
 # Creation of replicons.tsv file
@@ -22,15 +21,15 @@ import argparse
 ## FUNCTIONS ##
 
 def main(project_dir, output_dir, chr_only):
-    #Step1 - output file creation
+    # Step1 - output file creation
     output_name = os.path.join(output_dir,"replicons.tsv")
     output_file=open(output_name, "w")
     output_file.write("fasta_file\tSample\treplicon\n")
-    #Step2- which input information do we want
-    fasta_file = "" #path of file containing assembly of the replicon
-    sample = "" #name of sample
-    replicon = "" #name of replicons
-    #Step3- Searching assemblies in genomes folder
+    # Step2- which input information do we want
+    fasta_file = "" # path of file containing assembly of the replicon
+    sample = "" # name of sample
+    replicon = "" # name of replicons
+    # Step3- Searching assemblies in genomes folder
     replicons_list = {}
     dir_genomes = os.path.join(project_dir, "genomes")
     for sample_repo in os.listdir(dir_genomes):
@@ -38,7 +37,7 @@ def main(project_dir, output_dir, chr_only):
         mob_recon_dir = os.path.join(dir_genomes, sample_repo, "mob_recon")
         mlst_dir = os.path.join(dir_genomes, sample_repo, "mlst")
         species = ""
-        #Step3A- Checking sample specie
+        # Step3A- Checking sample specie in MLST results
         for mlst_file in os.listdir(mlst_dir):
             if mlst_file == "mlst.tsv":
                 mlst_path = os.path.join(mlst_dir, mlst_file)
@@ -48,14 +47,14 @@ def main(project_dir, output_dir, chr_only):
                     species = "ecloacae"
                 if species == "ecoli_achtman_4":
                     species = "ecoli"
-        #Step3B- Checking which replicons are in the sample
+        # Step3B- Checking which replicons are in the sample with MobRecon results
         for out_file in os.listdir(mob_recon_dir):
-            # Option to only analize chromosomes
+            # Option to only analyze chromosomes
             if chr_only:
                 pattern = "chromosome.fasta"
             else:
                 pattern = ".fasta"
-
+            # List all fasta replicon of sample 
             if pattern in out_file:
                 fasta_file = os.path.join(mob_recon_dir, out_file)
                 replicon = out_file.strip('.fasta')
@@ -64,7 +63,7 @@ def main(project_dir, output_dir, chr_only):
                 if replicon not in replicons_list.keys():
                     replicons_list[replicon] = []
                 replicons_list[replicon].append((sample, fasta_file))
-    #Step4- Only writing replicons with at least 2 samples (because needed to compare at least 2 genomes)
+    # Step4- Only writing replicons with at least 2 samples (because needed to compare at least 2 genomes)
     for rep in replicons_list:
         if len(replicons_list[rep]) >= 2:
             for sample_item in replicons_list[rep]:
