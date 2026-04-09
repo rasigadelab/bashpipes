@@ -47,18 +47,19 @@ workflow {
     fastq_ch.groupTuple(by: [0,1]).set{ fastq_ch }
     //Step2- launch process to create a directory for each sample in /genomes folder
     make_sample_dir(fastq_ch)
-    //Step3- create a Channel [sample, ONT/R1/R2_output_file_path]
+    //Step3- create a Channel [sample, sample_ONT/R1/R2.fastq.gz]
     make_sample_dir.out.set{ new_ch }
-    //Step3- create a Channel for each type of reads (ONT, R1 or R2)
+    //Step4- create a Channel for each type of reads (ONT, R1 or R2)
     illumina_R1 = new_ch.unique().filter{ it[1] =~/.*\_R1.fastq.gz$/ }
     illumina_R2 = new_ch.unique().filter{ it[1] =~/.*\_R2.fastq.gz$/ }
     ont_ch = new_ch.unique().filter{ it[1] =~/.*\_ONT.fastq.gz$/ }
-    //Step4- create a final Channel joining R1 and R2 Illumina reads together by sample.
+    //Step5- create a final Channel joining R1 and R2 Illumina reads together by sample.
     illumina_ch = illumina_R1.join(illumina_R2)
     
     main:
-    //Step5- launch the appropriate workflow
+    //Step6- launch the appropriate workflow
     if ( params.workflow == 'bacteria_denovo') {
+        //Launch Illumina-only workflow --> ont_ch should be empty
         bacteria_denovo(illumina_ch, ont_ch)
     } 
    

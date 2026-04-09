@@ -2,9 +2,7 @@ Bootstrap: docker
 From: quay.io/staphb/mlst:2.23.0-2025-02-01
 
 %post
-  # Go into the scripts folder (you need to have write access! type -a mlst)
-  # type -a mlst
-  # cat /etc/os-release
+  # Go into the scripts folder 
   cd /mlst-2.23.0/scripts
   
   # Save the old database folder

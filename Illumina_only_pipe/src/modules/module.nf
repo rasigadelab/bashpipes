@@ -132,7 +132,6 @@ process assembly_spades {
 
   input:
     tuple val(sample), path(R1), path(R2), path(R1_UNPAIRED), path(R2_UNPAIRED)
-  //  tuple val(sample), path(R1), path(R2)
   
   output:
     tuple val(sample), path("genomes/$sample/spades/contigs.fasta"), emit : draft_assembly
