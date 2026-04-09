@@ -46,7 +46,7 @@ workflow {
 
     //Step1- create a Channel based on content of plasmid_locations.tsv
     plasmid_locations = Channel.fromPath(params.result+"/plasmid_locations.tsv", checkIfExists:true).splitCsv(sep:'\t', header: false)
-    //plasmid_locations.groupTuple(by: [0,1,3]).set{ plasmid_ch }
+    //Step2- launch plasmid comparison workflow
     plasmid_compa(plasmid_locations)
      
    

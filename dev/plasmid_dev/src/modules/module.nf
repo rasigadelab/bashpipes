@@ -134,8 +134,8 @@ process align_to_reference {
 }
 
 process visualize_circos {
-  // Tool: Circos
-  // Refine Circos maps created by Quast at previous step
+  // Tool: Bash
+  // Copy Circos maps created by Quast at previous step
 
   label 'circos'
   storeDir params.result
@@ -158,6 +158,8 @@ process visualize_circos {
   RESULTS_DIR=\$(ls $params.result/analyses/$resistance/$inc)
   QUAST=\$(echo "\$RESULTS_DIR" | grep "^quast")
 
+  # Samples are processed / batch of 8 in Quast
+  # For quast results of each batch, copy Circos results if it exists inside a new dir for future modifications
   for quast_folder in \$QUAST; do
     mkdir -p -m 777 \${OUT_DIR}
     echo "Processing \$quast_folder" >> \${OUT_DIR}/out.txt
@@ -175,7 +177,7 @@ process visualize_circos {
 }
 
 process change_circos_config {
-  // Tool: Python script
+  // Tool: Python script and Circos
   // Change Circos configuration file, with personalized maps (font, labels, ...)
 
   label 'circos_config'
@@ -207,9 +209,11 @@ process change_circos_config {
     if [ -d \$CIRCOS_FOLDER ]; 
     then
       echo "Processing results in \$quast_folder" >> \${OUT_DIR}/changes.txt
+      # Apply modifications on Circos configuration file
       python3 $params.nfpath/modules/circos_plot.py -d \$CIRCOS_FOLDER
       source ~/miniconda3/etc/profile.d/conda.sh
       conda activate circos
+      # Re-run Circos with new configuration
       circos -conf \${CIRCOS_FOLDER}/circos.conf
       conda deactivate
     else
