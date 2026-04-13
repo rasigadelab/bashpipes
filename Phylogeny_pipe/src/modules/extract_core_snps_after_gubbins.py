@@ -101,71 +101,104 @@ def pick_ref_row(clean_aln, expected_len=None):
 
 def build_maps_from_clean_ref(clean_ref_seq):
     """
-    For each alignment column j, if ref has a base (not '-'), increment linear genome position.
+    For each alignment column idx, if reference has a base (not '-'), increment linear genome position.
+
+    Args:
+        clean_ref_seq (str): clean DNA sequence of reference genome extracted from alignment file.
+
     Returns:
-      genomepos_to_col : dict {linear_pos0 -> aln_col_index}
+      genomepos_to_col : dictionary indicating the position of informative bases (no "-")
       col_to_genomepos : list length = aln_len, with pos0 or None
     """
-    genomepos_to_col = {}
-    col_to_genomepos = [None] * len(clean_ref_seq)
-    pos0 = 0
-    for j, b in enumerate(clean_ref_seq):
-        if b == "-":
-            col_to_genomepos[j] = None
+    genomepos_to_col = {} # {linear_pos0 -> ref_col_index}
+    col_to_genomepos = [None] * len(clean_ref_seq) # (list length = aln_len, with pos0 or None)
+    pos0 = 0 # position of next informative base
+    for idx, base in enumerate(clean_ref_seq):
+        if base == "-":
+            # At this position in reference there is no base (-).
+            # pos0 does not change
+            col_to_genomepos[idx] = None
         else:
-            col_to_genomepos[j] = pos0
-            genomepos_to_col[pos0] = j
+            # At this position in reference there is a base (ATCG).
+            # Info: at this position, there is an informative base 
+            col_to_genomepos[idx] = pos0
+            # Info: informative base is at idx position in reference
+            genomepos_to_col[pos0] = idx
             pos0 += 1
     return genomepos_to_col, col_to_genomepos
 
 def parse_vcf_core_positions(vcf_fn, contig_offsets):
+    """
+    Transform positions of core variants from position on contig to position on reference genome.
+
+    Args:
+        vcf_fn (str): VCF file containing positions of all core variants called
+        contig_offsets (dict): cumulative length of contigs and contig length of reference genome per contig
+
+    Returns:
+        sorted(pos_set) : sorted set of core variant positions (reference-based)
+    """
     pos_set = set()
     opener = gzip.open if vcf_fn.endswith(".gz") else open
+    # Read VCF line / line
     with opener(vcf_fn, "rt") as fh:
         for line in fh:
-            if line.startswith("#"): continue
+            if line.startswith("#"): continue # avoid comments
             f = line.split("\t")
-            if len(f) < 2: continue
-            ctg = f[0]
+            if len(f) < 2: continue # avoid uninformative lines
+            ctg = f[0] # contig name "NODE_1_length_400000_cov_45.202521_pilon"
             try:
-                pos1 = int(f[1])
+                pos1 = int(f[1]) # variant position on reference
             except ValueError:
                 continue
             if ctg not in contig_offsets:
                 sys.stderr.write(f"[warn] VCF contig {ctg} not in reference; skipping\n")
                 continue
-            off, _ = contig_offsets[ctg]
-            pos0 = off + (pos1 - 1)
-            pos_set.add(pos0)
+            off, _ = contig_offsets[ctg] # Get start and length of contig in reference fasta
+            pos0 = off + (pos1 - 1) # Convert position on contig to position on whole assembly
+            pos_set.add(pos0) # Add to set of variant positions
     return sorted(pos_set)
 
 def extract_columns(msa_fn, keep_cols_sorted, out_fn_all, out_fn_strict):
-    # read masked alignment (no reference row) and slice columns
+    """
+    Filter core sites in MSA file based on core positions and write as output the new alignment file with and without masking ambiguous sites.
+
+    Args:
+        msa_fn (str): a Multi Sequence Alignment fasta file
+        keep_cols_sorted (list): List of positions to keep in MSA (ex: core SNPs positions) 
+        out_fn_all (str): Output file for filtered alignment
+        out_fn_strict (str): Output file for filtered alignment without ambiguous sites.
+
+    Returns:
+        None.
+    """
+    # Read masked alignment (no reference row)
     names, seqs = [], []
     for n, s in read_fasta(msa_fn):
         names.append(n)
         seqs.append(s)
     if not names:
-        sys.exit("masked alignment has no sequences")
+        sys.exit("Masked alignment has no sequences.")
 
-    # slice to kept columns
+    # Slice every sequence of input alignment file to kept columns only
     sliced = []
     for s in seqs:
-        # guard against length mismatches
+        # Guard against length mismatches
         if len(s) < (keep_cols_sorted[-1] + 1):
-            sys.exit("masked alignment shorter than requested column index; check you used the same cleaned alignment")
+            sys.exit("Masked alignment shorter than requested column index; check you used the same cleaned alignment.")
         sliced.append("".join(s[i] for i in keep_cols_sorted))
 
-    # write intersect (may include Ns)
+    # Re-write new alignment file with only kept positions (may include Ns)
     with open(out_fn_all, "w") as out:
         for n, s in zip(names, sliced):
             out.write(f">{n}\n{s}\n")
 
-    # strict core after masking: drop any column with any ambiguous/missing
+    # Strict core after masking: drop any column with any ambiguous/missing
     cols = list(zip(*sliced))
     ok_cols = [k for k, col in enumerate(cols) if not any(c in AMBIG or c == "-" for c in col)]
     strict = ["".join(s[i] for i in ok_cols) for s in sliced]
 
+    # Write strict core alignment after masking (without any "-" or "N")
     with open(out_fn_strict, "w") as out:
         for n, s in zip(names, strict):
             out.write(f">{n}\n{s}\n")
@@ -179,21 +212,20 @@ def main():
     ap.add_argument("--out_prefix", default="core_after_gubbins", help="output prefix")
     args = ap.parse_args()
 
+    # Step1- Get contigs start all along reference genome
     contig_offsets, ref_len = build_contig_offsets(args.reference)
+    # Step2- Identify reference entry in core alignment file
     ref_name, clean_ref_seq = pick_ref_row(args.clean_with_ref, expected_len=ref_len)
+    # Step3- Get informative base sites positions of reference in alignment file
     genomepos_to_col, _ = build_maps_from_clean_ref(clean_ref_seq)
-
-    # linearize VCF positions
+    # Step4- Linearize VCF positions (from contig-based to reference-based positions)
     vcf_positions = parse_vcf_core_positions(args.snippy_core_vcf, contig_offsets)
-
-    # keep only SNPs whose columns survived cleaning
+    # Step5- Keep only SNPs whose columns survived cleaning
     keep_cols = [genomepos_to_col[p] for p in vcf_positions if p in genomepos_to_col]
     if not keep_cols:
-        sys.exit("no SNP columns survived cleaning; did you pass the correct files?")
-
+        sys.exit("No SNP columns survived cleaning; did you pass the correct files?")
     keep_cols_sorted = sorted(set(keep_cols))
-
-    # extract from Gubbins-masked alignment
+    # Step6- Extract from Gubbins-masked alignment
     extract_columns(
         args.gubbins_masked_aln,
         keep_cols_sorted,
