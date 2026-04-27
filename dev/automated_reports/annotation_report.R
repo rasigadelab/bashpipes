@@ -21,7 +21,7 @@ today <- Sys.Date()
 sample_data <- paste0(today, "_annotation_scan.Rdata")
 rm(today)
 # Specify metadata file
-metadata_file <- "~/Projets/5.Suivi/Metadata_eq_rasigade.xlsx"
+metadata_file <- "metadata.xlsx"
 # Specify project name : "Epitrack" or "Resistrack"
 project <- "Epitrack"
 # Specify output directory path

@@ -415,7 +415,7 @@ process mge_mob_recon {
     params.mge_mob_recon.todo == 1
 
   input:
-    tuple val(sample), path(final_assembly)
+    tuple val(sample), path(final_assembly), path(taxonomy_file)
 
   output:
     tuple val(sample), path("genomes/$sample/mob_recon/contig_report.txt"), emit : samples_list

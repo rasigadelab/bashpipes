@@ -9,7 +9,7 @@
 
 ########################
 ## ASSEMBLY QC GLOBAL ##
-##     06-03-2026     ##
+##     20-04-2026     ##
 ########################
 
 # Goal: Script appliable to Nano-Illumina assemblies and Illumina-only assemblies at the same time
@@ -266,7 +266,7 @@ if(length(illumina_samples)!= 0){
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter braakii" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter farmeri" & sourmash_species %in% c("s__Citrobacter_A farmeri"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter farmeri" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
-    mutate(contaminated=ifelse(MALDI_species=="Citrobacter freundii" & sourmash_species %in% c("Citrobacter freundii", "Citrobacter sp. MGH103", "s__Citrobacter braakii", "s__Citrobacter freundii", "s__Citrobacter portucalensis", "s__Citrobacter_A amalonaticus", "s__Citrobacter_A farmeri", "s__Citrobacter_A telavivensis"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Citrobacter freundii" & sourmash_species %in% c("Citrobacter freundii", "Citrobacter sp. MGH103", "s__Citrobacter braakii", "s__Citrobacter freundii", "s__Citrobacter portucalensis", "s__Citrobacter_A amalonaticus", "s__Citrobacter_A farmeri", "s__Citrobacter_A telavivensis", "s__Citrobacter_B koseri"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter freundii" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter freundii / braakii" & sourmash_species %in% c("s__Citrobacter europaeus", "s__Citrobacter freundii", "s__Citrobacter portucalensis"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter freundii / braakii" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
@@ -317,7 +317,7 @@ if(length(illumina_samples)!= 0){
     # ENTEROCOCCUS
     mutate(contaminated=ifelse(MALDI_species=="Enterococcus faecalis" & sourmash_species %in% c("s__Enterococcus faecalis"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Enterococcus faecalis" & is.na(sourmash_species) & MLST_species %in% c("efaecalis"), FALSE, contaminated)) %>%
-    mutate(contaminated=ifelse(MALDI_species=="Enterococcus faecium" & sourmash_species %in% c("Enterococcus faecium", "s__Enterococcus_B faecium"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Enterococcus faecium" & sourmash_species %in% c("Enterococcus faecium", "s__Enterococcus_B faecium", "s__Enterococcus_A avium"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Enterococcus faecium" & is.na(sourmash_species) & MLST_species %in% c("efaecium"), FALSE, contaminated)) %>%
     # ESCHERICHIA
     mutate(contaminated=ifelse(MALDI_species=="Escherichia coli" & sourmash_species %in% c("Escherichia coli", "s__Escherichia coli", "s__Escherichia marmotae"), FALSE, contaminated)) %>%

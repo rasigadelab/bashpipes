@@ -91,8 +91,8 @@ workflow bacteria_denovo {
         
         //StepG- Genome annotation
         if ( params.annotate ) {
-            annotate_bakta(ch_final_assembly)
-            annotate_bakta.out.final_assembly.set{ ch_final_assembly }
+            // annotate_bakta(ch_final_assembly)
+            // annotate_bakta.out.final_assembly.set{ ch_final_assembly }
         }
 
         //StepH- MGE Analysis (mobile genetic elements)

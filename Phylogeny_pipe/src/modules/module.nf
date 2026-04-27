@@ -355,7 +355,7 @@ process vc_recombination_analysis_gubbins {
     run_gubbins.py --pairwise $core_snps_aln --threads $task.cpus --filter-percentage 50.0 \
                    --prefix \${OUT_DIR}/$replicon 1> \${OUT_DIR}/gubbins.log 2> \${OUT_DIR}/gubbins.err
   else
-    run_gubbins.py --tree-builder iqtree --first-tree-builder iqtree-fast --model GTR --model-fitter raxml $core_snps_aln \
+    run_gubbins.py --tree-builder iqtree --first-tree-builder iqtree-fast --model GTR $core_snps_aln \
                   --threads $task.cpus --filter-percentage 50.0 --prefix \${OUT_DIR}/$replicon 1> \${OUT_DIR}/gubbins.log 2> \${OUT_DIR}/gubbins.err
   fi
   # Masking recombination areas in input alignment
