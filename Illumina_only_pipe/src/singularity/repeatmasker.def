@@ -1,0 +1,26 @@
+Bootstrap: docker
+From: quay.io/biocontainers/repeatmasker:4.1.9--pl5321hdfd78af_0
+    
+%post
+
+  # Libraries installation
+  cd /usr/local/share/RepeatMasker
+  rm -f Libraries/RepeatMaskerLib.* Libraries/RepeatProteinMask.lib* Libraries/RepeatMasker.lib*
+  mkdir -p Libraries/famdb
+  cd Libraries/famdb
+  wget https://www.dfam.org/releases/current/families/FamDB/dfam39_full.0.h5.gz
+  wget https://www.dfam.org/releases/current/families/FamDB/dfam39_full.16.h5.gz
+  # gzip -d dfam39_full.0.h5.gz
+  gzip -d dfam39_full.16.h5.gz
+
+  # Configuration
+  cd /usr/local/share/RepeatMasker
+  perl ./configure -default_search_engine rmblast -rmblast_dir /usr/local/bin/ -trf_prgm /usr/local/bin/trf -libdir /usr/local/share/RepeatMasker/Libraries <<< $'y\n'
+
+%labels
+    org.opencontainers.image.title "Repeatmasker container"
+    org.opencontainers.image.description "Container for detecting repeats (RepeatMasker with Bacteria database)"
+    org.opencontainers.image.authors "Aurélie Fischer (PHE3ID, CIRI, Hospices Civils de Lyon)"
+    org.opencontainers.image.version "1.0.0"
+    org.opencontainers.image.licenses "AGPL-3.0-only + bundled tool licenses"
+    org.opencontainers.image.source "https://github.com/rasigadelab/bashpipes"
