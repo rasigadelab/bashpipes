@@ -282,7 +282,7 @@ if(length(illumina_samples)!= 0){
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter sedlakii" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter spp." & sourmash_species %in% c("s__Citrobacter freundii", "Citrobacter freundii"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter spp." & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
-    mutate(contaminated=ifelse(MALDI_species=="Citrobacter youngae" & sourmash_species %in% c("s__Citrobacter freundii", "s__Citrobacter youngae"), FALSE, contaminated)) %>%
+    mutate(contaminated=ifelse(MALDI_species=="Citrobacter youngae" & sourmash_species %in% c("s__Citrobacter freundii", "s__Citrobacter youngae", "s__Citrobacter portucalensis"), FALSE, contaminated)) %>%
     mutate(contaminated=ifelse(MALDI_species=="Citrobacter youngae" & is.na(sourmash_species) & MLST_species %in% c("cfreundii"), FALSE, contaminated)) %>%
     # CORYNEBACTERIUM
     mutate(contaminated=ifelse(MALDI_species=="Corynebacterium striatum" & sourmash_species %in% c("s__Corynebacterium striatum"), FALSE, contaminated)) %>%
