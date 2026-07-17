@@ -68,8 +68,6 @@ process align_to_reference {
   SEQ_DIR=${params.result}/analyses/$resistance/$inc/plasmids
   mkdir -p -m 777 \${OUT_DIR}
 
-  source ~/miniconda3/etc/profile.d/conda.sh
-  conda activate bactopia
   # Command is same but reference adapts to resistance and plasmid inc type
   REFERENCE="${params.nfpath}/ref_db"
   SAMPLES=\$(echo $sample | tr -d '[],')
@@ -129,7 +127,6 @@ process align_to_reference {
   else
     echo "No comparison requested" > \${OUT_DIR}/here.txt
   fi
-  conda deactivate
   """
 }
 
@@ -177,7 +174,7 @@ process visualize_circos {
 }
 
 process change_circos_config {
-  // Tool: Python script and Circos
+  // Tool: Python script
   // Change Circos configuration file, with personalized maps (font, labels, ...)
 
   label 'circos_config'
@@ -192,6 +189,7 @@ process change_circos_config {
     tuple val(resistance), val(inc), val(sample)
   
   output:
+    tuple val(resistance), val(inc), val(sample), emit : plasmids_info
     path("analyses/$resistance/$inc/visual/changes.txt")
     path("analyses/$resistance/$inc/visual/*")
 
@@ -211,13 +209,50 @@ process change_circos_config {
       echo "Processing results in \$quast_folder" >> \${OUT_DIR}/changes.txt
       # Apply modifications on Circos configuration file
       python3 $params.nfpath/modules/circos_plot.py -d \$CIRCOS_FOLDER
-      source ~/miniconda3/etc/profile.d/conda.sh
-      conda activate circos
-      # Re-run Circos with new configuration
-      circos -conf \${CIRCOS_FOLDER}/circos.conf
-      conda deactivate
     else
       echo "No results to process for \$quast_folder" >> \${OUT_DIR}/changes.txt
+    fi
+  done
+  """
+}
+
+process rerun_circos {
+  // Tool: Circos
+  // Run Circos with new configuration file
+
+  label 'rerun_circos'
+  storeDir params.result
+  debug false
+  tag "Rerun circos for $resistance/$inc"
+
+  when:
+    params.rerun_circos.todo == 1
+
+  input:
+    tuple val(resistance), val(inc), val(sample)
+  
+  output:
+    path("analyses/$resistance/$inc/visual/final_visu.txt")
+    path("analyses/$resistance/$inc/visual/*")
+
+
+  script:
+  """
+  OUT_DIR=analyses/$resistance/$inc/visual
+  mkdir -p -m 777 \${OUT_DIR}
+  RESULTS_DIR=\$(ls $params.result/analyses/$resistance/$inc)
+  QUAST=\$(echo "\$RESULTS_DIR" | grep "^quast")
+
+  echo "Final Circos visualisation." >> \${OUT_DIR}/final_visu.txt
+  for quast_folder in \$QUAST; do
+    CIRCOS_FOLDER=$params.result/analyses/$resistance/$inc/visual/\${quast_folder}/circos
+    if [ -d \$CIRCOS_FOLDER ]; 
+    then
+      echo "Second run of Circos for \$quast_folder" >> \${OUT_DIR}/final_visu.txt
+      # Re-run Circos with new configuration
+      circos -conf \${CIRCOS_FOLDER}/circos.conf
+    else
+      echo "No results to process for \$quast_folder" >> \${OUT_DIR}/final_visu.txt
     fi
   done
   """

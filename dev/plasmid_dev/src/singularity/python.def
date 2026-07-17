@@ -1,0 +1,11 @@
+Bootstrap: docker
+From: python:3.13-bookworm
+
+%post
+  # Install python dependencies
+  python3 -m pip install matplotlib
+
+%labels
+    Version 1.0
+    Author chuafischer
+    Date 2026-07-17

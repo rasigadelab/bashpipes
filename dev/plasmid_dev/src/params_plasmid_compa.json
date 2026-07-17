@@ -39,5 +39,9 @@
 
     "change_circos_config" : {
         "todo" : 1
+    },
+
+    "rerun_circos" : {
+        "todo" : 1
     }
 }

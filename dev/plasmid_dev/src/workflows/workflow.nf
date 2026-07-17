@@ -19,6 +19,7 @@ include {gather_plasmid_seq} from "${params.nfpath}/modules/module.nf"
 include {align_to_reference} from "${params.nfpath}/modules/module.nf"
 include {visualize_circos} from "${params.nfpath}/modules/module.nf"
 include {change_circos_config} from "${params.nfpath}/modules/module.nf"
+include {rerun_circos} from "${params.nfpath}/modules/module.nf"
 
 // workflow script
 workflow plasmid_compa {
@@ -35,7 +36,7 @@ workflow plasmid_compa {
             // Work with a max of 8 samples per batch (Circos limitation, this is to get readable visualisations)
             // ['ARG1', 'IncF', [chunk1, chunk2, chunk3]]
             ch_plasmids.groupTuple(by: [0,1])
-                       .flatMap { key1, key2, values -> values.collate(8).indexed().collect { idx, chunk -> [key1, key2, chunk, "Batch${idx + 1}"]}}
+                       .flatMap { key1, key2, values -> values.collate(8).indexed().collect { idx, chunk -> [key1, key2, chunk, "batch${idx + 1}"]}}
                        .set{ ch_plasmids }
        }
 
@@ -55,6 +56,8 @@ workflow plasmid_compa {
             visualize_circos(ch_plasmids)
             visualize_circos.out.plasmids_info.set{ch_plasmids}
             change_circos_config(ch_plasmids)
+            change_circos_config.out.plasmids_info.set{ch_plasmids}
+            rerun_circos(ch_plasmids)
         }
 
             
