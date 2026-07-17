@@ -316,13 +316,8 @@ def main(project_dir):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Modifying Circos configuration files')
     parser.add_argument("-d", dest="path_to_data", required=True, help="Path to the folder containing Circos files")
-    parser.add_argument("-o", dest="output_dir", required=False, help="Path to output directory")
     args = parser.parse_args()
 
-    if args.output_dir is None:
-        args.output_dir = args.path_to_data
-
     path_to_data = args.path_to_data
-    output_dir = args.output_dir
 
-    main(path_to_data, output_dir)
+    main(path_to_data)
