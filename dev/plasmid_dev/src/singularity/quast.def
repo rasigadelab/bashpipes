@@ -1,0 +1,10 @@
+Bootstrap: docker
+From: quay.io/staphb/quast:5.3.0
+
+%labels
+    org.opencontainers.image.title "Quast container"
+    org.opencontainers.image.description "Container for genome quality assessment and mapping for plasmid contigs"
+    org.opencontainers.image.authors "Aurélie Fischer (PHE3ID, CIRI, Hospices Civils de Lyon)"
+    org.opencontainers.image.version "1.0.0"
+    org.opencontainers.image.licenses "AGPL-3.0-only + bundled tool licenses"
+    org.opencontainers.image.source "https://github.com/rasigadelab/bashpipes"
