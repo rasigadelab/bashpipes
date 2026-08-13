@@ -65,14 +65,18 @@
     },
 
     "mlst_sequence_typing" : {
-        "todo" : 1
+        "todo" : 1,
+        "blastdb" : "/data/databases/mlst_db/blast/mlst.fa",
+        "pubmlst" : "/data/databases/mlst_db/pubmlst"
     },
 
     "classify_sourmash" : {
         "todo" : 1,
         "scale" : "1000",
         "k" : "21",
-        "db" : "/data/databases/sourmash_db/gtdb-rs214-k21.lca.json.gz"
+        "db" : "/data/databases/sourmash_db/gtdb-rs214-k21.lca.json.gz",
+        "bacteria_db" : "/data/databases/sourmash_db/gtdb-rs226-k21.dna.zip",
+        "taxonomy_file" : "/data/databases/sourmash_db/gtdb-rs226.lineages.csv"
     },
 
     "amr_typer_amrfinder" : {

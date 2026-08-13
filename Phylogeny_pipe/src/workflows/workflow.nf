@@ -131,8 +131,8 @@ workflow bacteria_phylogeny {
 
           //Step4- Phylogenetic dating
           if ( params.treetime ) {
-               //dating_treetime(ch_treefiles)
-               //dating_treetime.out.snippy_aln.set{ ch_treefiles }
+               dating_treetime(ch_treefiles)
+               dating_treetime.out.snippy_aln.set{ ch_treefiles }
           }
 
           //Step5- Gubbins recombination analysis

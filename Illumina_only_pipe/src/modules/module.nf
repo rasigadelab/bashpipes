@@ -285,7 +285,7 @@ process mlst_sequence_typing {
   OUT_DIR=genomes/$sample/mlst
   mkdir -p -m 777 \${OUT_DIR}
 
-  mlst $final_assembly --threads $task.cpus > \${OUT_DIR}/mlst.tsv 2>> \${OUT_DIR}/mlst.log
+  mlst $final_assembly --threads $task.cpus --blastdb ${params.mlst_sequence_typing["blastdb"]} --datadir ${params.mlst_sequence_typing["pubmlst"]} > \${OUT_DIR}/mlst.tsv 2>> \${OUT_DIR}/mlst.log
   """
 }
 
@@ -306,19 +306,25 @@ process classify_sourmash {
     tuple val(sample), path(final_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/sourmash/sourmash.csv"), emit : sample_taxonomy
+    tuple val(sample), path("genomes/$sample/sourmash/${sample}.classifications.csv"), emit : sample_taxonomy
     path("genomes/$sample/sourmash/${sample}_realigned.fasta.sig")
-    path("genomes/$sample/sourmash/sourmash.csv")
     path("genomes/$sample/sourmash/sourmash.log")
+    path("genomes/$sample/sourmash/${sample}_gather_results.csv")
 
   script:
   """
   OUT_DIR=genomes/$sample/sourmash
   OUT_SIG_FILE=\${OUT_DIR}/${sample}_realigned.fasta.sig
+  # mkdir -p -m 777 \${OUT_DIR}
+  # touch \${OUT_DIR}/sourmash.csv
+  # sourmash sketch dna -o \${OUT_SIG_FILE} -p scaled=${params.classify_sourmash["scale"]},k=${params.classify_sourmash["k"]} $final_assembly &> \${OUT_DIR}/sourmash.log
+  # sourmash lca classify --query \${OUT_SIG_FILE} --db ${params.classify_sourmash["db"]} > \${OUT_DIR}/sourmash.csv 2>> \${OUT_DIR}/sourmash.log
+
+  OUT_GATHER=\${OUT_DIR}/${sample}_gather_results.csv
   mkdir -p -m 777 \${OUT_DIR}
-  touch \${OUT_DIR}/sourmash.csv
   sourmash sketch dna -o \${OUT_SIG_FILE} -p scaled=${params.classify_sourmash["scale"]},k=${params.classify_sourmash["k"]} $final_assembly &> \${OUT_DIR}/sourmash.log
-  sourmash lca classify --query \${OUT_SIG_FILE} --db ${params.classify_sourmash["db"]} > \${OUT_DIR}/sourmash.csv 2>> \${OUT_DIR}/sourmash.log
+  sourmash gather \${OUT_SIG_FILE} ${params.classify_sourmash["bacteria_db"]} -o \${OUT_GATHER} &>> \${OUT_DIR}/sourmash.log
+  sourmash tax genome --gather-csv \${OUT_GATHER} --taxonomy ${params.classify_sourmash["taxonomy_file"]} -o \${OUT_DIR}/${sample} &>> \${OUT_DIR}/sourmash.log
   """
 }
 
@@ -339,26 +345,27 @@ process amr_typer_amrfinder {
     tuple val(sample), path(final_assembly), path(taxonomy_file)
 
   output:
-    tuple val(sample), path("genomes/$sample/$final_assembly"), path("genomes/$sample/sourmash/$taxonomy_file"), emit : final_assembly
+    tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
     path("genomes/$sample/amrfinder/amrfinder.log")
     path("genomes/$sample/amrfinder/amrfinder.tsv")
-  
+    path("genomes/$sample/amrfinder/args_sequences.fasta")
+
   script:
   """
   OUT_DIR=genomes/$sample/amrfinder
   mkdir -p -m 777 \${OUT_DIR}
 
   # Extract genus and species names if available
-  GENUS=\$(cut -d',' -f8 $taxonomy_file | tail -n 1)
-  SPECIES=\$(cut -d',' -f9 $taxonomy_file | tail -n 1)
+  GENUS=\$(cut -d',' -f5 $taxonomy_file | tail -n 1 | cut -d';' -f6)
+  SPECIES=\$(cut -d',' -f5 $taxonomy_file | tail -n 1 | cut -d';' -f7)
   # Set Organism flag if genus/species are specified
   ORGANISM_FLAG=""
   case "\$GENUS" in
-      "Escherichia" ) ORGANISM_FLAG="--organism Escherichia";;
+      "g__Escherichia" ) ORGANISM_FLAG="--organism Escherichia";;
       *) ORGANISM_FLAG=""
   esac
 
-  amrfinder --plus --nucleotide $final_assembly --threads $task.cpus \${ORGANISM_FLAG} > \${OUT_DIR}/amrfinder.tsv 2> \${OUT_DIR}/amrfinder.log
+  amrfinder --plus --nucleotide $final_assembly --threads $task.cpus \${ORGANISM_FLAG} --nucleotide_output \${OUT_DIR}/args_sequences.fasta > \${OUT_DIR}/amrfinder.tsv 2> \${OUT_DIR}/amrfinder.log
   """
 }
 
@@ -375,7 +382,7 @@ process annotate_bakta {
     params.annotate_bakta.todo == 1
 
   input:
-    tuple val(sample), path(final_assembly), path(taxonomy_file)
+    tuple val(sample), path(final_assembly)
 
   output:
     tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
@@ -391,9 +398,6 @@ process annotate_bakta {
   OUT_DIR=genomes/$sample/bakta
   mkdir -p -m 777 \${OUT_DIR}
 
-  # Extract genus and species names if available
-  GENUS=\$(cut -d',' -f8 $taxonomy_file | tail -n 1)
-  SPECIES=\$(cut -d',' -f9 $taxonomy_file | tail -n 1)
   TMP_DIR=\${OUT_DIR}/tmp
   mkdir -p -m 777 \${TMP_DIR}
   
@@ -415,7 +419,7 @@ process mge_mob_recon {
     params.mge_mob_recon.todo == 1
 
   input:
-    tuple val(sample), path(final_assembly), path(taxonomy_file)
+    tuple val(sample), path(final_assembly)
 
   output:
     tuple val(sample), path("genomes/$sample/mob_recon/contig_report.txt"), emit : samples_list

@@ -11,8 +11,8 @@
 rm -rf .nextflow
 rm -rf work
 rm .n*
-# rm report-*
-# rm trace-*
+rm report-*
+rm trace-*
 
 dos2unix src/workflows/workflow.nf
 dos2unix src/modules/*.nf

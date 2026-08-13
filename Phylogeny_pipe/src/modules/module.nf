@@ -173,7 +173,7 @@ process polish_pilon {
   ASSEMBLY=${params.result}/phylogeny/$replicon/sequences/${ref}.fasta
   SAMPLE_POLISHED=\${OUT_DIR}/${ref}_polished
 
-  java -Xmx${memory}G -jar /pilon/pilon.jar --genome \${ASSEMBLY} --bam $sorted_bam ${params.polish_pilon["list_changes"]} --output \${SAMPLE_POLISHED} &> \${OUT_DIR}/pilon.log
+  java -Xmx${memory}G -jar /usr/local/share/pilon-1.24-0/pilon.jar --genome \${ASSEMBLY} --bam $sorted_bam ${params.polish_pilon["list_changes"]} --output \${SAMPLE_POLISHED} &> \${OUT_DIR}/pilon.log
   """
 }
 
@@ -412,7 +412,7 @@ process ref_phylogeny {
 
   label 'lowCPU'
   storeDir params.result
-  debug true
+  debug false
   tag "Reference for $replicon"  
 
   when:

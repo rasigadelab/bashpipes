@@ -47,6 +47,8 @@ def main(project_dir, output_dir, chr_only):
                     species = "ecloacae"
                 if species == "ecoli_achtman_4":
                     species = "ecoli"
+                if species == "klebsiella":
+                    species = "kpneumoniae"
         # Step3B- Checking which replicons are in the sample with MobRecon results
         for out_file in os.listdir(mob_recon_dir):
             # Option to only analyze chromosomes
