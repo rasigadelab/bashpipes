@@ -1,13 +1,9 @@
 Bootstrap: docker
-From: quay.io/biocontainers/ncbi-amrfinderplus:4.2.7--hf69ffd2_0
-
-%post
-  # Install new database
-  amrfinder --update
+From: quay.io/biocontainers/circlator:1.5.5--py36_1
 
 %labels
-    org.opencontainers.image.title "NCBI amrfinderplus container"
-    org.opencontainers.image.description "Container for genome annotation (amrfinderplus)"
+    org.opencontainers.image.title "Circlator container"
+    org.opencontainers.image.description "Container for genome circularization"
     org.opencontainers.image.authors "Aurélie Fischer (PHE3ID, CIRI, Hospices Civils de Lyon)"
     org.opencontainers.image.version "1.0.0"
     org.opencontainers.image.licenses "AGPL-3.0-only + bundled tool licenses"

@@ -1,20 +1,20 @@
 Bootstrap: docker
-From: staphb/snippy:4.6.0-SC2
+From: quay.io/staphb/snippy:4.6.0-SC2
 
 %post
   # Install updates and dependencies
   apt-get update && apt-get install -y wget unzip git gcc cmake g++ make libz-dev curl
-  cd /opt
+  cd /opt 
   wget https://github.com/tseemann/snp-dists/archive/refs/tags/v0.8.2.tar.gz
-  tar -xvzf v0.8.2.tar.gz
+  tar -xzvf v0.8.2.tar.gz
   cd snp-dists-0.8.2
   make
   make check
   make install
 
 %labels
-    org.opencontainers.image.title "snippy + snp-dists container"
-    org.opencontainers.image.description "Container for phylogeny analysis (Snippy, snp-dists)"
+    org.opencontainers.image.title "Snippy container"
+    org.opencontainers.image.description "Container for SNP calling"
     org.opencontainers.image.authors "Aurélie Fischer (PHE3ID, CIRI, Hospices Civils de Lyon)"
     org.opencontainers.image.version "1.0.0"
     org.opencontainers.image.licenses "AGPL-3.0-only + bundled tool licenses"

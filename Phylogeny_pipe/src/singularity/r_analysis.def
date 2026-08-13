@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: r-base
+From: r-base:4.6.1
 
 %post
 Rscript -e 'install.packages(c("optparse", "stringr", "data.table", "dplyr"))'
