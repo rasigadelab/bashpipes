@@ -3,7 +3,7 @@ From: python:3.14.6-bookworm
 
 %post
   # Install python dependencies
-  python3 -m pip install matplotlib pandas
+  python3 -m pip install matplotlib pandas openpyxl
 
 %labels
     Version 1.0
