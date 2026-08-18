@@ -16,21 +16,21 @@ nextflow.enable.dsl = 2
 
 // import modules
 // assembly modules
-include {quality_fastp} from "${params.nfpath}/modules/module.nf"
-include {trimming_porechop} from "${params.nfpath}/modules/module.nf"
-include {trim_trimmomatic} from "${params.nfpath}/modules/module.nf"
-include {filter_filtlong} from "${params.nfpath}/modules/module.nf"
-include {stats_nanoplot} from "${params.nfpath}/modules/module.nf"
-include {assembly_flye} from "${params.nfpath}/modules/module.nf"
-include {map_bowtie2} from "${params.nfpath}/modules/module.nf"
-include {polish_pilon} from "${params.nfpath}/modules/module.nf"
-include {fixstart_circlator} from "${params.nfpath}/modules/module.nf"
+include {quality_fastp} from "../modules/module.nf"
+include {trimming_porechop} from "../modules/module.nf"
+include {trim_trimmomatic} from "../modules/module.nf"
+include {filter_filtlong} from "../modules/module.nf"
+include {stats_nanoplot} from "../modules/module.nf"
+include {assembly_flye} from "../modules/module.nf"
+include {map_bowtie2} from "../modules/module.nf"
+include {polish_pilon} from "../modules/module.nf"
+include {fixstart_circlator} from "../modules/module.nf"
 // annotation modules
-include {mlst_sequence_typing} from "${params.nfpath}/modules/module.nf"
-include {classify_sourmash} from "${params.nfpath}/modules/module.nf"
-include {amr_typer_amrfinder} from "${params.nfpath}/modules/module.nf"
-include {annotate_bakta} from "${params.nfpath}/modules/module.nf"
-include {mge_mob_recon} from "${params.nfpath}/modules/module.nf"
+include {mlst_sequence_typing} from "../modules/module.nf"
+include {classify_sourmash} from "../modules/module.nf"
+include {amr_typer_amrfinder} from "../modules/module.nf"
+include {annotate_bakta} from "../modules/module.nf"
+include {mge_mob_recon} from "../modules/module.nf"
 
 // workflow script
 workflow bacteria_denovo {

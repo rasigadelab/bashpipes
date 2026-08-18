@@ -23,7 +23,8 @@ process make_sample_dir{
 
   output:
     tuple val(sample), path("genomes/$sample/${sample}_${type}.fastq.gz")
-  
+
+  script:  
   """
   mkdir -p -m 777 genomes/$sample
   cat $list_of_filepaths >> genomes/$sample/${sample}_${type}.fastq.gz

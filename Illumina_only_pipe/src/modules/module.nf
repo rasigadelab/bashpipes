@@ -18,22 +18,22 @@ process quality_fastp {
   // Quality control on FASTQ reads. 
 
   label 'fastp'
-  storeDir (params.result)
+  storeDir params.result
   debug false
   tag "Fastp on $sample"
-
-  when:
-    params.quality_fastp.todo == 1
 
   input:
     tuple val(sample), path(R1), path(R2)
   
   output:
-    tuple val(sample), path("genomes/$sample/$R1"), path("genomes/$sample/$R2"), emit : illumina_reads
+    tuple val(sample), path("genomes/$sample/$R1"), path("genomes/$sample/$R2"), emit: illumina_reads
     path("genomes/$sample/fastp/fastp.json")
     path("genomes/$sample/fastp/fastp.html")
     path("genomes/$sample/fastp/fastp.err")
     path("genomes/$sample/fastp/fastp.log")
+
+  when:
+    params.quality_fastp.todo == 1
 
   script:
   """
@@ -50,24 +50,24 @@ process trim_trimmomatic {
   // Trimming adapters and filtering out Illumina reads of bad quality.
 
   label 'trim'
-  storeDir (params.result)
+  storeDir params.result
   debug false
   tag "Trimmomatic on $sample"  
-
-  when:
-    params.trim_trimmomatic.todo == 1
 
   input:
     tuple val(sample), path(R1), path(R2)
   
   output:
-    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit : illumina_trimmed
+    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit: illumina_trimmed
     path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz")
     path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz")
     path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz")
     path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz")
     path("genomes/$sample/trimmomatic/trimmomatic.err")
     path("genomes/$sample/trimmomatic/trimmomatic.log")
+
+  when:
+    params.trim_trimmomatic.todo == 1
 
   script:
   """
@@ -90,20 +90,20 @@ process resync_bbmap {
   // Resynchronizing R1/R2 reads inside fastq files.
 
   label 'resync'
-  storeDir (params.result)
+  storeDir params.result
   debug false
   tag "R1/R2 resync on $sample"
-
-  when:
-    params.resync_bbmap.todo == 1
 
   input:
     tuple val(sample), path(R1), path(R2), path(R1_UNPAIRED), path(R2_UNPAIRED)
   
   output:
-    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit : illumina_resync
+    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit: illumina_resync
     path("genomes/$sample/trimmomatic/resync.err")
     path("genomes/$sample/trimmomatic/resync.log")
+
+  when:
+    params.resync_bbmap.todo == 1
 
   script:
   """
@@ -117,7 +117,6 @@ process resync_bbmap {
 }
 
 process assembly_spades {
-
   // Tool: SPAdes. 
   // De novo assembler for Illumina short reads.
   // Filter for only contigs > 500bp.
@@ -127,18 +126,18 @@ process assembly_spades {
   debug false
   tag "SPAdes on $sample"
 
-  when:
-    params.assembly_spades.todo == 1
-
   input:
     tuple val(sample), path(R1), path(R2), path(R1_UNPAIRED), path(R2_UNPAIRED)
   
   output:
-    tuple val(sample), path("genomes/$sample/spades/contigs.fasta"), emit : draft_assembly
+    tuple val(sample), path("genomes/$sample/spades/contigs.fasta"), emit: draft_assembly
     path("genomes/$sample/spades/spades_1.log")
     path("genomes/$sample/spades/spades.err")
     path("genomes/$sample/spades/assembly_graph_with_scaffolds.gfa")
     path("genomes/$sample/spades/contigs.paths")
+
+  when:
+    params.assembly_spades.todo == 1
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -168,17 +167,17 @@ process filter_contigs_bbmap {
   debug false
   tag "Contigs filtering on $sample"
 
-  when:
-    params.filter_contigs_bbmap.todo == 1
-
   input:
     tuple val(sample), path(raw_assembly)
   
   output:
-    tuple val(sample), path("genomes/$sample/spades/contigs_filtered.fasta"), emit : draft_assembly
+    tuple val(sample), path("genomes/$sample/spades/contigs_filtered.fasta"), emit: draft_assembly
     path("genomes/$sample/spades/bbmap.log")
     path("genomes/$sample/spades/bbmap.err")
     path("genomes/$sample/${sample}_assembly_raw.fasta")
+
+  when:
+    params.filter_contigs_bbmap.todo == 1
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -201,14 +200,11 @@ process qc_quast {
   debug false
   tag "Quast QC on $sample"
 
-  when:
-    params.qc_quast.todo == 1
-
   input:
     tuple val(sample), path(draft_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/spades/$draft_assembly"), emit : draft_assembly
+    tuple val(sample), path("genomes/$sample/spades/$draft_assembly"), emit: draft_assembly
     path("genomes/$sample/quast/basic_stats/*")
     path("genomes/$sample/quast/icarus_viewers/*")
     path("genomes/$sample/quast/icarus.html")
@@ -219,6 +215,9 @@ process qc_quast {
     path("genomes/$sample/quast/report.tsv")
     path("genomes/$sample/quast/transposed_report.tsv")
     path("genomes/$sample/quast/transposed_report.txt")
+
+  when:
+    params.qc_quast.todo == 1
 
   script:
   """
@@ -238,18 +237,18 @@ process fixstart_circlator {
   debug false
   tag "Circlator on $sample"
 
-  when:
-    params.fixstart_circlator.todo == 1
-
   input:
     tuple val(sample), path(denovo_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/circlator/${sample}_realigned.fasta"), emit : realigned_assembly
+    tuple val(sample), path("genomes/$sample/circlator/${sample}_realigned.fasta"), emit: realigned_assembly
     path("genomes/$sample/circlator/${sample}_realigned.log")
     path("genomes/$sample/circlator/${sample}_realigned.detailed.log")
     path("genomes/$sample/${sample}_realigned.fasta")
  
+  when:
+    params.fixstart_circlator.todo == 1
+
   script:
   """
   OUT_DIR=genomes/$sample/circlator
@@ -269,16 +268,16 @@ process mlst_sequence_typing {
   debug false
   tag "MLST on $sample"
 
-  when:
-    params.mlst_sequence_typing.todo == 1
-
   input:
     tuple val(sample), path(final_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
+    tuple val(sample), path("genomes/$sample/$final_assembly"), emit: final_assembly
     path("genomes/$sample/mlst/mlst.log")
     path("genomes/$sample/mlst/mlst.tsv")
+
+  when:
+    params.mlst_sequence_typing.todo == 1
 
   script:
   """
@@ -299,17 +298,17 @@ process classify_sourmash {
   debug false
   tag "Sourmash on $sample"
 
-  when:
-    params.classify_sourmash.todo == 1
-
   input:
     tuple val(sample), path(final_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/sourmash/${sample}.classifications.csv"), emit : sample_taxonomy
+    tuple val(sample), path("genomes/$sample/sourmash/${sample}.classifications.csv"), emit: sample_taxonomy
     path("genomes/$sample/sourmash/${sample}_realigned.fasta.sig")
     path("genomes/$sample/sourmash/sourmash.log")
     path("genomes/$sample/sourmash/${sample}_gather_results.csv")
+
+  when:
+    params.classify_sourmash.todo == 1
 
   script:
   """
@@ -338,17 +337,17 @@ process amr_typer_amrfinder {
   debug false
   tag "AMRFinder on $sample"
 
-  when:
-    params.amr_typer_amrfinder.todo == 1
-
   input:
     tuple val(sample), path(final_assembly), path(taxonomy_file)
 
   output:
-    tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
+    tuple val(sample), path("genomes/$sample/$final_assembly"), emit: final_assembly
     path("genomes/$sample/amrfinder/amrfinder.log")
     path("genomes/$sample/amrfinder/amrfinder.tsv")
     path("genomes/$sample/amrfinder/args_sequences.fasta")
+
+  when:
+    params.amr_typer_amrfinder.todo == 1
 
   script:
   """
@@ -378,20 +377,20 @@ process annotate_bakta {
   debug false
   tag "Bakta on $sample"  
 
-  when:
-    params.annotate_bakta.todo == 1
-
   input:
     tuple val(sample), path(final_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
+    tuple val(sample), path("genomes/$sample/$final_assembly"), emit: final_assembly
     path("genomes/$sample/bakta/bakta.err")
     path("genomes/$sample/bakta/${sample}.gff3")
     path("genomes/$sample/bakta/${sample}.tsv")
     path("genomes/$sample/bakta/${sample}.png")
     path("genomes/$sample/bakta/${sample}.log")
     path("genomes/$sample/bakta/bakta.log")
+
+  when:
+    params.annotate_bakta.todo == 1
 
   script:
   """
@@ -415,18 +414,18 @@ process mge_mob_recon {
   debug false
   tag "Mob_Recon on $sample" 
 
-  when:
-    params.mge_mob_recon.todo == 1
-
   input:
     tuple val(sample), path(final_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/mob_recon/contig_report.txt"), emit : samples_list
+    tuple val(sample), path("genomes/$sample/mob_recon/contig_report.txt"), emit: samples_list
     path("genomes/$sample/mob_recon/*.fasta")
     path("genomes/$sample/mob_recon/*.txt")
     path("genomes/$sample/mob_recon/mob_recon.log")
     path("genomes/$sample/mob_recon/mob_recon.err")
+
+  when:
+    params.mge_mob_recon.todo == 1
 
   script:
   """

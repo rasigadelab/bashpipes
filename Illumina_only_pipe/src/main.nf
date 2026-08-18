@@ -22,11 +22,11 @@
 nextflow.enable.dsl = 2
 
 // include functions
-include {printHelp} from "${params.nfpath}/modules/help.nf"
-include {make_sample_dir} from "${params.nfpath}/modules/util.nf"
+include {printHelp} from "./modules/help.nf"
+include {make_sample_dir} from "./modules/util.nf"
 
 // import subworkflows
-include {bacteria_denovo} from "${params.nfpath}/workflows/workflow.nf"
+include {bacteria_denovo} from "./workflows/workflow.nf"
 
 def raiseError ( value ) {
     sleep(2000)
@@ -34,13 +34,15 @@ def raiseError ( value ) {
     System.exit(1)
 }
 
-if (params.help) {
-    printHelp()
-    exit 0
-}
-
 // main workflow
 workflow {
+    main:
+
+    if (params.help) {
+	printHelp()
+	return
+    }
+
     //Step1- create a Channel based on content of Files_location.tsv
     fastq_locations = Channel.fromPath(params.result+"/Files_location.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)
     fastq_ch = fastq_locations.map { row -> tuple(row.Sample, row.type, row.full_path) }
@@ -56,7 +58,6 @@ workflow {
     //Step5- create a final Channel joining R1 and R2 Illumina reads together by sample.
     illumina_ch = illumina_R1.join(illumina_R2)
     
-    main:
     //Step6- launch the appropriate workflow
     if ( params.workflow == 'bacteria_denovo') {
         //Launch Illumina-only workflow --> ont_ch should be empty

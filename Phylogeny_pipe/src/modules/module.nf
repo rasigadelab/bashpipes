@@ -22,14 +22,14 @@ process rename_fasta {
   debug false
   tag "FASTA gathering for $replicon"  
 
-  when:
-    params.rename_fasta.todo == 1
-  
   input:
     tuple val(replicon), val(sample), path(fasta_file)
 
   output:
-    tuple val(replicon), val(sample), path("phylogeny/$replicon/sequences/${sample}.fasta"), emit : fasta_renamed
+    tuple val(replicon), val(sample), path("phylogeny/$replicon/sequences/${sample}.fasta"), emit: fasta_renamed
+
+  when:
+    params.rename_fasta.todo == 1
 
   script:
   """
@@ -48,16 +48,16 @@ process distance_matrix_mash {
   storeDir params.result
   debug false
   tag "Mash distance matrix for $replicon"  
-
-  when:
-    params.distance_matrix_mash.todo == 1
   
   input:
     tuple val(replicon), val(samples), path(fasta_files)
 
   output:
-    tuple val(replicon), val(samples), emit : replicons_ch
+    tuple val(replicon), val(samples), emit: replicons_ch
     path("phylogeny/$replicon/mash/mash_dist.tsv")
+
+  when:
+    params.distance_matrix_mash.todo == 1
 
   script:
   """
@@ -76,19 +76,19 @@ process distance_matrix_analysis {
   storeDir params.result
   debug false
   tag "Mash distance clustering for $replicon"  
-
-  when:
-    params.distance_matrix_analysis.todo == 1
   
   input:
     tuple val(replicon), val(samples)
 
   output:
-    tuple val(replicon), val(samples), emit : replicons_ch
+    tuple val(replicon), val(samples), emit: replicons_ch
     path("phylogeny/$replicon/mash/mash_analysis.log")
     path("phylogeny/$replicon/mash/mini_clusters.tsv")
     path("phylogeny/$replicon/mash/no_clonal_samples.tsv")
     path("phylogeny/$replicon/mash/reference_for_phylogeny.tsv")
+
+  when:
+    params.distance_matrix_analysis.todo == 1
 
   script:
   """
@@ -111,19 +111,19 @@ process map_bowtie2 {
   debug false
   tag "Mapping for $replicon - $subgroup"
 
-  when:
-    params.map_bowtie2.todo == 1
-
   input:
     tuple val(samples), val(replicon), val(subgroup), val(ref)
 
   output:
-    tuple val(samples), val(replicon), val(subgroup), val(ref), path("phylogeny/$replicon/minicluster_$subgroup/polish/${ref}.sorted.bam"), emit : sorted_bam_files
+    tuple val(samples), val(replicon), val(subgroup), val(ref), path("phylogeny/$replicon/minicluster_$subgroup/polish/${ref}.sorted.bam"), emit: sorted_bam_files
     path("phylogeny/$replicon/minicluster_$subgroup/polish/${ref}.sorted.bam.bai")
     path("phylogeny/$replicon/minicluster_$subgroup/polish/bowtie2.index.log")
     path("phylogeny/$replicon/minicluster_$subgroup/polish/bowtie2.map.log")
     path("phylogeny/$replicon/minicluster_$subgroup/polish/samtools.index.log")
     path("phylogeny/$replicon/minicluster_$subgroup/polish/samtools.sort.log")
+
+  when:
+    params.map_bowtie2.todo == 1
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -153,16 +153,16 @@ process polish_pilon {
   debug false
   tag "Polishing for $replicon - $subgroup"
 
-  when:
-    params.polish_pilon.todo == 1
-
   input:
     tuple val(samples), val(replicon), val(subgroup), val(ref), path(sorted_bam)
 
   output:
-    tuple val(samples), val(replicon), val(subgroup), val(ref), path("phylogeny/$replicon/minicluster_$subgroup/polish/${ref}_polished.fasta"), emit : polished_reference
+    tuple val(samples), val(replicon), val(subgroup), val(ref), path("phylogeny/$replicon/minicluster_$subgroup/polish/${ref}_polished.fasta"), emit: polished_reference
     path("phylogeny/$replicon/minicluster_$subgroup/polish/pilon.log")
     path("phylogeny/$replicon/minicluster_$subgroup/polish/${ref}_polished.changes")
+
+  when:
+    params.polish_pilon.todo == 1
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -185,18 +185,18 @@ process duplicate_masker_repeatmasker {
   storeDir params.result
   debug true
   tag "RepeatMasker for $replicon - $subgroup"  
-
-  when:
-    params.duplicate_masker_repeatmasker.todo == 1
   
   input:
     tuple val(samples), val(replicon), val(subgroup), val(ref), path(polished_ref)
 
   output:
-    tuple val(replicon), val(samples), val(subgroup), val(ref), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/${ref}_polished.fasta.out"), emit : replicons_ch
+    tuple val(replicon), val(samples), val(subgroup), val(ref), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/${ref}_polished.fasta.out"), emit: replicons_ch
     path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/repeatmasker.log")
     path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/repeatmasker.err")
-    
+  
+  when:
+    params.duplicate_masker_repeatmasker.todo == 1
+
   script:
   """
   OUT_DIR=phylogeny/$replicon/minicluster_$subgroup/repeatmasker
@@ -214,16 +214,16 @@ process duplicate_masker_bedops {
   storeDir params.result
   debug true
   tag "Rmsk2bed for $replicon - $subgroup"  
-
-  when:
-    params.duplicate_masker_bedops.todo == 1
   
   input:
     tuple val(replicon), val(samples), val(subgroup), val(ref), path(repeat_regions)
 
   output:
-    tuple val(replicon), val(samples), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/masked_${ref}.bed"), emit : replicons_ch
-    
+    tuple val(replicon), val(samples), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/masked_${ref}.bed"), emit: replicons_ch
+  
+  when:
+    params.duplicate_masker_bedops.todo == 1
+
   script:
   """
   OUT_DIR=phylogeny/$replicon/minicluster_$subgroup/repeatmasker
@@ -241,15 +241,15 @@ process create_input_tab {
   storeDir params.result
   debug false
   tag "Input tab for $replicon - $subgroup"  
-
-  when:
-    params.core_snps_snippy.todo == 1
   
   input:
     tuple val(replicon), val(samples), val(subgroup), path(masked_regions)
 
   output:
-    tuple val(replicon), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/*.bed"), path("phylogeny/$replicon/minicluster_$subgroup/snippy/input.tab"), emit : input_tab
+    tuple val(replicon), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/repeatmasker/*.bed"), path("phylogeny/$replicon/minicluster_$subgroup/snippy/input.tab"), emit: input_tab
+
+  when:
+    params.core_snps_snippy.todo == 1
 
   script:
   """
@@ -272,15 +272,12 @@ process core_snps_snippy {
   storeDir params.result
   debug false
   tag "Snippy on $replicon - $subgroup" 
-
-  when:
-    params.core_snps_snippy.todo == 1
   
   input:
     tuple val(replicon), val(subgroup), path(masked_regions), path(input_tab)
 
   output:
-    tuple val(replicon), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/snippy/clean.full.aln"), emit : clean_core_snps
+    tuple val(replicon), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/snippy/clean.full.aln"), emit: clean_core_snps
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/*/snps.aligned.fa")
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/*/snps.log")
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/*/snps.subs.vcf")
@@ -293,6 +290,9 @@ process core_snps_snippy {
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/core_without_ref.aln")
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/clean.full.withref.aln")
     path("phylogeny/$replicon/minicluster_$subgroup/snippy/core.ref.fa")
+
+  when:
+    params.core_snps_snippy.todo == 1
 
   script:
   """
@@ -324,15 +324,12 @@ process vc_recombination_analysis_gubbins {
   storeDir params.result
   debug false
   tag "Gubbins for $replicon - $subgroup"  
-
-  when:
-    params.vc_recombination_analysis_gubbins.todo == 1
   
   input:
     tuple val(replicon), val(subgroup), path(core_snps_aln)
 
   output:
-    tuple val(replicon), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/gubbins/${replicon}_core_masked.strict_core_after_masking.fasta"), emit : aln_without_rec
+    tuple val(replicon), val(subgroup), path("phylogeny/$replicon/minicluster_$subgroup/gubbins/${replicon}_core_masked.strict_core_after_masking.fasta"), emit: aln_without_rec
     path("phylogeny/$replicon/minicluster_$subgroup/gubbins/${replicon}.final_tree.tre")
     path("phylogeny/$replicon/minicluster_$subgroup/gubbins/${replicon}.log")
     path("phylogeny/$replicon/minicluster_$subgroup/gubbins/gubbins.err")
@@ -342,10 +339,15 @@ process vc_recombination_analysis_gubbins {
     path("phylogeny/$replicon/minicluster_$subgroup/gubbins/*")
     path("phylogeny/$replicon/minicluster_$subgroup/gubbins/clean.recombination_masked.aln")
 
+  when:
+    params.vc_recombination_analysis_gubbins.todo == 1
+
   script:
   """
   OUT_DIR=phylogeny/$replicon/minicluster_$subgroup/gubbins
   mkdir -p -m 777 \${OUT_DIR}
+  mkdir -p "\$PWD/.numba_cache"
+  export NUMBA_CACHE_DIR="\$PWD/.numba_cache"
 
   # Count number of samples analyzed
   NB_SAMPLES=\$(grep -o ">" $core_snps_aln | wc -l)
@@ -386,15 +388,15 @@ process vc_final_snp_matrix {
   storeDir params.result
   debug false
   tag "SNP matrix for $replicon - $subgroup"  
-
-  when:
-    params.vc_final_snp_matrix.todo == 1
   
   input:
     tuple val(replicon), val(subgroup), path(core_snps_aln)
 
   output:
     path("phylogeny/$replicon/minicluster_$subgroup/gubbins/core_snp_matrix.tsv")
+
+  when:
+    params.vc_final_snp_matrix.todo == 1
 
   script:
   """
@@ -414,17 +416,17 @@ process ref_phylogeny {
   storeDir params.result
   debug false
   tag "Reference for $replicon"  
-
-  when:
-    params.ref_phylogeny.todo == 1
   
   input:
     tuple val(replicon), val(samples), val(ref)
 
   output:
-    tuple val(replicon), val(samples), path("phylogeny/$replicon/phylogenetic_tree/reference/masked_${ref}.bed"), emit : replicons_ch
+    tuple val(replicon), val(samples), path("phylogeny/$replicon/phylogenetic_tree/reference/masked_${ref}.bed"), emit: replicons_ch
     path("phylogeny/$replicon/phylogenetic_tree/reference/${ref}_polished.fasta")
-    
+  
+  when:
+    params.ref_phylogeny.todo == 1
+
   script:
   """
   OUT_DIR=phylogeny/$replicon/phylogenetic_tree/reference
@@ -445,15 +447,15 @@ process create_input_tab_phylogeny {
   storeDir params.result
   debug false
   tag "Input tab for $replicon"  
-
-  when:
-    params.core_snps_snippy_phylogeny.todo == 1
   
   input:
     tuple val(replicon), val(samples), path(mask_file)
 
   output:
-    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/reference/*.bed"), path("phylogeny/$replicon/phylogenetic_tree/snippy/input.tab"), emit : input_tab
+    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/reference/*.bed"), path("phylogeny/$replicon/phylogenetic_tree/snippy/input.tab"), emit: input_tab
+
+  when:
+    params.core_snps_snippy_phylogeny.todo == 1
 
   script:
   """
@@ -476,15 +478,12 @@ process core_snps_snippy_phylogeny {
   storeDir params.result
   debug false
   tag "Snippy on $replicon" 
-
-  when:
-    params.core_snps_snippy_phylogeny.todo == 1
   
   input:
     tuple val(replicon), path(masked_regions), path(input_tab)
 
   output:
-    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/snippy/clean.full.aln"), emit : core_snps_aln
+    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/snippy/clean.full.aln"), emit: core_snps_aln
     path("phylogeny/$replicon/phylogenetic_tree/snippy/*/snps.aligned.fa")
     path("phylogeny/$replicon/phylogenetic_tree/snippy/*/snps.log")
     path("phylogeny/$replicon/phylogenetic_tree/snippy/*/snps.subs.vcf")
@@ -494,6 +493,9 @@ process core_snps_snippy_phylogeny {
     path("phylogeny/$replicon/phylogenetic_tree/snippy/snippy.log")
     path("phylogeny/$replicon/phylogenetic_tree/snippy/snippy.err")
     path("phylogeny/$replicon/phylogenetic_tree/snippy/snp_matrix.tsv")
+
+  when:
+    params.core_snps_snippy_phylogeny.todo == 1
 
   script:
   """
@@ -525,15 +527,12 @@ process snps_tree_iqtree {
   storeDir params.result
   debug false
   tag "Iqtree on $replicon"  
-
-  when:
-    params.snps_tree_iqtree.todo == 1
   
   input:
     tuple val(replicon), path(core_snps_aln)
 
   output:
-    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/snippy/clean.full.aln"), path("phylogeny/$replicon/phylogenetic_tree/iqtree/${replicon}.treefile"), emit : treefile
+    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/snippy/clean.full.aln"), path("phylogeny/$replicon/phylogenetic_tree/iqtree/${replicon}.treefile"), emit: treefile
     path("phylogeny/$replicon/phylogenetic_tree/iqtree/${replicon}.iqtree")
     path("phylogeny/$replicon/phylogenetic_tree/iqtree/iqtree.err")
     path("phylogeny/$replicon/phylogenetic_tree/iqtree/iqtree.log")
@@ -541,6 +540,9 @@ process snps_tree_iqtree {
     path("phylogeny/$replicon/phylogenetic_tree/iqtree/${replicon}.bionj")
     path("phylogeny/$replicon/phylogenetic_tree/iqtree/${replicon}.log")
     path("phylogeny/$replicon/phylogenetic_tree/iqtree/${replicon}.mldist")
+
+  when:
+    params.snps_tree_iqtree.todo == 1
 
   script:
   """
@@ -559,21 +561,21 @@ process rec_removal_clonalframeml {
   storeDir params.result
   debug false
   tag "ClonalFrameML on $replicon"  
-
-  when:
-    params.rec_removal_clonalframeml.todo == 1
   
   input:
     tuple val(replicon), path(core_snps_aln), path(treefile)
 
   output:
-    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/snippy/clean.full.aln"), path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/${replicon}.labelled_tree.newick"), emit : tree_without_rec
+    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/snippy/clean.full.aln"), path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/${replicon}.labelled_tree.newick"), emit: tree_without_rec
     path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/clonalframeml.err")
     path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/clonalframeml.log")
     path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/${replicon}.em.txt")
     path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/${replicon}.importation_status.txt")
     path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/${replicon}.ML_sequence.fasta")
     path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/${replicon}.position_cross_reference.txt")
+
+  when:
+    params.rec_removal_clonalframeml.todo == 1
 
   script:
   """
@@ -592,18 +594,18 @@ process dating_treetime {
   storeDir params.result
   debug false
   tag "Treetime on $replicon"  
-
-  when:
-    params.dating_treetime.todo == 1
   
   input:
     tuple val(replicon), path(core_snps_aln), path(treefile)
 
   output:
-    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/snippy/clean.full.aln"), path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/${replicon}.labelled_tree.newick"), emit : snippy_aln
+    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/snippy/clean.full.aln"), path("phylogeny/$replicon/phylogenetic_tree/clonalframeml/${replicon}.labelled_tree.newick"), emit: snippy_aln
     path("phylogeny/$replicon/phylogenetic_tree/treetime/treetime.err")
     path("phylogeny/$replicon/phylogenetic_tree/treetime/treetime.log")
     path("phylogeny/$replicon/phylogenetic_tree/treetime/out/*")
+
+  when:
+    params.dating_treetime.todo == 1
 
   script:
   """
@@ -622,15 +624,12 @@ process recombination_analysis_gubbins {
   storeDir params.result
   debug false
   tag "Gubbins for $replicon"  
-
-  when:
-    params.recombination_analysis_gubbins.todo == 1
   
   input:
     tuple val(replicon), path(core_snps_aln), path(treefile)
 
   output:
-    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/gubbins/clean.recombination_masked.aln"), emit : aln_without_rec
+    tuple val(replicon), path("phylogeny/$replicon/phylogenetic_tree/gubbins/clean.recombination_masked.aln"), emit: aln_without_rec
     path("phylogeny/$replicon/phylogenetic_tree/gubbins/${replicon}.final_tree.tre")
     path("phylogeny/$replicon/phylogenetic_tree/gubbins/${replicon}.log")
     path("phylogeny/$replicon/phylogenetic_tree/gubbins/gubbins.err")
@@ -639,10 +638,15 @@ process recombination_analysis_gubbins {
     path("phylogeny/$replicon/phylogenetic_tree/gubbins/${replicon}.recombination_predictions.gff")
     path("phylogeny/$replicon/phylogenetic_tree/gubbins/*")
 
+  when:
+    params.recombination_analysis_gubbins.todo == 1
+
   script:
   """
   OUT_DIR=phylogeny/$replicon/phylogenetic_tree/gubbins
   mkdir -p -m 777 \${OUT_DIR}
+  mkdir -p "\$PWD/.numba_cache"
+  export NUMBA_CACHE_DIR="\$PWD/.numba_cache"
 
   run_gubbins.py --tree-builder iqtree --first-tree-builder iqtree-fast --model GTR $core_snps_aln \
           --threads $task.cpus --filter-percentage 50.0 --prefix \${OUT_DIR}/$replicon 1> \${OUT_DIR}/gubbins.log 2> \${OUT_DIR}/gubbins.err

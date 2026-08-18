@@ -27,12 +27,12 @@
 nextflow.enable.dsl = 2
 
 // include functions
-include {printHelp} from "${params.nfpath}/modules/help.nf"
+include {printHelp} from "./modules/help.nf"
 
 // import subworkflows
-include {bacteria_mash_clustering} from "${params.nfpath}/workflows/workflow.nf"
-include {bacteria_variant_calling} from "${params.nfpath}/workflows/workflow.nf"
-include {bacteria_phylogeny} from "${params.nfpath}/workflows/workflow.nf"
+include {bacteria_mash_clustering} from "./workflows/workflow.nf"
+include {bacteria_variant_calling} from "./workflows/workflow.nf"
+include {bacteria_phylogeny} from "./workflows/workflow.nf"
 
 def raiseError ( value ) {
     sleep(2000)
@@ -40,16 +40,16 @@ def raiseError ( value ) {
     System.exit(1)
 }
 
-if (params.help) {
-    printHelp()
-    exit 0
-}
-
 // main workflow
 workflow {
 
     main:
     
+    if (params.help) {
+        printHelp()
+        return
+    }
+
     if ( params.workflow == 'bacteria_mash_clustering') {
         //Step1- Create a Channel based on content of replicons.tsv
         replicons_files = Channel.fromPath(params.result+"/replicons.tsv", checkIfExists:true).splitCsv(sep:'\t', header: true)

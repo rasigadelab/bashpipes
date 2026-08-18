@@ -16,19 +16,19 @@ nextflow.enable.dsl = 2
 
 // import modules
 // assembly modules
-include {quality_fastp} from "${params.nfpath}/modules/module.nf"
-include {trim_trimmomatic} from "${params.nfpath}/modules/module.nf"
-include {resync_bbmap} from "${params.nfpath}/modules/module.nf"
-include {assembly_spades} from "${params.nfpath}/modules/module.nf"
-include {filter_contigs_bbmap} from "${params.nfpath}/modules/module.nf"
-include {qc_quast} from "${params.nfpath}/modules/module.nf"
-include {fixstart_circlator} from "${params.nfpath}/modules/module.nf"
+include {quality_fastp} from "../modules/module.nf"
+include {trim_trimmomatic} from "../modules/module.nf"
+include {resync_bbmap} from "../modules/module.nf"
+include {assembly_spades} from "../modules/module.nf"
+include {filter_contigs_bbmap} from "../modules/module.nf"
+include {qc_quast} from "../modules/module.nf"
+include {fixstart_circlator} from "../modules/module.nf"
 // annotation modules
-include {mlst_sequence_typing} from "${params.nfpath}/modules/module.nf"
-include {classify_sourmash} from "${params.nfpath}/modules/module.nf"
-include {amr_typer_amrfinder} from "${params.nfpath}/modules/module.nf"
-include {annotate_bakta} from "${params.nfpath}/modules/module.nf"
-include {mge_mob_recon} from "${params.nfpath}/modules/module.nf"
+include {mlst_sequence_typing} from "../modules/module.nf"
+include {classify_sourmash} from "../modules/module.nf"
+include {amr_typer_amrfinder} from "../modules/module.nf"
+include {annotate_bakta} from "../modules/module.nf"
+include {mge_mob_recon} from "../modules/module.nf"
 
 // workflow script
 workflow bacteria_denovo {

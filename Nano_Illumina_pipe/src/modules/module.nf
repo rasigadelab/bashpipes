@@ -18,22 +18,22 @@ process quality_fastp {
   // Quality control on FASTQ reads. 
 
   label 'fastp'
-  storeDir (params.result)
+  storeDir params.result
   debug false
   tag "Fastp on $sample"
-
-  when:
-    params.quality_fastp.todo == 1
 
   input:
     tuple val(sample), path(R1), path(R2)
   
   output:
-    tuple val(sample), path("genomes/$sample/$R1"), path("genomes/$sample/$R2"), emit : illumina_reads
+    tuple val(sample), path("genomes/$sample/$R1"), path("genomes/$sample/$R2"), emit: illumina_reads
     path("genomes/$sample/fastp/fastp.json")
     path("genomes/$sample/fastp/fastp.html")
     path("genomes/$sample/fastp/fastp.err")
     path("genomes/$sample/fastp/fastp.log")
+
+  when:
+    params.quality_fastp.todo == 1
 
   script:
   """
@@ -50,20 +50,20 @@ process trimming_porechop {
   // Trimming of ONT FASTQ reads. 
 
   label 'porechop'
-  storeDir (params.result)
+  storeDir params.result
   debug false
   tag "Porechop on $sample"
-
-  when:
-    params.trimming_porechop.todo == 1
 
   input:
     tuple val(sample), path(ont_reads)
   
   output:
-    tuple val(sample), path("genomes/$sample/porechop/${sample}_ONT_trimmed.fastq.gz"), emit : trimmed_ont_reads
+    tuple val(sample), path("genomes/$sample/porechop/${sample}_ONT_trimmed.fastq.gz"), emit: trimmed_ont_reads
     path("genomes/$sample/porechop/porechop.err")
     path("genomes/$sample/porechop/porechop.log")
+
+  when:
+    params.trimming_porechop.todo == 1
 
   script:
   """
@@ -83,19 +83,19 @@ process stats_nanoplot{
   debug false
   tag "Computing ONT stats of sample $sample"
 
-  when:
-    params.stats_nanoplot.todo == 1 
-
   input:
     tuple val(sample), path(ont_reads)
 
   output:
-    tuple val(sample), path("genomes/$sample/filtlong/${sample}_filtered_ONT.fastq.gz"), emit : nanopore_reads
+    tuple val(sample), path("genomes/$sample/filtlong/${sample}_filtered_ONT.fastq.gz"), emit: nanopore_reads
     path("genomes/$sample/nanoplot/*.log")
     path("genomes/$sample/nanoplot/NanoPlot-report.html")
     path("genomes/$sample/nanoplot/NanoStats.txt")
     
-  
+  when:
+    params.stats_nanoplot.todo == 1 
+
+  script:
   """
   OUT_DIR=genomes/$sample/nanoplot
   mkdir -p -m 777 \${OUT_DIR}
@@ -109,24 +109,24 @@ process trim_trimmomatic {
   // Trimming adapters and filtering out Illumina reads of bad quality.
 
   label 'trim'
-  storeDir (params.result)
+  storeDir params.result
   debug false
   tag "Trimmomatic on $sample"  
-
-  when:
-    params.trim_trimmomatic.todo == 1
 
   input:
     tuple val(sample), path(R1), path(R2)
   
   output:
-    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit : illumina_trimmed
+    tuple val(sample), path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz"), path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz"), emit: illumina_trimmed
     path("genomes/$sample/trimmomatic/${sample}_R1_paired.trimmed.fastq.gz")
     path("genomes/$sample/trimmomatic/${sample}_R2_paired.trimmed.fastq.gz")
     path("genomes/$sample/trimmomatic/${sample}_R1_unpaired.trimmed.fastq.gz")
     path("genomes/$sample/trimmomatic/${sample}_R2_unpaired.trimmed.fastq.gz")
     path("genomes/$sample/trimmomatic/trimmomatic.err")
     path("genomes/$sample/trimmomatic/trimmomatic.log")
+
+  when:
+    params.trim_trimmomatic.todo == 1
 
   script:
   """
@@ -149,19 +149,19 @@ process filter_filtlong {
   // Filtering out of Nanopore reads with length less than a minimum length and keeping only the best quality reads of dataset.
 
   label 'filtlong'
-  storeDir (params.result)
+  storeDir params.result
   debug false
   tag "Filtlong on $ont_reads.simpleName"
-
-  when:
-    params.filter_filtlong.todo == 1
 
   input:
     tuple val(sample), path(ont_reads)
   
   output:
-    tuple val(sample), path("genomes/$sample/filtlong/${sample}_filtered_ONT.fastq.gz"), emit : filtered_nanopore
+    tuple val(sample), path("genomes/$sample/filtlong/${sample}_filtered_ONT.fastq.gz"), emit: filtered_nanopore
     path("genomes/$sample/filtlong/filtlong.err")
+
+  when:
+    params.filter_filtlong.todo == 1
 
   script:
   """
@@ -177,24 +177,24 @@ process assembly_flye {
   // De novo assembler for Oxford Nanopore long reads. 
 
   label 'flye'
-  storeDir (params.result)
+  storeDir params.result
   debug false
   tag "FLYE on $ont_reads.simpleName"
-
-  when:
-    params.assembly_flye.todo == 1
 
   input:
     tuple val(sample), path(ont_reads)
   
   output:
-    tuple val(sample), path("genomes/$sample/flye/assembly.fasta"), emit : draft_assembly
+    tuple val(sample), path("genomes/$sample/flye/assembly.fasta"), emit: draft_assembly
     path("genomes/$sample/flye/*")
     // path("genomes/$sample/flye/flye.log")
     // path("genomes/$sample/flye/flye.err")
     // path("genomes/$sample/flye/assembly_info.txt")
     // path("genomes/$sample/flye/*.gfa")
     // path("genomes/$sample/${sample}_assembly_raw.fasta")
+
+  when:
+    params.assembly_flye.todo == 1
 
   script:
   """
@@ -220,19 +220,19 @@ process map_bowtie2 {
   debug false
   tag "Mapping on $sample"
 
-  when:
-    params.map_bowtie2.todo == 1
-
   input:
     tuple val(sample), path(draft_assembly), path(R1), path(R2), path(R1_UNPAIRED), path(R2_UNPAIRED)
 
   output:
-    tuple val(sample), path("genomes/$sample/polish/${sample}.sorted.bam"), emit : sorted_bam_files
+    tuple val(sample), path("genomes/$sample/polish/${sample}.sorted.bam"), emit: sorted_bam_files
     path("genomes/$sample/polish/${sample}.sorted.bam.bai")
     path("genomes/$sample/polish/bowtie2.index.log")
     path("genomes/$sample/polish/bowtie2.map.log")
     path("genomes/$sample/polish/samtools.index.log")
     path("genomes/$sample/polish/samtools.sort.log")
+
+  when:
+    params.map_bowtie2.todo == 1
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -259,17 +259,17 @@ process polish_pilon {
   debug false
   tag "Polishing of $sample"
 
-  when:
-    params.polish_pilon.todo == 1
-
   input:
     tuple val(sample), path(draft_assembly), path(sorted_bam)
 
   output:
-    tuple val(sample), path("genomes/$sample/polish/${sample}_polished.fasta"), emit : polished_assembly
+    tuple val(sample), path("genomes/$sample/polish/${sample}_polished.fasta"), emit: polished_assembly
     path("genomes/$sample/polish/pilon.log")
     path("genomes/$sample/${sample}_polished.fasta")
     path("genomes/$sample/polish/${sample}_polished.changes")
+
+  when:
+    params.polish_pilon.todo == 1
 
   script:
   memory = (task.memory =~ /([^\ ]+)(.+)/)[0][1]
@@ -294,18 +294,18 @@ process fixstart_circlator {
   debug false
   tag "Circlator on $sample"
 
-  when:
-    params.fixstart_circlator.todo == 1
-
   input:
     tuple val(sample), path(denovo_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/circlator/${sample}_realigned.fasta"), emit : realigned_assembly
+    tuple val(sample), path("genomes/$sample/circlator/${sample}_realigned.fasta"), emit: realigned_assembly
     path("genomes/$sample/circlator/${sample}_realigned.log")
     path("genomes/$sample/circlator/${sample}_realigned.detailed.log")
     path("genomes/$sample/${sample}_realigned.fasta")
  
+  when:
+    params.fixstart_circlator.todo == 1
+
   script:
   """
   OUT_DIR=genomes/$sample/circlator
@@ -325,16 +325,16 @@ process mlst_sequence_typing {
   debug false
   tag "MLST on $sample"
 
-  when:
-    params.mlst_sequence_typing.todo == 1
-
   input:
     tuple val(sample), path(final_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
+    tuple val(sample), path("genomes/$sample/$final_assembly"), emit: final_assembly
     path("genomes/$sample/mlst/mlst.log")
     path("genomes/$sample/mlst/mlst.tsv")
+
+  when:
+    params.mlst_sequence_typing.todo == 1
 
   script:
   """
@@ -355,17 +355,17 @@ process classify_sourmash {
   debug false
   tag "Sourmash on $sample"
 
-  when:
-    params.classify_sourmash.todo == 1
-
   input:
     tuple val(sample), path(final_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/sourmash/${sample}.classifications.csv"), emit : sample_taxonomy
+    tuple val(sample), path("genomes/$sample/sourmash/${sample}.classifications.csv"), emit: sample_taxonomy
     path("genomes/$sample/sourmash/${sample}_realigned.fasta.sig")
     path("genomes/$sample/sourmash/sourmash.log")
     path("genomes/$sample/sourmash/${sample}_gather_results.csv")
+
+  when:
+    params.classify_sourmash.todo == 1
 
   script:
   """
@@ -393,17 +393,17 @@ process amr_typer_amrfinder {
   debug false
   tag "AMRFinder on $sample"
 
-  when:
-    params.amr_typer_amrfinder.todo == 1
-
   input:
     tuple val(sample), path(final_assembly), path(taxonomy_file)
 
-output:
-    tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
+  output:
+    tuple val(sample), path("genomes/$sample/$final_assembly"), emit: final_assembly
     path("genomes/$sample/amrfinder/amrfinder.log")
     path("genomes/$sample/amrfinder/amrfinder.tsv")
     path("genomes/$sample/amrfinder/args_sequences.fasta")
+
+  when:
+    params.amr_typer_amrfinder.todo == 1
 
   script:
   """
@@ -433,20 +433,20 @@ process annotate_bakta {
   debug false
   tag "Bakta on $sample"  
 
-  when:
-    params.annotate_bakta.todo == 1
-
   input:
     tuple val(sample), path(final_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/$final_assembly"), emit : final_assembly
+    tuple val(sample), path("genomes/$sample/$final_assembly"), emit: final_assembly
     path("genomes/$sample/bakta/bakta.err")
     path("genomes/$sample/bakta/${sample}.gff3")
     path("genomes/$sample/bakta/${sample}.tsv")
     path("genomes/$sample/bakta/${sample}.png")
     path("genomes/$sample/bakta/${sample}.log")
     path("genomes/$sample/bakta/bakta.log")
+
+  when:
+    params.annotate_bakta.todo == 1
 
   script:
   """
@@ -470,19 +470,19 @@ process mge_mob_recon {
   debug false
   tag "Mob_Recon on $sample" 
 
-  when:
-    params.mge_mob_recon.todo == 1
-
   input:
     tuple val(sample), path(final_assembly)
 
   output:
-    tuple val(sample), path("genomes/$sample/mob_recon/contig_report.txt"), emit : samples_list
+    tuple val(sample), path("genomes/$sample/mob_recon/contig_report.txt"), emit: samples_list
     path("genomes/$sample/mob_recon/*.fasta")
     path("genomes/$sample/mob_recon/mge.report.txt")
     path("genomes/$sample/mob_recon/*.txt")
     path("genomes/$sample/mob_recon/mob_recon.log")
     path("genomes/$sample/mob_recon/mob_recon.err")
+
+  when:
+    params.mge_mob_recon.todo == 1
 
   script:
   """

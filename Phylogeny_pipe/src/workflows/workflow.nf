@@ -16,26 +16,26 @@ nextflow.enable.dsl = 2
 
 // import modules
 // Mash clustering modules
-include {rename_fasta} from "${params.nfpath}/modules/module.nf"
-include {distance_matrix_mash} from "${params.nfpath}/modules/module.nf"
-include {distance_matrix_analysis} from "${params.nfpath}/modules/module.nf"
+include {rename_fasta} from "../modules/module.nf"
+include {distance_matrix_mash} from "../modules/module.nf"
+include {distance_matrix_analysis} from "../modules/module.nf"
 // SNP Calling modules
-include {map_bowtie2} from "${params.nfpath}/modules/module.nf"
-include {polish_pilon} from "${params.nfpath}/modules/module.nf"
-include {duplicate_masker_repeatmasker} from "${params.nfpath}/modules/module.nf"
-include {duplicate_masker_bedops} from "${params.nfpath}/modules/module.nf"
-include {create_input_tab} from "${params.nfpath}/modules/module.nf"
-include {core_snps_snippy} from "${params.nfpath}/modules/module.nf" 
-include {vc_recombination_analysis_gubbins} from "${params.nfpath}/modules/module.nf"
-include {vc_final_snp_matrix} from "${params.nfpath}/modules/module.nf"
+include {map_bowtie2} from "../modules/module.nf"
+include {polish_pilon} from "../modules/module.nf"
+include {duplicate_masker_repeatmasker} from "../modules/module.nf"
+include {duplicate_masker_bedops} from "../modules/module.nf"
+include {create_input_tab} from "../modules/module.nf"
+include {core_snps_snippy} from "../modules/module.nf" 
+include {vc_recombination_analysis_gubbins} from "../modules/module.nf"
+include {vc_final_snp_matrix} from "../modules/module.nf"
 // Phylogeny modules
-include {ref_phylogeny} from "${params.nfpath}/modules/module.nf" 
-include {create_input_tab_phylogeny} from "${params.nfpath}/modules/module.nf" 
-include {core_snps_snippy_phylogeny} from "${params.nfpath}/modules/module.nf" 
-include {snps_tree_iqtree} from "${params.nfpath}/modules/module.nf" 
-include {rec_removal_clonalframeml} from "${params.nfpath}/modules/module.nf"
-include {dating_treetime} from "${params.nfpath}/modules/module.nf"
-include {recombination_analysis_gubbins} from "${params.nfpath}/modules/module.nf"
+include {ref_phylogeny} from "../modules/module.nf" 
+include {create_input_tab_phylogeny} from "../modules/module.nf" 
+include {core_snps_snippy_phylogeny} from "../modules/module.nf" 
+include {snps_tree_iqtree} from "../modules/module.nf" 
+include {rec_removal_clonalframeml} from "../modules/module.nf"
+include {dating_treetime} from "../modules/module.nf"
+include {recombination_analysis_gubbins} from "../modules/module.nf"
 
 // workflow scripts
 workflow bacteria_mash_clustering {
