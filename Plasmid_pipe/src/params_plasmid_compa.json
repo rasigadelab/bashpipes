@@ -1,0 +1,47 @@
+{
+    "_meta": {
+        "author": "Aurélie Fischer",
+        "lab": "PHE3ID, CIRI, Hospices civils de Lyon",
+        "license": "AGPL-3.0-only",
+        "description": "Configuration for plasmid comparison pipeline"
+    },
+
+    "result" : "/srv/scratch/lapendryau/transmission_aurelie/Plasmid_results",
+    "workflow" : "plasmid_compa",
+    "gathering" : true,
+    "mapping" : true,
+    "visual" : true,
+
+    "gather_plasmid_seq" : {
+        "todo" : 1
+    },
+
+    "align_to_reference" : {
+        "todo" : 1,
+        "reference_vim1_incN" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/KF977034",
+        "reference_vim1_incLM" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/KX523902",
+        "reference_vim4_incHI2A" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/CP041734",
+        "reference_oxa48_incLM" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/LR025105",
+        "reference_oxa48_incC" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/CP017987",
+        "reference_oxa48_incLMR" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/KX523901",
+        "reference_oxa48_noInc" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/CP045282",
+        "reference_ndm1_incN" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/CP032203",
+        "reference_ndm1_incFIB" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/LS992176",
+        "reference_ndm1_incHI1A" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/CP026196",
+        "reference_ndm1_incC" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/KR091911",
+        "reference_ndm1_incCNR" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/KR091911",
+        "reference_ndm1_noInc" : "/srv/scratch/lapendryau/transmission_aurelie/databases/plasmid_db/MH917717"
+    },
+
+    "visualize_circos" : {
+        "todo" : 1
+    },
+
+    "change_circos_config" : {
+        "todo" : 1
+    },
+
+    "rerun_circos" : {
+        "todo" : 1
+    }
+}

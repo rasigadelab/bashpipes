@@ -8,5 +8,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #
 
-nextflow -C src/nextflow.config run src/main.nf -params-file src/params_plasmid_compa.json -with-trace -with-report --prefix run_plasmid -profile standard
+NEXTFLOW_PATH=/srv/scratch/lapendryau/transmission_aurelie
+
+NXF_OFFLINE=true NXF_DISABLE_AUTO_UPDATE=true $NEXTFLOW_PATH/nextflow -C src/nextflow.config run src/main.nf -params-file src/params_plasmid_compa.json -with-trace -with-report --prefix run_plasmid -profile standard
 

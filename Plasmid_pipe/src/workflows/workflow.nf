@@ -15,11 +15,11 @@
 nextflow.enable.dsl = 2
 
 // import modules
-include {gather_plasmid_seq} from "${params.nfpath}/modules/module.nf"
-include {align_to_reference} from "${params.nfpath}/modules/module.nf"
-include {visualize_circos} from "${params.nfpath}/modules/module.nf"
-include {change_circos_config} from "${params.nfpath}/modules/module.nf"
-include {rerun_circos} from "${params.nfpath}/modules/module.nf"
+include {gather_plasmid_seq} from "../modules/module.nf"
+include {align_to_reference} from "../modules/module.nf"
+include {visualize_circos} from "../modules/module.nf"
+include {change_circos_config} from "../modules/module.nf"
+include {rerun_circos} from "../modules/module.nf"
 
 // workflow script
 workflow plasmid_compa {

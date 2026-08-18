@@ -22,10 +22,10 @@
 nextflow.enable.dsl = 2
 
 // include functions
-include {printHelp} from "${params.nfpath}/modules/help.nf"
+include {printHelp} from "./modules/help.nf"
 
 // import subworkflows
-include {plasmid_compa} from "${params.nfpath}/workflows/workflow.nf"
+include {plasmid_compa} from "./workflows/workflow.nf"
 
 // Error raising, wait 2000s before printing error and exit Nextflow launcher
 def raiseError ( value ) {
@@ -34,16 +34,15 @@ def raiseError ( value ) {
     System.exit(1)
 }
 
-if (params.help) {
-    printHelp()
-    exit 0
-}
-
 // main workflow
 workflow {
 
     main:
 
+    if (params.help) {
+        printHelp()
+        return
+    }
     //Step1- create a Channel based on content of plasmid_locations.tsv
     plasmid_locations = Channel.fromPath(params.result+"/plasmid_locations.tsv", checkIfExists:true).splitCsv(sep:'\t', header: false)
     //Step2- launch plasmid comparison workflow
